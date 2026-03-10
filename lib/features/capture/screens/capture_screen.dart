@@ -1393,11 +1393,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // ← Back — returns to Journal
+                  // ← Back — returns to EEG Home
                   _camIconButton(
                     icon: Icons.arrow_back_ios_new_rounded,
                     dark: dark,
-                    onTap: () => context.go('/journal'),
+                    onTap: () => context.go('/eeg-home'),
                   ),
 
                   const Spacer(),
