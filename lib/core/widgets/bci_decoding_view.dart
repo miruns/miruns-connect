@@ -24,8 +24,8 @@ import '../theme/app_theme.dart';
 
 /// Simulated mental states for BCI decoding demo.
 enum _BrainState {
-  focus('FOCUS', Icons.center_focus_strong_rounded, Color(0xFF4DD4C8)),
-  relax('RELAX', Icons.self_improvement_rounded, Color(0xFF8B78F5)),
+  focus('FOCUS', Icons.center_focus_strong_rounded, AppTheme.glow),
+  relax('RELAX', Icons.self_improvement_rounded, AppTheme.aurora),
   motorLeft('MOTOR L', Icons.pan_tool_rounded, Color(0xFF40C4FF)),
   motorRight('MOTOR R', Icons.back_hand_rounded, Color(0xFFFF5252)),
   meditation('MEDITATE', Icons.spa_rounded, Color(0xFF69F0AE));

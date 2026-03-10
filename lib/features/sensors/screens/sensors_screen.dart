@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/services/service_providers.dart';
+import '../../../core/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sensors & State — live dashboard of every data source the app relies on
@@ -395,7 +396,7 @@ class _SensorsScreenState extends ConsumerState<SensorsScreen> {
       appBar: AppBar(
         title: Text(
           'Sensors & State',
-          style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -557,8 +558,8 @@ class _SensorGroupCard extends StatelessWidget {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFFFBD5A),
-                    side: const BorderSide(color: Color(0xFFFFBD5A), width: 1),
+                    foregroundColor: AppTheme.amber,
+                    side: const BorderSide(color: AppTheme.amber, width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -652,15 +653,15 @@ class _StateBadge extends StatelessWidget {
 Color _stateColor(_SensorState s) {
   switch (s) {
     case _SensorState.active:
-      return const Color(0xFF38C87E); // seaGreen
+      return AppTheme.seaGreen; // seaGreen
     case _SensorState.idle:
-      return const Color(0xFFFFBD5A); // amber
+      return AppTheme.amber; // amber
     case _SensorState.denied:
-      return const Color(0xFFFF5A7A); // crimson
+      return AppTheme.crimson; // crimson
     case _SensorState.unavailable:
-      return const Color(0xFF60758F); // fog
+      return AppTheme.fog; // fog
     case _SensorState.error:
-      return const Color(0xFFFF5A7A); // crimson
+      return AppTheme.crimson; // crimson
   }
 }
 
@@ -690,7 +691,7 @@ class _FixAllPermissionsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFFFBD5A);
+    const accent = AppTheme.amber;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -812,7 +813,7 @@ class _SensorGuidanceCard extends StatelessWidget {
       tips.add(
         _GuidanceTip(
           icon: Icons.lock_outline_rounded,
-          color: const Color(0xFFFF5A7A),
+          color: AppTheme.crimson,
           title: 'Permissions needed',
           message:
               '${denied.join(", ")} — grant access so your body story is complete.',
@@ -823,7 +824,7 @@ class _SensorGuidanceCard extends StatelessWidget {
       tips.add(
         _GuidanceTip(
           icon: Icons.warning_amber_rounded,
-          color: const Color(0xFFFF5A7A),
+          color: AppTheme.crimson,
           title: 'Errors detected',
           message:
               '${errored.join(", ")} — try re-probing or restarting the app.',
@@ -834,7 +835,7 @@ class _SensorGuidanceCard extends StatelessWidget {
       tips.add(
         _GuidanceTip(
           icon: Icons.cloud_off_rounded,
-          color: const Color(0xFF60758F),
+          color: AppTheme.fog,
           title: 'Unavailable',
           message: '${unavailable.join(", ")} — not available on this device.',
         ),
@@ -844,7 +845,7 @@ class _SensorGuidanceCard extends StatelessWidget {
       tips.add(
         _GuidanceTip(
           icon: Icons.hourglass_empty_rounded,
-          color: const Color(0xFFFFBD5A),
+          color: AppTheme.amber,
           title: 'Waiting for data',
           message:
               '${idle.join(", ")} — try syncing your wearable or moving around.',

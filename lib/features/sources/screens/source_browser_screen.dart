@@ -27,7 +27,7 @@ class SourceBrowserScreen extends ConsumerWidget {
         elevation: 0,
         title: Text(
           'Signal Sources',
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: AppTheme.moonbeam,
@@ -71,12 +71,12 @@ class SourceBrowserScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'No sources registered',
-            style: GoogleFonts.dmSans(fontSize: 16, color: AppTheme.fog),
+            style: GoogleFonts.inter(fontSize: 16, color: AppTheme.fog),
           ),
           const SizedBox(height: 8),
           Text(
             'Community sources will appear here.',
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.inter(
               fontSize: 13,
               color: AppTheme.fog.withValues(alpha: 0.6),
             ),
@@ -120,7 +120,7 @@ class SourceBrowserScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Add your own source',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.aurora,
@@ -130,7 +130,7 @@ class SourceBrowserScreen extends ConsumerWidget {
                 Text(
                   'Implement BleSourceProvider and register it in '
                   'source_registry_init.dart',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 11,
                     color: AppTheme.fog.withValues(alpha: 0.6),
                     height: 1.4,
@@ -190,7 +190,7 @@ class _SourceCard extends StatelessWidget {
                 children: [
                   Text(
                     source.displayName,
-                    style: GoogleFonts.dmSans(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.moonbeam,
@@ -201,7 +201,7 @@ class _SourceCard extends StatelessWidget {
                     source.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
                       color: AppTheme.fog,
                       height: 1.4,

@@ -94,7 +94,7 @@ class SocialCard extends StatelessWidget {
                   children: [
                     Text(
                       headline,
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.inter(
                         fontSize: _headlineFontSize(headline),
                         fontWeight: FontWeight.w700,
                         height: 1.22,
@@ -168,7 +168,7 @@ class SocialCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Miruns',
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           height: 1.1,

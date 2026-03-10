@@ -135,7 +135,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
                 'Reset',
                 style: TextStyle(
                   color: AppTheme.fog,
-                  fontFamily: 'DM Sans',
+                  fontFamily: 'Inter',
                   fontSize: 13,
                 ),
               ),
@@ -199,7 +199,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
                 style: TextStyle(
                   color: AppTheme.fog,
                   fontSize: 13,
-                  fontFamily: 'DM Sans',
+                  fontFamily: 'Inter',
                 ),
               ),
               const SizedBox(height: 16),
@@ -267,7 +267,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
       obscureText: _obscureKey,
       style: const TextStyle(
         color: AppTheme.moonbeam,
-        fontFamily: 'DM Sans',
+        fontFamily: 'Inter',
         fontSize: 14,
       ),
       decoration: _fieldDecoration(
@@ -296,7 +296,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
       keyboardType: keyboardType,
       style: const TextStyle(
         color: AppTheme.moonbeam,
-        fontFamily: 'DM Sans',
+        fontFamily: 'Inter',
         fontSize: 14,
       ),
       decoration: _fieldDecoration(hint: hint),
@@ -375,7 +375,7 @@ class _ActiveBanner extends StatelessWidget {
                     color: AppTheme.moonbeam,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -384,7 +384,7 @@ class _ActiveBanner extends StatelessWidget {
                   style: TextStyle(
                     color: AppTheme.fog,
                     fontSize: 12,
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'Inter',
                   ),
                 ),
               ],
@@ -416,7 +416,7 @@ class _SectionHeader extends StatelessWidget {
         fontWeight: FontWeight.w600,
         color: AppTheme.fog,
         letterSpacing: 2.0,
-        fontFamily: 'DM Sans',
+        fontFamily: 'Inter',
       ),
     );
   }
@@ -436,7 +436,7 @@ class _FieldLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: AppTheme.moonbeam,
-        fontFamily: 'DM Sans',
+        fontFamily: 'Inter',
       ),
     );
   }
@@ -530,7 +530,7 @@ class _ProviderTile extends StatelessWidget {
                               ? FontWeight.w600
                               : FontWeight.w400,
                           fontSize: 14,
-                          fontFamily: 'DM Sans',
+                          fontFamily: 'Inter',
                         ),
                       ),
                       const SizedBox(height: 1),
@@ -539,7 +539,7 @@ class _ProviderTile extends StatelessWidget {
                         style: TextStyle(
                           color: AppTheme.fog.withValues(alpha: 0.80),
                           fontSize: 11,
-                          fontFamily: 'DM Sans',
+                          fontFamily: 'Inter',
                         ),
                       ),
                     ],
@@ -620,7 +620,7 @@ class _ActionButton extends StatelessWidget {
                   color: color,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  fontFamily: 'DM Sans',
+                  fontFamily: 'Inter',
                 ),
               ),
             ],
@@ -663,7 +663,7 @@ class _InfoBox extends StatelessWidget {
                   color: AppTheme.starlight,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  fontFamily: 'DM Sans',
+                  fontFamily: 'Inter',
                 ),
               ),
             ],
@@ -715,7 +715,7 @@ class _InfoBox extends StatelessWidget {
               color: AppTheme.fog,
               fontSize: 12,
               height: 1.4,
-              fontFamily: 'DM Sans',
+              fontFamily: 'Inter',
             ),
           ),
         ),

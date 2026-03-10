@@ -115,8 +115,8 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
     Color(0xFF060A14), // abyss
     Color(0xFF0B253A), // deep sea glow
     Color(0xFF125C6D), // teal dark
-    Color(0xFF4DD4C8), // bioluminescent teal
-    Color(0xFF8B78F5), // aurora violet
+    AppTheme.glow, // bioluminescent teal
+    AppTheme.aurora, // aurora violet
     Color(0xFFD4A0FF), // light violet
     Color(0xFFFFFFFF), // white hot
   ];
@@ -607,9 +607,9 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
   }
 
   Color _bandColor(FrequencyBand band) => switch (band) {
-    FrequencyBand.delta => const Color(0xFF4DD4C8), // teal — deep, slow
+    FrequencyBand.delta => AppTheme.glow, // deep, slow
     FrequencyBand.theta => const Color(0xFF40C4FF), // blue — meditative
-    FrequencyBand.alpha => const Color(0xFF8B78F5), // aurora — the star
+    FrequencyBand.alpha => AppTheme.aurora, // violet — the star
     FrequencyBand.beta => const Color(0xFFFFD740), // amber — active mind
     FrequencyBand.gamma => const Color(0xFFFF5252), // red-hot — high freq
   };

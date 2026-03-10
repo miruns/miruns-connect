@@ -1616,7 +1616,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                     children: [
                       Text(
                         'Recents',
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: dark ? Colors.white : Colors.black87,
@@ -1789,7 +1789,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                           Expanded(
                             child: Text(
                               'Capture Details',
-                              style: GoogleFonts.playfairDisplay(
+                              style: GoogleFonts.inter(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w700,
                                 color: dark ? Colors.white : Colors.black87,

@@ -214,22 +214,22 @@ class _ChapterNavState extends State<_ChapterNav>
       child: SizedBox(
         height: 72,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.deepSea.withValues(alpha: 0.90),
-                borderRadius: BorderRadius.circular(18),
+                color: AppTheme.deepSea.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: AppTheme.shimmer.withValues(alpha: 0.30),
+                  color: AppTheme.shimmer.withValues(alpha: 0.40),
                   width: 0.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.50),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withValues(alpha: 0.40),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -281,7 +281,7 @@ class _ChapterNavContent extends StatelessWidget {
       builder: (ctx, constraints) {
         final itemW = constraints.maxWidth / total;
 
-        // Interpolated x-position of the sliding top rule.
+        // Interpolated x-position of the dot indicator.
         final fromX = prevIndex * itemW;
         final toX = currentIndex * itemW;
         final lineX = Tween<double>(
@@ -289,33 +289,22 @@ class _ChapterNavContent extends StatelessWidget {
           end: toX,
         ).animate(slideAnim).value;
 
-        // The rule inset from each tab edge — gives a refined, editorial gap.
-        const lineInset = 22.0;
-        const lineH = 1.5;
-
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // ── Glowing top-rule chapter indicator (real tabs only) ──────
+            // ── Active bottom dot indicator ────────────────────────────
             if (currentIndex < realCount)
-              Positioned(
-                left: lineX + lineInset,
-                top: 0,
-                width: itemW - lineInset * 2,
-                height: lineH,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubicEmphasized,
+                left: lineX + (itemW / 2) - 3,
+                bottom: 6,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
                     color: AppTheme.glow,
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(2),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.glow.withValues(alpha: 0.55),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
@@ -384,54 +373,38 @@ class _ChapterTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isActive ? AppTheme.glow : AppTheme.fog;
+    final iconColor = isActive ? AppTheme.moonbeam : AppTheme.fog;
     final labelColor = isActive ? AppTheme.moonbeam : AppTheme.fog;
-    final numeralColor = isActive
-        ? AppTheme.glow.withValues(alpha: 0.70)
-        : Colors.transparent;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(height: 4), // breathing room below the top rule
-        // ── Chapter numeral ──────────────────────────────────────────────
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 250),
-          style: TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w500,
-            color: numeralColor,
-            letterSpacing: 1.5,
-            fontFamily: 'DM Sans',
-          ),
-          child: Text(item.numeral),
-        ),
-        const SizedBox(height: 2),
         // ── Icon ─────────────────────────────────────────────────────────
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 180),
           transitionBuilder: (child, anim) =>
               FadeTransition(opacity: anim, child: child),
           child: Icon(
             isActive ? item.activeIcon : item.icon,
             key: ValueKey(isActive),
-            size: 20,
+            size: 22,
             color: iconColor,
           ),
         ),
         const SizedBox(height: 4),
-        // ── Label (all-caps editorial) ────────────────────────────────────
+        // ── Label ────────────────────────────────────────────────────────
         AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 180),
           style: TextStyle(
-            fontSize: 9,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+            fontSize: 10,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
             color: labelColor,
-            letterSpacing: 2.2,
-            fontFamily: 'DM Sans',
+            letterSpacing: 0,
+            fontFamily: 'Inter',
           ),
-          child: Text(item.label.toUpperCase()),
+          child: Text(item.label),
         ),
+        const SizedBox(height: 10), // space for the bottom dot indicator
       ],
     );
   }
@@ -485,11 +458,11 @@ class _MoreSheet extends ConsumerWidget {
                   Text(
                     'MORE',
                     style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
                       color: AppTheme.fog,
-                      letterSpacing: 2.5,
-                      fontFamily: 'DM Sans',
+                      letterSpacing: 0.4,
+                      fontFamily: 'Inter',
                     ),
                   ),
                 ],
@@ -546,15 +519,16 @@ class _MoreTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: AppTheme.shimmer.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                color: AppTheme.tidePool,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.shimmer, width: 0.5),
               ),
-              child: Icon(destination.icon, size: 20, color: AppTheme.fog),
+              child: Icon(destination.icon, size: 18, color: AppTheme.fog),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,19 +537,19 @@ class _MoreTile extends StatelessWidget {
                     destination.label,
                     style: const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontFamily: 'DM Sans',
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.moonbeam,
+                      fontFamily: 'Inter',
                     ),
                   ),
                   if (destination.description != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       destination.description!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.fog,
-                        fontFamily: 'DM Sans',
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ],
@@ -606,7 +580,7 @@ Widget _buildSensorBadgeDot(WidgetRef ref) {
   if (available == null || granted == null) return const SizedBox.shrink();
   if (available && granted) return const SizedBox.shrink();
 
-  final color = !available ? const Color(0xFF60758F) : const Color(0xFFFFBD5A);
+  final color = !available ? AppTheme.fog : AppTheme.amber;
 
   return _PulseDot(color: color, size: 8, needsAttention: !granted);
 }
@@ -624,9 +598,7 @@ class _SensorAttentionBadge extends ConsumerWidget {
     if (available == null || granted == null) return const SizedBox.shrink();
     if (available && granted) return const SizedBox.shrink();
 
-    final color = !available
-        ? const Color(0xFF60758F)
-        : const Color(0xFFFFBD5A);
+    final color = !available ? AppTheme.fog : AppTheme.amber;
 
     return _PulseDot(color: color, size: 7, needsAttention: !granted);
   }
@@ -653,15 +625,15 @@ class _SensorGuidanceBanner extends StatelessWidget {
 
     if (available == false) {
       message = 'Health platform unavailable on this device.';
-      accent = const Color(0xFF60758F);
+      accent = AppTheme.fog;
       icon = Icons.cloud_off_rounded;
     } else if (granted == false) {
       message = 'Some sensors need attention \u2014 open Sensors to review.';
-      accent = const Color(0xFFFFBD5A);
+      accent = AppTheme.amber;
       icon = Icons.warning_amber_rounded;
     } else {
       message = 'Checking sensor status\u2026';
-      accent = const Color(0xFF60758F);
+      accent = AppTheme.fog;
       icon = Icons.hourglass_empty_rounded;
     }
 
@@ -690,7 +662,7 @@ class _SensorGuidanceBanner extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: accent,
-                  fontFamily: 'DM Sans',
+                  fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
                 ),
               ),

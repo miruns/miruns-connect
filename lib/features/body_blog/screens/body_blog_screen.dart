@@ -1205,7 +1205,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
                   const SizedBox(height: 10),
                   Text(
                     widget.headline,
-                    style: GoogleFonts.playfairDisplay(
+                    style: GoogleFonts.inter(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
                       height: 1.15,
@@ -1412,7 +1412,7 @@ class _JournalGlassSection extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             title,
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -3751,7 +3751,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                     children: [
                       Text(
                         'How are you feeling?',
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: dark ? Colors.white : Colors.black87,
@@ -4047,7 +4047,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                 Text(
                                   paragraphs[i],
                                   style: i == 0
-                                      ? GoogleFonts.playfairDisplay(
+                                      ? GoogleFonts.inter(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w500,
                                           height: 1.7,
@@ -4545,7 +4545,7 @@ class _VersionTile extends StatelessWidget {
                       version.headline,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         height: 1.3,
@@ -4626,7 +4626,7 @@ class _VersionTile extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   version.headline,
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     height: 1.3,

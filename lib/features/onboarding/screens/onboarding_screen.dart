@@ -455,7 +455,7 @@ class _WelcomePage extends StatelessWidget {
           // ── branding ──
           Text(
             'Miruns',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.inter(
               fontSize: 44,
               fontWeight: FontWeight.w700,
               color: dark ? Colors.white : Colors.black87,
@@ -584,7 +584,7 @@ class _PermissionStep extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -731,7 +731,7 @@ class _HealthPermissionStep extends StatelessWidget {
                 Text(
                   'Body\nIntelligence',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -974,7 +974,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                 Text(
                   'One more\nstep',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -1393,7 +1393,7 @@ class _NotificationStep extends StatelessWidget {
                 Text(
                   'Daily\nBody Post',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -1516,7 +1516,7 @@ class _CompletePage extends StatelessWidget {
 
           Text(
             'You\'re ready',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.inter(
               fontSize: 38,
               fontWeight: FontWeight.w700,
               color: dark ? Colors.white : Colors.black87,

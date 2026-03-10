@@ -25,7 +25,7 @@ import '../theme/app_theme.dart';
 /// Artifact types detected (simulated).
 enum _ArtifactType {
   clean('CLEAN', Icons.check_circle_outline_rounded, AppTheme.seaGreen),
-  eyeBlink('BLINK', Icons.visibility_off_rounded, Color(0xFFFFBD5A)),
+  eyeBlink('BLINK', Icons.visibility_off_rounded, AppTheme.amber),
   muscle('MUSCLE', Icons.flash_on_rounded, Color(0xFFFF9800)),
   movement('MOVE', Icons.open_with_rounded, Color(0xFFFF5252));
 

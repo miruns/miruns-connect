@@ -114,7 +114,7 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
               // Main reflection text — the "mantra"
               Text(
                 insight.reflection,
-                style: GoogleFonts.playfairDisplay(
+                style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                   fontStyle: FontStyle.italic,

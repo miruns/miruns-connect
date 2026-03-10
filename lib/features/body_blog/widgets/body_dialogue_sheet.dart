@@ -223,7 +223,7 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'Ask Your Body',
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: dark ? Colors.white : Colors.black87,
@@ -289,7 +289,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Your body is feeling $mood today',
             textAlign: TextAlign.center,
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: dark ? Colors.white70 : Colors.black54,
