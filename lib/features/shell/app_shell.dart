@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/services/service_providers.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Root scaffold with a reader-inspired editorial chapter navigation.
+/// Root scaffold with a hamburger FAB for navigation.
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
 
@@ -17,32 +17,35 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Capture tab (index 2) takes over full-screen like a camera app —
-    // hide the floating nav so it doesn't compete.
+    // hide the FAB so it doesn't compete.
     final isCaptureTab = navigationShell.currentIndex == 2;
 
     return Scaffold(
-      // Body bleeds under the floating nav bar so the blur has content to blur.
-      extendBody: !isCaptureTab,
+      extendBody: true,
       body: navigationShell,
-      bottomNavigationBar: isCaptureTab
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: isCaptureTab
           ? null
-          : _ChapterNav(
+          : _MenuFab(
               currentIndex: navigationShell.currentIndex,
-              onTap: (index) => navigationShell.goBranch(
-                index,
-                initialLocation: index == navigationShell.currentIndex,
-              ),
-              onMoreTap: () => _showMoreSheet(context),
+              onOpenMenu: () => _showNavSheet(context),
             ),
     );
   }
 
-  void _showMoreSheet(BuildContext context) {
+  void _showNavSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: false,
-      builder: (_) => _MoreSheet(routerContext: context),
+      builder: (_) => _FullNavSheet(
+        routerContext: context,
+        currentIndex: navigationShell.currentIndex,
+        onTabTap: (index) => navigationShell.goBranch(
+          index,
+          initialLocation: index == navigationShell.currentIndex,
+        ),
+      ),
     );
   }
 }
@@ -153,80 +156,38 @@ const List<_MoreDestination> _moreDestinations = [
   ),
 ];
 
-// ─── Chapter navigation bar ────────────────────────────────────────────────────
+// ─── Hamburger FAB ────────────────────────────────────────────────────────────
 
-class _ChapterNav extends StatefulWidget {
-  const _ChapterNav({
-    required this.currentIndex,
-    required this.onTap,
-    required this.onMoreTap,
-  });
+class _MenuFab extends ConsumerWidget {
+  const _MenuFab({required this.currentIndex, required this.onOpenMenu});
 
   final int currentIndex;
-  final ValueChanged<int> onTap;
-  final VoidCallback onMoreTap;
+  final VoidCallback onOpenMenu;
 
   @override
-  State<_ChapterNav> createState() => _ChapterNavState();
-}
-
-class _ChapterNavState extends State<_ChapterNav>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _slideCtrl;
-  late final CurvedAnimation _slideAnim;
-
-  int _prevIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _prevIndex = widget.currentIndex;
-
-    _slideCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-    );
-    _slideAnim = CurvedAnimation(
-      parent: _slideCtrl,
-      curve: Curves.easeInOutCubicEmphasized,
-    );
-
-    _slideCtrl.value = 1.0;
-  }
-
-  @override
-  void didUpdateWidget(_ChapterNav old) {
-    super.didUpdateWidget(old);
-    if (old.currentIndex != widget.currentIndex) {
-      _prevIndex = old.currentIndex;
-      _slideCtrl
-        ..reset()
-        ..forward();
-    }
-  }
-
-  @override
-  void dispose() {
-    _slideCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.paddingOf(context).bottom;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final available = ref.watch(healthAvailableProvider).valueOrNull;
+    final granted = ref.watch(healthPermissionStatusProvider).valueOrNull;
+    final needsAttention =
+        available != null && granted != null && !(available && granted);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPad + 10),
-      child: SizedBox(
-        height: 72,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onOpenMenu();
+        },
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 color: AppTheme.deepSea.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                   color: AppTheme.shimmer.withValues(alpha: 0.40),
                   width: 0.5,
@@ -239,16 +200,22 @@ class _ChapterNavState extends State<_ChapterNav>
                   ),
                 ],
               ),
-              child: AnimatedBuilder(
-                animation: _slideAnim,
-                builder: (context, _) => _ChapterNavContent(
-                  items: _navItems,
-                  currentIndex: widget.currentIndex,
-                  prevIndex: _prevIndex,
-                  slideAnim: _slideAnim,
-                  onTap: widget.onTap,
-                  onMoreTap: widget.onMoreTap,
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.menu_rounded, size: 22, color: AppTheme.moonbeam),
+                  if (needsAttention)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: _PulseDot(
+                        color: AppTheme.amber,
+                        size: 7,
+                        needsAttention: true,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -258,174 +225,23 @@ class _ChapterNavState extends State<_ChapterNav>
   }
 }
 
-// ─── Inner content (rebuilt on animation tick) ───────────────────────────────
+// ─── Full navigation sheet ────────────────────────────────────────────────────
 
-class _ChapterNavContent extends StatelessWidget {
-  const _ChapterNavContent({
-    required this.items,
+class _FullNavSheet extends ConsumerWidget {
+  const _FullNavSheet({
+    required this.routerContext,
     required this.currentIndex,
-    required this.prevIndex,
-    required this.slideAnim,
-    required this.onTap,
-    required this.onMoreTap,
+    required this.onTabTap,
   });
 
-  final List<_NavItem> items;
-  final int currentIndex;
-  final int prevIndex;
-  final Animation<double> slideAnim;
-  final ValueChanged<int> onTap;
-  final VoidCallback onMoreTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // Only non-More tabs participate in the active sliding indicator.
-    final realCount = items.where((item) => !item.isMoreTab).length;
-    final total = items.length;
-
-    return LayoutBuilder(
-      builder: (ctx, constraints) {
-        final itemW = constraints.maxWidth / total;
-
-        // Interpolated x-position of the dot indicator.
-        final fromX = prevIndex * itemW;
-        final toX = currentIndex * itemW;
-        final lineX = Tween<double>(
-          begin: fromX,
-          end: toX,
-        ).animate(slideAnim).value;
-
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // ── Active bottom dot indicator ────────────────────────────
-            if (currentIndex < realCount)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutCubicEmphasized,
-                left: lineX + (itemW / 2) - 3,
-                bottom: 6,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.glow,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-
-            // ── Subtle dividers between tabs ──────────────────────────────
-            ...List.generate(total - 1, (i) {
-              return Positioned(
-                left: itemW * (i + 1),
-                top: 20,
-                bottom: 20,
-                width: 0.5,
-                child: ColoredBox(
-                  color: AppTheme.shimmer.withValues(alpha: 0.40),
-                ),
-              );
-            }),
-
-            // ── Chapter tabs ──────────────────────────────────────────────
-            Row(
-              children: List.generate(total, (i) {
-                final item = items[i];
-                final isActive = !item.isMoreTab && i == currentIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      if (item.isMoreTab) {
-                        onMoreTap();
-                      } else {
-                        onTap(i);
-                      }
-                    },
-                    child: item.isMoreTab
-                        ? Stack(
-                            alignment: Alignment.center,
-                            clipBehavior: Clip.none,
-                            children: [
-                              _ChapterTab(item: item, isActive: isActive),
-                              const Positioned(
-                                right: 16,
-                                top: 8,
-                                child: _SensorAttentionBadge(),
-                              ),
-                            ],
-                          )
-                        : _ChapterTab(item: item, isActive: isActive),
-                  ),
-                );
-              }),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-// ─── Single chapter tab ──────────────────────────────────────────────────────
-
-class _ChapterTab extends StatelessWidget {
-  const _ChapterTab({required this.item, required this.isActive});
-
-  final _NavItem item;
-  final bool isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    final iconColor = isActive ? AppTheme.moonbeam : AppTheme.fog;
-    final labelColor = isActive ? AppTheme.moonbeam : AppTheme.fog;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // ── Icon ─────────────────────────────────────────────────────────
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
-          transitionBuilder: (child, anim) =>
-              FadeTransition(opacity: anim, child: child),
-          child: Icon(
-            isActive ? item.activeIcon : item.icon,
-            key: ValueKey(isActive),
-            size: 22,
-            color: iconColor,
-          ),
-        ),
-        const SizedBox(height: 4),
-        // ── Label ────────────────────────────────────────────────────────
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 180),
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-            color: labelColor,
-            letterSpacing: 0,
-            fontFamily: 'Inter',
-          ),
-          child: Text(item.label),
-        ),
-        const SizedBox(height: 10), // space for the bottom dot indicator
-      ],
-    );
-  }
-}
-
-// ─── More overflow sheet ──────────────────────────────────────────────────────
-
-class _MoreSheet extends ConsumerWidget {
-  const _MoreSheet({required this.routerContext});
-
-  /// Context from the shell build — used for go_router navigation.
   final BuildContext routerContext;
+  final int currentIndex;
+  final ValueChanged<int> onTabTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mainItems = _navItems.where((i) => !i.isMoreTab).toList();
+
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.deepSea,
@@ -442,7 +258,7 @@ class _MoreSheet extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Drag handle ──────────────────────────────────────────────
+            // ── Drag handle ────────────────────────────────────────────────
             const SizedBox(height: 12),
             Center(
               child: Container(
@@ -456,7 +272,119 @@ class _MoreSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // ── Section label ─────────────────────────────────────────────
+            // ── Tabs section label ──────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+              child: Row(
+                children: [
+                  Text(
+                    'NAVIGATE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.fog,
+                      letterSpacing: 0.4,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Main tabs ──────────────────────────────────────────────────
+            ...List.generate(mainItems.length, (i) {
+              final item = mainItems[i];
+              final isActive = i == currentIndex;
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onTabTap(i);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppTheme.glow.withValues(alpha: 0.12)
+                              : AppTheme.tidePool,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isActive
+                                ? AppTheme.glow.withValues(alpha: 0.35)
+                                : AppTheme.shimmer,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          size: 18,
+                          color: isActive ? AppTheme.glow : AppTheme.fog,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: isActive
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: isActive ? AppTheme.moonbeam : AppTheme.fog,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                      if (isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.glow.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            item.numeral,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.glow,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: AppTheme.fog.withValues(alpha: 0.50),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+
+            // ── Divider ────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: Divider(
+                color: AppTheme.shimmer.withValues(alpha: 0.20),
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── More section label ──────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
               child: Row(
@@ -475,10 +403,10 @@ class _MoreSheet extends ConsumerWidget {
               ),
             ),
 
-            // ── Sensor guidance (when not healthy) ─────────────────────────────
+            // ── Sensor guidance ────────────────────────────────────────────
             _SensorGuidanceBanner(ref: ref),
 
-            // ── Destination tiles (scrollable when sheet is short) ─────────
+            // ── More destinations ──────────────────────────────────────────
             Flexible(
               child: ListView(
                 shrinkWrap: true,
