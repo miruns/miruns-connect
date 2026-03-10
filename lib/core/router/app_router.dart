@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/ai_settings/screens/ai_settings_screen.dart';
 import '../../features/capture/screens/capture_screen.dart';
+import '../../features/eeg/screens/eeg_home_screen.dart';
+import '../../features/eeg/screens/eeg_onboarding_screen.dart';
 import '../../features/environment/screens/environment_screen.dart';
 import '../../features/journal/screens/journal_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
@@ -19,9 +21,21 @@ class AppRouter {
   /// Call once before [runApp] to set the initial route based on user prefs.
   static void init({bool skipOnboarding = false}) {
     router = GoRouter(
-      initialLocation: skipOnboarding ? '/journal' : '/onboarding',
+      initialLocation: skipOnboarding ? '/eeg-home' : '/eeg-onboarding',
       routes: [
-        // ── Onboarding (no bottom nav) ──────────────────────────────────
+        // ── EEG onboarding (first-run, no bottom nav) ───────────────────
+        GoRoute(
+          path: '/eeg-onboarding',
+          name: 'eeg-onboarding',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const EegOnboardingScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
+        ),
+        // ── Legacy onboarding (kept for backward-compat) ────────────────
         GoRoute(
           path: '/onboarding',
           name: 'onboarding',
@@ -39,14 +53,14 @@ class AppRouter {
           builder: (context, state, navigationShell) =>
               AppShell(navigationShell: navigationShell),
           branches: [
-            // Tab 0 — Journal (default)
+            // Tab 0 — EEG Home
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/journal',
-                  name: 'journal',
+                  path: '/eeg-home',
+                  name: 'eeg-home',
                   pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: JournalScreen()),
+                      const NoTransitionPage(child: EegHomeScreen()),
                 ),
               ],
             ),
@@ -76,6 +90,29 @@ class AppRouter {
         ),
 
         // ── Standalone routes (no bottom nav) ───────────────────────────
+        GoRoute(
+          path: '/journal',
+          name: 'journal',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const JournalScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
         GoRoute(
           path: '/environment',
           name: 'environment',

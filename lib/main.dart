@@ -41,22 +41,15 @@ void main() async {
       onTimeout: () => debugPrint('[main] bgService.initialize() timed out'),
     );
 
-    // Show onboarding only when permissions are missing.
-    // Always check actual OS permissions so that revoking them
-    // re-surfaces the onboarding flow on next launch.
+    // Skip onboarding once the user has completed the EEG first-run flow.
+    // Permissions (health, location, calendar) are requested lazily when
+    // the features that need them are first used — not as a gate at startup.
     final db = container.read(localDbServiceProvider);
-    final permService = container.read(permissionServiceProvider);
-    final healthService = container.read(healthServiceProvider);
-    final criticalPerms = await permService
-        .areCriticalPermissionsGranted()
-        .timeout(const Duration(seconds: 3), onTimeout: () => false);
-    final healthPerms = await healthService.hasPermissionsProbe().timeout(
-      const Duration(seconds: 5),
-      onTimeout: () => false,
+    final eegDone = await db.getSetting('eeg_onboarding_done').timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => null,
     );
-    skipOnboarding = criticalPerms && healthPerms;
-    // Keep the DB flag in sync so other parts of the app can read it.
-    await db.setSetting('skip_onboarding', skipOnboarding ? 'true' : 'false');
+    skipOnboarding = eegDone == 'true';
 
     // Schedule the two hardcoded daily pushes (08:30 + 20:00).
     // Request permission first — on Android 13+ this is required at runtime.

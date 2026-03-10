@@ -70,9 +70,9 @@ class _NavItem {
 
 const List<_NavItem> _navItems = [
   _NavItem(
-    icon: Icons.auto_stories_outlined,
-    activeIcon: Icons.auto_stories,
-    label: 'Journal',
+    icon: Icons.sensors_outlined,
+    activeIcon: Icons.sensors_rounded,
+    label: 'EEG',
     numeral: 'I',
   ),
   _NavItem(
@@ -115,6 +115,12 @@ class _MoreDestination {
 /// Add new features here first; graduate them to [_navItems] when they earn
 /// a permanent spot in the primary navigation.
 const List<_MoreDestination> _moreDestinations = [
+  _MoreDestination(
+    icon: Icons.auto_stories_outlined,
+    label: 'Journal',
+    route: '/journal',
+    description: 'Body blog, daily entries',
+  ),
   _MoreDestination(
     icon: Icons.auto_awesome_rounded,
     label: 'AI Services',
