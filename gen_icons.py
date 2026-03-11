@@ -1,23 +1,103 @@
-"""Generate Miruns app icons - retro-future newspaper vibe, large serif 'B'."""
+"""Generate Miruns app icons - the M signal-wave logo (mirrored from m_signal_logo.dart)."""
 
+import math
 import os
-from PIL import Image, ImageDraw, ImageFont
 
-# ── Design tokens ──────────────────────────────────────────────────────────────
-BG_COLOR   = (8, 8, 8)          # near-black ink background
-FG_COLOR   = (240, 234, 218)    # warm newsprint off-white
-PADDING    = 0.11               # fraction of size to keep clear around edge
+from PIL import Image, ImageDraw, ImageFilter
 
-# Windows system fonts to try in order (bold serif → newspaper feel)
-FONT_CANDIDATES = [
-    r"C:\Windows\Fonts\garabd.ttf",       # Garamond Bold
-    r"C:\Windows\Fonts\timesbd.ttf",      # Times New Roman Bold
-    r"C:\Windows\Fonts\georgiab.ttf",     # Georgia Bold
-    r"C:\Windows\Fonts\georgia.ttf",      # Georgia Regular
-    r"C:\Windows\Fonts\times.ttf",        # Times New Roman
+BG_COLOR     = (0, 0, 0)
+GLOW_COLOR   = (0, 112, 243)
+AURORA_COLOR = (121, 40, 202)
+
+PADDING = 0.12
+
+_SEGMENTS = [
+    ((0.00, 0.56), (0.07, 0.56), (0.10, 0.10), (0.22, 0.10)),
+    ((0.22, 0.10), (0.34, 0.10), (0.42, 0.72), (0.50, 0.72)),
+    ((0.50, 0.72), (0.58, 0.72), (0.66, 0.10), (0.78, 0.10)),
+    ((0.78, 0.10), (0.90, 0.10), (0.93, 0.56), (1.00, 0.56)),
 ]
 
-# ── Icon sets ─────────────────────────────────────────────────────────────────
+
+def _cubic(p0, cp1, cp2, p1, t):
+    mt = 1.0 - t
+    return (
+        mt**3*p0[0] + 3*mt**2*t*cp1[0] + 3*mt*t**2*cp2[0] + t**3*p1[0],
+        mt**3*p0[1] + 3*mt**2*t*cp1[1] + 3*mt*t**2*cp2[1] + t**3*p1[1],
+    )
+
+
+def _sample_path(steps_per_seg=300):
+    raw = []
+    for seg in _SEGMENTS:
+        for i in range(steps_per_seg):
+            raw.append(_cubic(*seg, i / steps_per_seg))
+    raw.append(_cubic(*_SEGMENTS[-1], 1.0))
+    pts = [raw[0]]
+    for p in raw[1:]:
+        if abs(p[0] - pts[-1][0]) > 1e-9 or abs(p[1] - pts[-1][1]) > 1e-9:
+            pts.append(p)
+    lens = [0.0]
+    for i in range(1, len(pts)):
+        lens.append(lens[-1] + math.hypot(pts[i][0] - pts[i-1][0],
+                                           pts[i][1] - pts[i-1][1]))
+    total = lens[-1]
+    return pts, [d / total for d in lens]
+
+
+def _lerp(c1, c2, t):
+    return tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
+
+
+def make_icon(px):
+    pts, global_ts = _sample_path()
+    bx0 = min(p[0] for p in pts)
+    bx1 = max(p[0] for p in pts)
+    by0 = min(p[1] for p in pts)
+    by1 = max(p[1] for p in pts)
+    pad   = PADDING * px
+    avail = px - 2 * pad
+    scale = min(avail / (bx1 - bx0), avail / (by1 - by0))
+    draw_w = (bx1 - bx0) * scale
+    draw_h = (by1 - by0) * scale
+    ox = pad + (avail - draw_w) / 2
+    oy = pad + (avail - draw_h) / 2
+
+    def to_px(fx, fy):
+        return (ox + (fx - bx0) * scale, oy + (fy - by0) * scale)
+
+    pixel_pts = [to_px(fx, fy) for fx, fy in pts]
+    stroke_w = max(int(px * 0.052), 2)
+
+    base = Image.new("RGBA", (px, px), BG_COLOR + (255,))
+
+    # 1. Wide blurred glow
+    glow = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    gd   = ImageDraw.Draw(glow)
+    gw   = max(int(stroke_w * 2.6), 4)
+    for i in range(1, len(pixel_pts)):
+        col = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i]) + (110,)
+        gd.line([pixel_pts[i-1], pixel_pts[i]], fill=col, width=gw)
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=max(stroke_w * 1.8, 4)))
+    base = Image.alpha_composite(base, glow)
+
+    # 2. Main gradient stroke with round joins
+    sl = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sl)
+    r  = max(stroke_w // 2, 1)
+    for i in range(1, len(pixel_pts)):
+        col = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i]) + (255,)
+        sd.line([pixel_pts[i-1], pixel_pts[i]], fill=col, width=stroke_w)
+        x, y = pixel_pts[i-1]
+        cap  = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i-1]) + (255,)
+        sd.ellipse([(x-r, y-r), (x+r, y+r)], fill=cap)
+    x, y = pixel_pts[-1]
+    sd.ellipse([(x-r, y-r), (x+r, y+r)], fill=AURORA_COLOR + (255,))
+
+    base = Image.alpha_composite(base, sl)
+    return base.convert("RGB")
+
+
 ANDROID_ICONS = {
     r"android\app\src\main\res\mipmap-mdpi\ic_launcher.png":    48,
     r"android\app\src\main\res\mipmap-hdpi\ic_launcher.png":    72,
@@ -47,66 +127,13 @@ IOS_ICONS = {
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_font(size: int) -> ImageFont.FreeTypeFont:
-    """Load best available serif font at given size."""
-    for path in FONT_CANDIDATES:
-        if os.path.exists(path):
-            try:
-                return ImageFont.truetype(path, size)
-            except Exception:
-                continue
-    return ImageFont.load_default()
-
-
-def make_icon(px: int) -> Image.Image:
-    """Create a square icon of size px with a large centred 'B'."""
-    img = Image.new("RGB", (px, px), BG_COLOR)
-    draw = ImageDraw.Draw(img)
-
-    # Aim for the 'B' to fill most of the canvas minus padding
-    target_height = px * (1.0 - PADDING * 2)
-    font_size = int(target_height * 1.05)   # overshoot, then clamp
-
-    font = load_font(font_size)
-
-    # Measure bounding box and shrink until it fits
-    for _ in range(40):
-        bbox = draw.textbbox((0, 0), "B", font=font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        if w <= target_height and h <= target_height:
-            break
-        font_size = int(font_size * 0.96)
-        font = load_font(font_size)
-
-    # Re-measure for final centering
-    bbox = draw.textbbox((0, 0), "B", font=font)
-    w = bbox[2] - bbox[0]
-    h = bbox[3] - bbox[1]
-
-    # Centre precisely
-    x = (px - w) / 2 - bbox[0]
-    y = (px - h) / 2 - bbox[1]
-
-    # Subtle warm shadow for depth (retro print feel)
-    if px >= 48:
-        shadow_offset = max(1, px // 96)
-        draw.text((x + shadow_offset, y + shadow_offset), "B",
-                  fill=(180, 140, 80, 120), font=font)
-
-    draw.text((x, y), "B", fill=FG_COLOR, font=font)
-
-    return img
-
-
 def generate_all():
     all_icons = {**ANDROID_ICONS, **IOS_ICONS}
     for rel_path, size in all_icons.items():
         full_path = os.path.join(BASE_DIR, rel_path)
         img = make_icon(size)
         img.save(full_path, "PNG")
-        print(f"  ✓  {size:>4}px  {rel_path}")
-
+        print(f"  OK  {size:>4}px  {rel_path}")
     print("\nAll icons generated.")
 
 
