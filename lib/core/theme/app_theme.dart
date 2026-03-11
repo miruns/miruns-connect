@@ -22,8 +22,8 @@ class AppTheme {
   /// Elevated — dialogs, sheets, modals.
   static const Color current = Color(0xFF1A1A1A);
 
-  /// Border — subtle separator / outline.
-  static const Color shimmer = Color(0xFF252525);
+  /// Border — structural separator / outline.
+  static const Color shimmer = Color(0xFF2E2E2E);
 
   /// Primary accent — Vercel blue / Apple system blue.
   static const Color glow = Color(0xFF0070F3);
@@ -180,7 +180,7 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: Colors.transparent,
@@ -200,8 +200,8 @@ class AppTheme {
         elevation: 0,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: shimmer, width: 0.5),
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: shimmer, width: 1),
         ),
         color: tidePool,
         shadowColor: Colors.transparent,
@@ -214,9 +214,7 @@ class AppTheme {
           backgroundColor: glow,
           foregroundColor: Color(0xFFF5F5F5),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
           textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -229,9 +227,7 @@ class AppTheme {
           foregroundColor: moonbeam,
           side: const BorderSide(color: shimmer, width: 1),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
           textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -247,7 +243,7 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             letterSpacing: -0.1,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
       // ── Input ──
@@ -255,15 +251,15 @@ class AppTheme {
         filled: true,
         fillColor: tidePool,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: shimmer, width: 0.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: shimmer, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: shimmer, width: 0.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: shimmer, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: glow, width: 1.5),
         ),
         hintStyle: GoogleFonts.inter(color: fog, fontSize: 14),
@@ -286,15 +282,15 @@ class AppTheme {
       // ── Chips ──
       chipTheme: ChipThemeData(
         backgroundColor: tidePool,
-        side: const BorderSide(color: shimmer, width: 0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: const BorderSide(color: shimmer, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         labelStyle: GoogleFonts.inter(fontSize: 13, color: moonbeam),
         selectedColor: glow.withValues(alpha: 0.15),
       ),
       // ── Dialog ──
       dialogTheme: DialogThemeData(
         backgroundColor: current,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 17,
           fontWeight: FontWeight.w600,
@@ -306,7 +302,7 @@ class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: current,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
         ),
       ),
       // ── Slider ──
@@ -334,7 +330,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: current,
         contentTextStyle: GoogleFonts.inter(color: moonbeam, fontSize: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -359,7 +355,7 @@ class AppTheme {
       textTheme: base,
       appBarTheme: AppBarTheme(
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         foregroundColor: const Color(0xFF111111),
         titleTextStyle: GoogleFonts.inter(
@@ -372,8 +368,8 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
         ),
         color: Colors.white,
       ),
@@ -381,9 +377,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
           textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,

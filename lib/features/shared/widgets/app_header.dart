@@ -75,10 +75,10 @@ class AppHeader extends ConsumerWidget {
                 Text(
                   title,
                   style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                     color: titleColor,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.6,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -88,7 +88,8 @@ class AppHeader extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 11,
                       color: subColor,
-                      letterSpacing: 0.2,
+                      letterSpacing: 0.4,
+                      fontFamily: 'Inter',
                     ),
                   ),
                 ],

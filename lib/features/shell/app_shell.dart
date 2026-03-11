@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,46 +176,30 @@ class _MenuFab extends ConsumerWidget {
           HapticFeedback.selectionClick();
           onOpenMenu();
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppTheme.deepSea.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: AppTheme.glow.withValues(alpha: 0.28),
-                  width: 0.8,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.40),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppTheme.tidePool,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.shimmer, width: 1),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.menu_rounded, size: 20, color: AppTheme.moonbeam),
+              if (needsAttention)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: _PulseDot(
+                    color: AppTheme.amber,
+                    size: 6,
+                    needsAttention: true,
                   ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(Icons.menu_rounded, size: 22, color: AppTheme.moonbeam),
-                  if (needsAttention)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: _PulseDot(
-                        color: AppTheme.amber,
-                        size: 7,
-                        needsAttention: true,
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -274,13 +256,8 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.deepSea,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: AppTheme.shimmer.withValues(alpha: 0.30),
-            width: 0.5,
-          ),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+        border: Border(top: BorderSide(color: AppTheme.shimmer, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -292,9 +269,9 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
             Center(
               child: Container(
                 width: 36,
-                height: 4,
+                height: 3,
                 decoration: BoxDecoration(
-                  color: AppTheme.shimmer.withValues(alpha: 0.50),
+                  color: AppTheme.shimmer,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -353,21 +330,15 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
                     vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppTheme.shimmer.withValues(alpha: 0.30),
-                      width: 0.5,
-                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(color: AppTheme.shimmer, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppTheme.glow.withValues(alpha: 0.50),
-                      width: 1,
-                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(color: AppTheme.glow, width: 1.5),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
               ),
@@ -523,29 +494,29 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
         Navigator.of(context).pop();
         widget.onTabTap(index);
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppTheme.glow.withValues(alpha: 0.12)
+                    ? AppTheme.glow.withValues(alpha: 0.10)
                     : AppTheme.tidePool,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: isActive
-                      ? AppTheme.glow.withValues(alpha: 0.35)
+                      ? AppTheme.glow.withValues(alpha: 0.50)
                       : AppTheme.shimmer,
-                  width: 0.5,
+                  width: 1,
                 ),
               ),
               child: Icon(
                 isActive ? item.activeIcon : item.icon,
-                size: 18,
+                size: 17,
                 color: isActive ? AppTheme.glow : AppTheme.fog,
               ),
             ),
@@ -554,7 +525,7 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
               child: Text(
                 item.label,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   color: isActive ? AppTheme.moonbeam : AppTheme.fog,
                   fontFamily: 'Inter',
@@ -563,10 +534,14 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
             ),
             if (isActive)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.glow.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppTheme.glow.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.glow.withValues(alpha: 0.30),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   item.numeral,
@@ -574,14 +549,15 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
                     fontSize: 10,
                     color: AppTheme.glow,
                     fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               )
             else
               Icon(
                 Icons.chevron_right_rounded,
-                size: 20,
-                color: AppTheme.fog.withValues(alpha: 0.50),
+                size: 18,
+                color: AppTheme.fog.withValues(alpha: 0.40),
               ),
           ],
         ),
@@ -601,20 +577,20 @@ class _MoreTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: AppTheme.tidePool,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.shimmer, width: 0.5),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppTheme.shimmer, width: 1),
               ),
-              child: Icon(destination.icon, size: 18, color: AppTheme.fog),
+              child: Icon(destination.icon, size: 17, color: AppTheme.fog),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -728,11 +704,11 @@ class _SensorGuidanceBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: accent.withValues(alpha: 0.25)),
+          color: accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: accent.withValues(alpha: 0.30), width: 1),
         ),
         child: Row(
           children: [
