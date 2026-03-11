@@ -227,7 +227,7 @@ class _MenuFab extends ConsumerWidget {
 
 // ─── Full navigation sheet ────────────────────────────────────────────────────
 
-class _FullNavSheet extends ConsumerWidget {
+class _FullNavSheet extends ConsumerStatefulWidget {
   const _FullNavSheet({
     required this.routerContext,
     required this.currentIndex,
@@ -239,8 +239,37 @@ class _FullNavSheet extends ConsumerWidget {
   final ValueChanged<int> onTabTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FullNavSheet> createState() => _FullNavSheetState();
+}
+
+class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final mainItems = _navItems.where((i) => !i.isMoreTab).toList();
+    final q = _query.toLowerCase().trim();
+
+    final filteredNav = q.isEmpty
+        ? mainItems
+        : mainItems.where((i) => i.label.toLowerCase().contains(q)).toList();
+
+    final filteredMore = q.isEmpty
+        ? _moreDestinations
+        : _moreDestinations
+              .where(
+                (d) =>
+                    d.label.toLowerCase().contains(q) ||
+                    (d.description?.toLowerCase().contains(q) ?? false),
+              )
+              .toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -272,163 +301,288 @@ class _FullNavSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // ── Tabs section label ──────────────────────────────────────────
+            // ── Search field ───────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
-              child: Row(
-                children: [
-                  Text(
-                    'NAVIGATE',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.fog,
-                      letterSpacing: 0.4,
-                      fontFamily: 'Inter',
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppTheme.moonbeam,
+                  fontFamily: 'Inter',
+                ),
+                cursorColor: AppTheme.glow,
+                onChanged: (v) => setState(() => _query = v),
+                decoration: InputDecoration(
+                  hintText: 'Search…',
+                  hintStyle: TextStyle(
+                    fontSize: 15,
+                    color: AppTheme.fog.withValues(alpha: 0.55),
+                    fontFamily: 'Inter',
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: AppTheme.fog.withValues(alpha: 0.65),
+                      size: 20,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // ── Main tabs ──────────────────────────────────────────────────
-            ...List.generate(mainItems.length, (i) {
-              final item = mainItems[i];
-              final isActive = i == currentIndex;
-              return InkWell(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  onTabTap(i);
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? AppTheme.glow.withValues(alpha: 0.12)
-                              : AppTheme.tidePool,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isActive
-                                ? AppTheme.glow.withValues(alpha: 0.35)
-                                : AppTheme.shimmer,
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Icon(
-                          isActive ? item.activeIcon : item.icon,
-                          size: 18,
-                          color: isActive ? AppTheme.glow : AppTheme.fog,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: isActive
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: isActive ? AppTheme.moonbeam : AppTheme.fog,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ),
-                      if (isActive)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.glow.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            item.numeral,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppTheme.glow,
-                              fontFamily: 'Inter',
+                  prefixIconConstraints: const BoxConstraints(),
+                  suffixIcon: _query.isNotEmpty
+                      ? GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: AppTheme.fog.withValues(alpha: 0.65),
+                              size: 18,
                             ),
                           ),
                         )
-                      else
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 20,
-                          color: AppTheme.fog.withValues(alpha: 0.50),
-                        ),
-                    ],
+                      : null,
+                  suffixIconConstraints: const BoxConstraints(),
+                  filled: true,
+                  fillColor: AppTheme.tidePool,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppTheme.shimmer.withValues(alpha: 0.30),
+                      width: 0.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppTheme.glow.withValues(alpha: 0.50),
+                      width: 1,
+                    ),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-              );
-            }),
-
-            // ── Divider ────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: Divider(
-                color: AppTheme.shimmer.withValues(alpha: 0.20),
-                height: 1,
               ),
             ),
-            const SizedBox(height: 8),
 
-            // ── More section label ──────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'MORE',
+            // ── Filtered results (searching) ───────────────────────────────
+            if (q.isNotEmpty) ...[
+              if (filteredNav.isEmpty && filteredMore.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+                  child: Text(
+                    'No results for "$_query"',
                     style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.fog,
-                      letterSpacing: 0.4,
+                      fontSize: 14,
+                      color: AppTheme.fog.withValues(alpha: 0.55),
                       fontFamily: 'Inter',
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // ── Sensor guidance ────────────────────────────────────────────
-            _SensorGuidanceBanner(ref: ref),
-
-            // ── More destinations ──────────────────────────────────────────
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                children: [
-                  ..._moreDestinations.map(
-                    (dest) => _MoreTile(
-                      destination: dest,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        routerContext.push(dest.route);
-                      },
-                      badge: dest.route == '/sensors'
-                          ? _buildSensorBadgeDot(ref)
-                          : null,
-                    ),
+                )
+              else
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.only(bottom: 12),
+                    children: [
+                      ...List.generate(filteredNav.length, (i) {
+                        final item = filteredNav[i];
+                        final originalIndex = mainItems.indexOf(item);
+                        return _buildNavRow(
+                          context,
+                          item,
+                          originalIndex,
+                          originalIndex == widget.currentIndex,
+                        );
+                      }),
+                      ...filteredMore.map(
+                        (dest) => _MoreTile(
+                          destination: dest,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            widget.routerContext.push(dest.route);
+                          },
+                          badge: dest.route == '/sensors'
+                              ? _buildSensorBadgeDot(ref)
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+            ] else ...[
+              // ── Normal view ────────────────────────────────────────────
+
+              // Tabs section label
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                child: Row(
+                  children: [
+                    Text(
+                      'NAVIGATE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                        letterSpacing: 0.4,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Main tabs
+              ...List.generate(mainItems.length, (i) {
+                return _buildNavRow(
+                  context,
+                  mainItems[i],
+                  i,
+                  i == widget.currentIndex,
+                );
+              }),
+
+              // Divider
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: Divider(
+                  color: AppTheme.shimmer.withValues(alpha: 0.20),
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // More section label
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'MORE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                        letterSpacing: 0.4,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Sensor guidance
+              _SensorGuidanceBanner(ref: ref),
+
+              // More destinations
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    ..._moreDestinations.map(
+                      (dest) => _MoreTile(
+                        destination: dest,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          widget.routerContext.push(dest.route);
+                        },
+                        badge: dest.route == '/sensors'
+                            ? _buildSensorBadgeDot(ref)
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavRow(
+    BuildContext context,
+    _NavItem item,
+    int index,
+    bool isActive,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pop();
+        widget.onTabTap(index);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppTheme.glow.withValues(alpha: 0.12)
+                    : AppTheme.tidePool,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isActive
+                      ? AppTheme.glow.withValues(alpha: 0.35)
+                      : AppTheme.shimmer,
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                isActive ? item.activeIcon : item.icon,
+                size: 18,
+                color: isActive ? AppTheme.glow : AppTheme.fog,
               ),
             ),
-
-            const SizedBox(height: 12),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: isActive ? AppTheme.moonbeam : AppTheme.fog,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
+            if (isActive)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTheme.glow.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  item.numeral,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppTheme.glow,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              )
+            else
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppTheme.fog.withValues(alpha: 0.50),
+              ),
           ],
         ),
       ),
