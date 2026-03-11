@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -26,7 +24,7 @@ class MSignalLogo extends StatefulWidget {
   const MSignalLogo({
     super.key,
     this.size = 80,
-    this.loop = true,
+    this.loop = false,
     this.cycleDuration = const Duration(milliseconds: 3200),
   });
 
@@ -40,9 +38,6 @@ class _MSignalLogoState extends State<MSignalLogo>
   late final AnimationController _ctrl;
   late final Animation<double> _draw; // 0→0.5 : pen travels
   late final Animation<double> _glow; // 0.5→1 : bloom in/out
-
-  late final AnimationController _spinCtrl;
-  late final Animation<double> _spinAngle; // 0 → 2π, Y-axis
 
   @override
   void initState() {
@@ -74,22 +69,8 @@ class _MSignalLogoState extends State<MSignalLogo>
       ],
     ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.50, 1.0)));
 
-    _spinCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 10000),
-    );
-
-    // Full 360° in the last 15 % of the 10-second window.
-    _spinAngle = Tween<double>(begin: 0.0, end: math.pi * 2.0).animate(
-      CurvedAnimation(
-        parent: _spinCtrl,
-        curve: const Interval(0.85, 1.0, curve: Curves.easeInOut),
-      ),
-    );
-
     if (widget.loop) {
       _ctrl.repeat();
-      _spinCtrl.repeat();
     } else {
       _ctrl.forward();
     }
@@ -98,30 +79,19 @@ class _MSignalLogoState extends State<MSignalLogo>
   @override
   void dispose() {
     _ctrl.dispose();
-    _spinCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_ctrl, _spinCtrl]),
+      animation: _ctrl,
       builder: (context, _) {
-        // True 3-D Y-axis rotation with perspective foreshortening.
-        // At π/2 the shape appears as a near-invisible vertical line then
-        final m = Matrix4.identity()
-          ..setEntry(3, 2, 0.0015) // perspective depth
-          ..rotateY(_spinAngle.value);
-
-        return Transform(
-          transform: m,
-          alignment: Alignment.center,
-          child: CustomPaint(
-            size: Size(widget.size, widget.size),
-            painter: _MSignalPainter(
-              drawProgress: _draw.value,
-              glowIntensity: _ctrl.value > 0.50 ? _glow.value : 0.0,
-            ),
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _MSignalPainter(
+            drawProgress: _draw.value,
+            glowIntensity: _ctrl.value > 0.50 ? _glow.value : 0.0,
           ),
         );
       },
@@ -205,7 +175,7 @@ class _MSignalPainter extends CustomPainter {
     final drawLen = metric.length * drawProgress.clamp(0.0, 1.0);
     final drawnPath = metric.extractPath(0, drawLen);
 
-    final strokeW = w * 0.086; // bold, proportional to canvas size
+    final strokeW = w * 0.048; // thin, proportional to canvas size
 
     // ── Wide soft glow behind the stroke ─────────────────────────────────────
     if (glowIntensity > 0.01) {
