@@ -1,5 +1,13 @@
 # Miruns Connect
 
+> [!WARNING]
+> **Early-stage open-source project — not for production use.**
+> This software is under active development and is provided **as-is**, without warranty of any kind. Expect breaking changes, incomplete features, and potential instability. **Do not rely on it in any critical or production environment.**
+>
+> **Not medical advice.** Miruns Connect is a wellness and sport-science tool intended for informational and research purposes only. It is **not a medical device**, and nothing in this application should be interpreted as medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for any health-related decisions.
+>
+> **AI-assisted development.** Portions of this codebase, including data-processing logic and application code were developed with the assistance of AI tools. Outputs have been reviewed by human developers, but no guarantee of correctness or completeness is implied at this stage.
+
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
 ![Version](https://img.shields.io/badge/version-1.0.20-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
