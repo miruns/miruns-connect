@@ -244,7 +244,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                 curve: Curves.easeInOut,
                 child: _expertMode
                     ? Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: 80),
                         child: _ExpertPanel(
                           onLiveSignals: () => context.push('/sources/ads1299'),
                           onSources: () => context.push('/sources'),

@@ -189,8 +189,8 @@ class _MenuFab extends ConsumerWidget {
                 color: AppTheme.deepSea.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: AppTheme.shimmer.withValues(alpha: 0.40),
-                  width: 0.5,
+                  color: AppTheme.glow.withValues(alpha: 0.28),
+                  width: 0.8,
                 ),
                 boxShadow: [
                   BoxShadow(
