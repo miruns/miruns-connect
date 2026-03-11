@@ -1,21 +1,52 @@
 # Miruns Connect
 
-
-
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
 ![Version](https://img.shields.io/badge/version-1.0.20-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
 
-
-
 Miruns is a cutting-edge platform at the intersection of **neuroscience, sport science, and active living**. Designed to integrate discreetly into everyday headphones, Miruns captures a comprehensive array of physiological and environmental biodata — without interrupting your training or your day.
 
 The companion Flutter app processes signals from the embedded hardware and device sensors with AI to deliver four core pillars: **real-time fatigue prediction**, **recuperation tracking**, **personalised cognitive health insights**, and a first-person daily narrative — actionable awareness written _by_ your body, _for_ you.
 
-<img width="600" alt="miruns-screenshot-000" src="https://github.com/user-attachments/assets/1c4f0642-5e3a-46a5-89f7-476e697e8d65" />
----
+## Screenshots
+
+<table>
+  <tr>
+   <td><img width="400" alt="Screenshot_1773252594" src="https://github.com/user-attachments/assets/961e7b0d-ddec-44d4-831c-44491f8ec07c" /></td>
+ <td><img width="400" alt="Screenshot_1773252597" src="https://github.com/user-attachments/assets/81bac3a5-e434-4e22-8ec1-531c49ba1818" /></td>
+ <td><img width="400" alt="Screenshot_1773252602" src="https://github.com/user-attachments/assets/b0b07d90-ae87-4acc-ae06-3ef3173f7278" /></td>
+ <td><img width="400" alt="Screenshot_1773252606" src="https://github.com/user-attachments/assets/ff582cba-ecea-42a9-8836-50b28a31f3a9" /></td>
+ <td><img width="400" alt="Screenshot_1773252609" src="https://github.com/user-attachments/assets/ac5cc94b-d37a-4f38-ad24-741ebe73a250" /></td>
+ <td><img width="400" alt="Screenshot_1773252612" src="https://github.com/user-attachments/assets/4d0db46c-f45f-4144-92ad-b84e76d5d548" /></td>
+ <td><img width="400" alt="Screenshot_1773252619" src="https://github.com/user-attachments/assets/35435bf3-7131-47b7-89ef-5c68849a5133" /></td>
+ <td><img width="400" alt="Screenshot_1773252624" src="https://github.com/user-attachments/assets/285901f9-0c72-4687-9c51-b4c7162ba441" /></td>
+ <td><img width="400" alt="Screenshot_1773252629" src="https://github.com/user-attachments/assets/7e703942-e834-421b-aed9-d44b4e4d3f77" /></td>
+  </tr>
+</table>
+
+<details>
+<summary>More screenshots</summary>
+
+<table>
+  <tr>
+    <td><img width="200" src="https://github.com/user-attachments/assets/ecee3855-2836-4e5b-a559-c9edac9166a7" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/4b7bb0b1-2f92-40b1-a170-49a67ac802c8" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/8834a150-3d16-4fcc-bb7f-a184a9b91c48" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/b76caba3-f7ee-449f-ab20-9795bbcff717" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/ce5c09cf-0021-4f67-bb28-31bc0b6fcdfe" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/4f7cb624-64e7-4728-a1d4-ea87a914cf15" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/3218e319-f647-4b30-8785-f6bf38256e6e" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/57cd41ac-3d52-43cf-9cac-da500b8caa3e" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/f44194ea-0f20-4805-8744-a85c1f80f844" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/14dd1b37-20f3-412b-aa8a-8521633e7488" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/d009636a-4713-48a2-b62a-81ec479cc320" /></td>
+    <td><img width="200" src="https://github.com/user-attachments/assets/86b6c9a9-30af-4715-a62d-9a62e11e7d16" /></td>
+  </tr>
+</table>
+
+## </details>
 
 ## Why Miruns?
 
