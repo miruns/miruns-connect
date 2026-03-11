@@ -45,11 +45,13 @@ void main() async {
     // Permissions (health, location, calendar) are requested lazily when
     // the features that need them are first used — not as a gate at startup.
     final db = container.read(localDbServiceProvider);
-    final eegDone = await db.getSetting('eeg_onboarding_done').timeout(
-      const Duration(seconds: 3),
-      onTimeout: () => null,
-    );
-    skipOnboarding = eegDone == 'true';
+    final eegDone = await db
+        .getSetting('eeg_onboarding_done')
+        .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    // ── DEV FLAG: set to true to always show onboarding on reload ──────
+    const bool kForceOnboarding = true;
+    // ───────────────────────────────────────────────────────────────────
+    skipOnboarding = kForceOnboarding ? false : eegDone == 'true';
 
     // Schedule the two hardcoded daily pushes (08:30 + 20:00).
     // Request permission first — on Android 13+ this is required at runtime.
