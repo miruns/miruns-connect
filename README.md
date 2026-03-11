@@ -5,56 +5,43 @@
 ![Version](https://img.shields.io/badge/version-1.0.20-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> Your body writes a journal every day — Miruns reads it.
+> Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
 
-A cross-platform Flutter app that collects physiological, environmental, and behavioural signals from device sensors, then synthesises them into a daily first-person narrative: a blog written _by_ your body, _for_ you.
+Miruns is a cutting-edge platform at the intersection of **neuroscience, sport science, and active living**. Designed to integrate discreetly into everyday headphones, Miruns captures a comprehensive array of physiological and environmental biodata — without interrupting your training or your day.
 
----
-
-## Screenshots
-
-<table>
-  <tr>
-    <td><img width="200" src="https://github.com/user-attachments/assets/400c148d-80cc-4614-b224-e1b11ff16a29" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/89eb3103-79c0-4b05-8a16-2f077ef2c46b" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/6afd6d98-23a1-4cd2-9c2d-cd3e9c2d3841" /></td>
-     <td><img width="200" alt="image" src="https://github.com/user-attachments/assets/39a1ab62-2769-49e0-a195-0bc4d4386df8" /></td>
-    <td><img width="200" alt="Journal" src="https://github.com/user-attachments/assets/83c0a31e-1cfe-48e3-9478-9fcbf6c12dcc" /></td>
-    <td><img width="200" alt="Capture" src="https://github.com/user-attachments/assets/4a6de629-54b0-40f4-af2a-b8650b305fd2" /></td>
-    <td><img width="200" alt="Patterns" src="https://github.com/user-attachments/assets/7b58bd67-4dc1-4cd4-88a7-6a177d931bb1" /></td>
-    <td><img width="200" alt="Detail" src="https://github.com/user-attachments/assets/1c07cc5f-6dfd-4f66-9294-19f1bf20e8d8" /></td>
-  </tr>
-</table>
-
-<details>
-<summary>More screenshots</summary>
-
-<table>
-  <tr>
-    <td><img width="200" src="https://github.com/user-attachments/assets/ecee3855-2836-4e5b-a559-c9edac9166a7" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/4b7bb0b1-2f92-40b1-a170-49a67ac802c8" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/8834a150-3d16-4fcc-bb7f-a184a9b91c48" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/b76caba3-f7ee-449f-ab20-9795bbcff717" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/ce5c09cf-0021-4f67-bb28-31bc0b6fcdfe" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/4f7cb624-64e7-4728-a1d4-ea87a914cf15" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/3218e319-f647-4b30-8785-f6bf38256e6e" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/57cd41ac-3d52-43cf-9cac-da500b8caa3e" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/f44194ea-0f20-4805-8744-a85c1f80f844" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/14dd1b37-20f3-412b-aa8a-8521633e7488" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/d009636a-4713-48a2-b62a-81ec479cc320" /></td>
-    <td><img width="200" src="https://github.com/user-attachments/assets/86b6c9a9-30af-4715-a62d-9a62e11e7d16" /></td>
-  </tr>
-</table>
-
-</details>
+The companion Flutter app processes signals from the embedded hardware and device sensors with AI to deliver four core pillars: **real-time fatigue prediction**, **recuperation tracking**, **personalised cognitive health insights**, and a first-person daily narrative — actionable awareness written _by_ your body, _for_ you.
 
 ---
 
 ## Why Miruns?
 
-Most health apps show dashboards of numbers. Miruns takes a different approach: it presents your biometrics as a _narrative_. Story-framing surfaces correlations you'd otherwise miss — poor sleep preceding an elevated resting heart rate, high AQI days correlating with fewer steps — and reading about yourself is more engaging than staring at charts.
+Elite sport has always demanded an edge. Miruns brings neuroscience-grade biosignal monitoring to every athlete and active person — discreetly embedded in the headphones you already wear.
 
-Under the hood the app treats the human body as an observable system: collect objective signals throughout the day, feed them to an LLM, and get back a warm, first-person journal entry that reads as though your body is writing to you.
+### EEG-Powered Fatigue Intelligence
+
+EEG signals provide a direct, objective window into brain activity — the most accurate method available for detecting mental fatigue. Miruns reads that signal continuously and turns it into four practical benefits:
+
+| Benefit                           | What it means for you                                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Accurate fatigue assessment**   | Objective, brain-level measurement of cognitive state — not a proxy like typing speed or eye tracking                  |
+| **Real-time prediction & alerts** | Timely prompts to take a break, adjust intensity, or switch tasks before performance degrades                          |
+| **Personalised management**       | Individual fatigue patterns analysed over time → tailored recommendations for breaks, recovery, and work rhythm        |
+| **Long-term cognitive health**    | Longitudinal tracking surfaces trends that may signal burnout risk or cognitive decline — before they become a problem |
+
+Most health apps show dashboards of numbers. Miruns goes further: it presents your biometrics as a _narrative_. Story-framing surfaces correlations you'd otherwise miss — poor sleep preceding an elevated resting heart rate, high AQI days correlating with fewer steps, or cognitive fatigue building through an intense interval session.
+
+## Who Benefits?
+
+> _Sweat. Gain. Do._
+
+| Audience                           | Use case                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Athletes & fitness enthusiasts** | Optimal workout planning, overtraining prevention, post-exercise mental recovery tracking                                 |
+| **Professionals & executives**     | Monitor fatigue across long working hours; optimise focus intervals and break timing for sustained productivity           |
+| **Students**                       | Identify when cognitive capacity is falling during study sessions; adjust pacing for better retention                     |
+| **Gamers & esports competitors**   | Gauge mental fatigue during marathon sessions; protect reaction time and decision-making under pressure                   |
+| **Drivers & operators**            | Long-haul truck drivers, pilots, and shift workers get continuous fatigue monitoring to reduce accident risk              |
+| **Medical & clinical**             | Healthcare providers and researchers gain an objective tool for patient fatigue monitoring and fatigue-management studies |
 
 ---
 
@@ -497,9 +484,3 @@ These are enforced by `CODING_PRINCIPLES.md`.
 ## License
 
 MIT
-
----
-
-## Attribution
-
-Miruns is a fork of [bodyPress](https://github.com/the-governor-hq/bodyPress) by [the-governor-hq](https://github.com/the-governor-hq).
