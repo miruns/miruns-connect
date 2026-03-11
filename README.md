@@ -1,16 +1,20 @@
-# Miruns
+# Miruns Connect
 
-[![CI — Download Build APK](https://github.com/the-governor-hq/Miruns-flutter/actions/workflows/ci.yml/badge.svg)](https://github.com/the-governor-hq/Miruns-flutter/actions/workflows/ci.yml)
+
+
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
 ![Version](https://img.shields.io/badge/version-1.0.20-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
 
+
+
 Miruns is a cutting-edge platform at the intersection of **neuroscience, sport science, and active living**. Designed to integrate discreetly into everyday headphones, Miruns captures a comprehensive array of physiological and environmental biodata — without interrupting your training or your day.
 
 The companion Flutter app processes signals from the embedded hardware and device sensors with AI to deliver four core pillars: **real-time fatigue prediction**, **recuperation tracking**, **personalised cognitive health insights**, and a first-person daily narrative — actionable awareness written _by_ your body, _for_ you.
 
+<img width="600" alt="miruns-screenshot-000" src="https://github.com/user-attachments/assets/1c4f0642-5e3a-46a5-89f7-476e697e8d65" />
 ---
 
 ## Why Miruns?
