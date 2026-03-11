@@ -1,14 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// miruns M — drawn as a continuous EEG signal trace.
+// miruns M — drawn as a continuous signal / wave trace.
 //
-// Phase 1 (0→50% of cycle): The signal pen travels along the M path,
+// Phase 1 (0→50% of cycle): The signal pen travels along the wavy M path,
 //   leaving a blue→violet gradient stroke behind it, with a glowing cursor dot.
-// Phase 2 (50→100%): The completed M pulses with a glow bloom and the whole
-//   glyph rotates a few degrees then returns — an artistic breath.
+// Phase 2 (50→100%): The completed M pulses with a glow bloom and a gentle
+//   breathing wobble (±3°).
 // ─────────────────────────────────────────────────────────────────────────────
 
 class MSignalLogo extends StatefulWidget {
@@ -33,21 +35,19 @@ class MSignalLogo extends StatefulWidget {
 }
 
 class _MSignalLogoState extends State<MSignalLogo>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // draw + glow cycle
   late final AnimationController _ctrl;
+  late final Animation<double> _draw; // 0→0.5 : pen travels
+  late final Animation<double> _glow; // 0.5→1 : bloom in/out
 
-  // 0.00 → 0.50 : draw the M from left to right
-  late final Animation<double> _draw;
-
-  // 0.50 → 1.00 : glow bloom (in then out)
-  late final Animation<double> _glow;
-
-  // 0.50 → 1.00 : subtle artistic rotation (0 → +3.5° → 0)
-  late final Animation<double> _rotate;
+  late final AnimationController _spinCtrl;
+  late final Animation<double> _spinAngle; // 0 → 2π, Y-axis
 
   @override
   void initState() {
     super.initState();
+
     _ctrl = AnimationController(vsync: this, duration: widget.cycleDuration);
 
     _draw = CurvedAnimation(
@@ -74,19 +74,22 @@ class _MSignalLogoState extends State<MSignalLogo>
       ],
     ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.50, 1.0)));
 
-    _rotate =
-        TweenSequence<double>([
-          TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.061), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: 0.061, end: 0.0), weight: 1),
-        ]).animate(
-          CurvedAnimation(
-            parent: _ctrl,
-            curve: const Interval(0.50, 1.0, curve: Curves.easeInOut),
-          ),
-        );
+    _spinCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 10000),
+    );
+
+    // Full 360° in the last 15 % of the 10-second window.
+    _spinAngle = Tween<double>(begin: 0.0, end: math.pi * 2.0).animate(
+      CurvedAnimation(
+        parent: _spinCtrl,
+        curve: const Interval(0.85, 1.0, curve: Curves.easeInOut),
+      ),
+    );
 
     if (widget.loop) {
       _ctrl.repeat();
+      _spinCtrl.repeat();
     } else {
       _ctrl.forward();
     }
@@ -95,16 +98,24 @@ class _MSignalLogoState extends State<MSignalLogo>
   @override
   void dispose() {
     _ctrl.dispose();
+    _spinCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _ctrl,
+      animation: Listenable.merge([_ctrl, _spinCtrl]),
       builder: (context, _) {
-        return Transform.rotate(
-          angle: _rotate.value,
+        // True 3-D Y-axis rotation with perspective foreshortening.
+        // At π/2 the shape appears as a near-invisible vertical line then
+        final m = Matrix4.identity()
+          ..setEntry(3, 2, 0.0015) // perspective depth
+          ..rotateY(_spinAngle.value);
+
+        return Transform(
+          transform: m,
+          alignment: Alignment.center,
           child: CustomPaint(
             size: Size(widget.size, widget.size),
             painter: _MSignalPainter(
@@ -136,35 +147,80 @@ class _MSignalPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // ── M path: 5 key points drawn as a single continuous stroke ─────────────
-    //   bottom-left → top-left → center dip → top-right → bottom-right
-    //   The center dip sits at ~65% height to give the M a natural, EEG-like
-    //   V-valley rather than a flat geometric midpoint.
+    // ── Horizontal wavy M ─────────────────────────────────────────────────────
+    //
+    //  The letter flows left → right as one continuous stroke at mid height,
+    //  rising into two rounded humps and dipping through a smooth U-valley —
+    //  matching the brand signal-wave shape.
+    //
+    //  Anchors (x, y):  entry(0, .56) → peak-L(.22, .10) → valley(.50, .72)
+    //                   → peak-R(.78, .10) → exit(1, .56)
+    //
+    //  Bezier tangents are near-horizontal at crests and valley ends so the
+    //  shape reads as a sine wave rather than pointed peaks.
+
     final path = Path()
-      ..moveTo(0.08 * w, 0.88 * h)
-      ..lineTo(0.08 * w, 0.12 * h)
-      ..lineTo(0.50 * w, 0.66 * h)
-      ..lineTo(0.92 * w, 0.12 * h)
-      ..lineTo(0.92 * w, 0.88 * h);
+      ..moveTo(0.00 * w, 0.56 * h)
+      // → left peak
+      ..cubicTo(
+        0.07 * w,
+        0.56 * h, //  cp1: hold horizontal before rising
+        0.10 * w,
+        0.10 * h, //  cp2: fast lift toward crest
+        0.22 * w,
+        0.10 * h, //  anchor: left crest
+      )
+      // left peak → valley
+      ..cubicTo(
+        0.34 * w,
+        0.10 * h, //  cp1: flat exit off crest
+        0.42 * w,
+        0.72 * h, //  cp2: pull into valley
+        0.50 * w,
+        0.72 * h, //  anchor: valley bottom
+      )
+      // valley → right peak
+      ..cubicTo(
+        0.58 * w,
+        0.72 * h, //  cp1: flat exit from valley
+        0.66 * w,
+        0.10 * h, //  cp2: pull up toward crest
+        0.78 * w,
+        0.10 * h, //  anchor: right crest
+      )
+      // right peak → exit
+      ..cubicTo(
+        0.90 * w,
+        0.10 * h, //  cp1: flat exit off crest
+        0.93 * w,
+        0.56 * h, //  cp2: descend to exit height
+        1.00 * w,
+        0.56 * h, //  anchor: outgoing tail
+      );
 
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
     final metric = metrics.first;
-    final drawLen = (metric.length * drawProgress.clamp(0.0, 1.0));
+    final drawLen = metric.length * drawProgress.clamp(0.0, 1.0);
     final drawnPath = metric.extractPath(0, drawLen);
 
-    // ── Glow bloom layer (rendered first, behind main stroke) ────────────────
+    final strokeW = w * 0.086; // bold, proportional to canvas size
+
+    // ── Wide soft glow behind the stroke ─────────────────────────────────────
     if (glowIntensity > 0.01) {
       canvas.drawPath(
         drawnPath,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 7.0
+          ..strokeWidth = strokeW * 2.4
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round
-          ..color = AppTheme.glow.withValues(alpha: 0.30 * glowIntensity)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12 * glowIntensity),
+          ..color = AppTheme.glow.withValues(alpha: 0.28 * glowIntensity)
+          ..maskFilter = MaskFilter.blur(
+            BlurStyle.normal,
+            14.0 * glowIntensity,
+          ),
       );
     }
 
@@ -173,29 +229,30 @@ class _MSignalPainter extends CustomPainter {
       drawnPath,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.4
+        ..strokeWidth = strokeW
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
         ..shader = const LinearGradient(
           colors: [AppTheme.glow, AppTheme.aurora],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // ── Trailing cursor dot — moves with the pen tip during draw phase ────────
-    if (drawProgress > 0.02 && drawProgress < 0.98) {
+    // ── Glowing cursor dot — travels with the pen tip ─────────────────────────
+    if (drawProgress > 0.015 && drawProgress < 0.985) {
       final tangent = metric.getTangentForOffset(
-        (drawLen - 1.0).clamp(0, metric.length),
+        (drawLen - 1.0).clamp(0.0, metric.length),
       );
       if (tangent != null) {
+        final r = strokeW * 0.85;
         canvas.drawCircle(
           tangent.position,
-          5.0,
+          r,
           Paint()
             ..color = AppTheme.glow
             ..style = PaintingStyle.fill
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 1.1),
         );
       }
     }
