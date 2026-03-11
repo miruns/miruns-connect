@@ -81,6 +81,9 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
   int _waveTick = 0;
   final _rng = Random();
 
+  // ── Real-mode signal subscription (page 3) ───────────────────────────────
+  StreamSubscription<SignalSample>? _signalSub;
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +114,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
     _devicesSub?.cancel();
     _simTimer?.cancel();
     _waveTimer?.cancel();
+    _signalSub?.cancel();
     _bleService.stopScan();
     super.dispose();
   }
@@ -204,21 +208,61 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
         });
       });
     } else {
-      // Real device: simulate realistic quality (mostly good, occasionally fair).
-      final rand = Random();
-      _simTimer = Timer.periodic(const Duration(milliseconds: 380), (_) {
+      // Real device: derive quality from actual live signal (RMS per channel).
+      _signalSub?.cancel();
+      final channelData = List.generate(8, (_) => <double>[]);
+      int nextElectrode = 0;
+      const samplesPerElectrode = 25; // ~100 ms window per reveal at 250 Hz
+
+      _signalSub = _bleService.signalStream.listen((sample) {
         if (!mounted) return;
-        setState(() {
-          if (_simStep < 8) {
-            _electrodeQuality[_simStep] = rand.nextInt(5) == 0 ? 2 : 1;
-            _simStep++;
-          } else {
-            _signalCheckDone = true;
-            _simTimer?.cancel();
-          }
-        });
+
+        for (var ch = 0; ch < 8 && ch < sample.channels.length; ch++) {
+          channelData[ch].add(sample.channels[ch]);
+        }
+
+        bool needsRebuild = false;
+
+        // Score electrodes one by one as data accumulates.
+        while (nextElectrode < 8 &&
+            channelData[0].length >=
+                samplesPerElectrode * (nextElectrode + 1)) {
+          _electrodeQuality[nextElectrode] = _classifyChannel(
+            channelData[nextElectrode],
+          );
+          nextElectrode++;
+          needsRebuild = true;
+          if (nextElectrode == 8) _signalCheckDone = true;
+        }
+
+        // Feed waveform at ~25 Hz (every 10th sample).
+        if (channelData[0].length % 10 == 0) {
+          _wavePoints.removeAt(0);
+          _wavePoints.add((sample.channels[0] / 50.0).clamp(-1.0, 1.0));
+          needsRebuild = true;
+        }
+
+        if (needsRebuild) setState(() {});
+
+        if (_signalCheckDone) _signalSub?.cancel();
       });
     }
+  }
+
+  // ── Channel quality heuristic ──────────────────────────────────────────────
+
+  /// Classifies a channel's signal quality from its RMS amplitude (µV).
+  /// Typical EEG: 5–100 µV RMS. Near-zero = disconnected; very high = artifact.
+  int _classifyChannel(List<double> samples) {
+    if (samples.isEmpty) return 0;
+    double sumSq = 0;
+    for (final v in samples) {
+      sumSq += v * v;
+    }
+    final rms = sqrt(sumSq / samples.length);
+    if (rms < 1.0 || rms > 300.0) return 3; // poor — flat or saturated
+    if (rms < 5.0 || rms > 150.0) return 2; // fair
+    return 1; // good
   }
 
   // ── Finish ─────────────────────────────────────────────────────────────────
@@ -591,8 +635,8 @@ class _SignalCheckPage extends StatelessWidget {
             ),
           ),
 
-          // ── Demo waveform preview ────────────────────────────────────────────
-          if (isDemoMode && checkDone) ...[
+          // ── Waveform preview ─────────────────────────────────────────────────
+          if (checkDone) ...[
             const SizedBox(height: 28),
             Container(
               height: 64,
@@ -1110,7 +1154,7 @@ class _WavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WavePainter old) => old.points != points;
+  bool shouldRepaint(_WavePainter old) => true;
 }
 
 // ── Primary action button ─────────────────────────────────────────────────────
