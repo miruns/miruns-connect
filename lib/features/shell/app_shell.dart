@@ -117,6 +117,12 @@ class _MoreDestination {
 /// a permanent spot in the primary navigation.
 const List<_MoreDestination> _moreDestinations = [
   _MoreDestination(
+    icon: Icons.fitness_center_rounded,
+    label: 'Sport',
+    route: '/sport',
+    description: 'Workouts, voice coaching & brain performance',
+  ),
+  _MoreDestination(
     icon: Icons.auto_stories_outlined,
     label: 'Journal',
     route: '/journal',
