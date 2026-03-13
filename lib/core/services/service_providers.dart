@@ -1,6 +1,9 @@
 // ignore_for_file: directives_ordering
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/sport/services/voice_coach_service.dart';
+import '../../features/sport/services/workout_analytics_service.dart';
+import '../../features/sport/services/workout_service.dart';
 import '../models/ai_provider_config.dart';
 import 'ai_config_service.dart';
 import 'ai_service.dart';
@@ -201,6 +204,24 @@ final bodyBlogServiceProvider = Provider<BodyBlogService>((ref) {
 /// `ref.read(bodyDialogueServiceProvider)` to start a chat session.
 final bodyDialogueServiceProvider = Provider<BodyDialogueService>((ref) {
   return BodyDialogueService(ai: ref.read(aiServiceProvider));
+});
+
+// ── Sport / Workout services ────────────────────────────────────────────────
+
+final workoutServiceProvider = Provider<WorkoutService>((ref) {
+  return WorkoutService(db: ref.read(localDbServiceProvider));
+});
+
+final workoutAnalyticsServiceProvider = Provider<WorkoutAnalyticsService>((
+  ref,
+) {
+  return WorkoutAnalyticsService(ai: ref.read(aiServiceProvider));
+});
+
+final voiceCoachServiceProvider = Provider<VoiceCoachService>((ref) {
+  final svc = VoiceCoachService();
+  ref.onDispose(svc.dispose);
+  return svc;
 });
 
 // ── Health permission reactive status ───────────────────────────────────────

@@ -74,6 +74,9 @@ dependencies:
   flutter_dotenv: ^6.0.0
   in_app_update: ^4.2.5
 
+  # Voice coaching
+  flutter_tts: ^4.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
