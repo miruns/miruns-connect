@@ -8,7 +8,7 @@
 ## Critical Bugs
 
 - [ ] **HRV calculation broken** — `active_workout_screen.dart` computes mean RR instead of RMSSD (root mean square of successive differences). The `_computeHrv()` method needs the standard RMSSD formula.
-- [ ] **GPS samples never recorded** — `active_workout_screen.dart` has a comment "Record GPS sample" in `_startGpsTracking()` but no implementation. GPS trajectory is lost; only the final summary distance is saved. No route/map visualization possible.
+- [x] **GPS samples never recorded** — Fixed: `_startGpsTracking()` now appends `WorkoutGpsSample` to the session on each position update (throttled by the 5 m distanceFilter). `GpsMetrics` carries `lat`/`lon` for this purpose.
 - [ ] **EEG data never populated** — `_latestEeg` is declared but never receives data from any BLE source. Brain state UI is always hidden, and post-workout EEG analysis is always null. Need to subscribe to the BLE source stream and map channel data to `WorkoutEegSample`.
 
 ## High Priority

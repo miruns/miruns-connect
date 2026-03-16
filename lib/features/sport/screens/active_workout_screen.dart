@@ -157,8 +157,17 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       if (!mounted) return;
       setState(() => _gpsMetrics = metrics);
 
-      // Record GPS sample
-      // (GPS samples are added less frequently by the distanceFilter)
+      // Record GPS sample (already throttled by the 5 m distanceFilter)
+      final sample = WorkoutGpsSample(
+        timestamp: DateTime.now(),
+        lat: metrics.lat,
+        lon: metrics.lon,
+        altitudeM: metrics.altitudeM,
+        speedKmh: metrics.currentSpeedKmh,
+      );
+      _session = _session.copyWith(
+        gpsSamples: [..._session.gpsSamples, sample],
+      );
     });
   }
 

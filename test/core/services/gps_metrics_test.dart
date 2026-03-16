@@ -1,5 +1,5 @@
-import 'package:miruns_flutter/core/services/gps_metrics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:miruns_flutter/core/services/gps_metrics_service.dart';
 
 void main() {
   group('GpsMetrics', () {
@@ -9,6 +9,8 @@ void main() {
       expect(m.maxSpeedKmh, 0);
       expect(m.averageSpeedKmh, 0);
       expect(m.totalDistanceKm, 0);
+      expect(m.lat, 0);
+      expect(m.lon, 0);
       expect(m.altitudeM, 0);
       expect(m.heading, 0);
       expect(m.cardinalDirection, '-');
@@ -23,6 +25,8 @@ void main() {
         maxSpeedKmh: 12.0,
         averageSpeedKmh: 7.2,
         totalDistanceKm: 3.4,
+        lat: 48.8566,
+        lon: 2.3522,
         altitudeM: 50.0,
         heading: 180.0,
         cardinalDirection: 'S',
@@ -34,6 +38,8 @@ void main() {
       expect(m.maxSpeedKmh, 12.0);
       expect(m.averageSpeedKmh, 7.2);
       expect(m.totalDistanceKm, 3.4);
+      expect(m.lat, 48.8566);
+      expect(m.lon, 2.3522);
       expect(m.altitudeM, 50.0);
       expect(m.heading, 180.0);
       expect(m.cardinalDirection, 'S');
