@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -262,12 +263,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           .map((s) => s.rrMs!)
           .toList();
       if (rrs.length > 1) {
-        final mean = rrs.reduce((a, b) => a + b) / rrs.length;
-        final diffs = <double>[];
+        var sumSqDiffs = 0.0;
         for (var i = 1; i < rrs.length; i++) {
-          diffs.add((rrs[i] - rrs[i - 1]) * (rrs[i] - rrs[i - 1]));
+          final diff = rrs[i] - rrs[i - 1];
+          sumSqDiffs += diff * diff;
         }
-        avgHrvMs = mean;
+        avgHrvMs = sqrt(sumSqDiffs / (rrs.length - 1));
       }
     }
 

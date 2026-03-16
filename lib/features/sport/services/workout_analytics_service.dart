@@ -143,7 +143,7 @@ class WorkoutAnalyticsService {
 
       if (session.avgHrvMs != null) {
         prompt.writeln(
-          'HRV: ${session.avgHrvMs!.toStringAsFixed(1)} ms average',
+          'HRV (RMSSD): ${session.avgHrvMs!.toStringAsFixed(1)} ms',
         );
       }
 
