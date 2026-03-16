@@ -104,6 +104,7 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 | **User Annotations**     | Free-text notes and mood emojis per day, persisted in SQLite alongside the AI-generated content.                                                                                                                                                                                                                                                                                                      |
 | **Onboarding**           | Step-by-step permission flow with per-permission explanations and privacy notes. Every step is skippable.                                                                                                                                                                                                                                                                                             |
 | **BCI Signal Analysis**  | Four visualisation modes on the Live Signal screen: time-domain waveforms, real-time FFT spectral analysis (spectrum / waterfall / EEG bands), neural-state decoding demo (5-state classifier with confidence ring), and signal quality monitoring demo (SNR, impedance, artifact detection). Switchable via a popup menu — works with real BLE hardware and demo mode.                               |
+| **Sport & Workouts**     | Full workout lifecycle: choose activity → real-time training with live HR/GPS/EEG metrics → voice coaching through earphones → post-workout feedback (fatigue, energy, mood) → AI performance analysis → pre-workout readiness predictions. Supports 8 activity types, 3 user levels (beginner/intermediate/advanced), and HR zone tracking via Tanaka formula. See **Sport Workout Flow** below.     |
 | **Dark & Light Themes**  | Material 3 theming with system-mode detection.                                                                                                                                                                                                                                                                                                                                                        |
 
 ---
@@ -138,6 +139,7 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 | Calendar         | `device_calendar` ^4.3.2              | CalDAV read                                                             |
 | HTTP             | `http` ^1.2.2                         | Ambient-scan & AI API calls                                             |
 | Barcode scanner  | `mobile_scanner` ^7.0.1               | Camera-based barcode reading (EAN-13, UPC-A, etc.)                      |
+| Voice coaching   | `flutter_tts` ^4.2.0                  | Text-to-speech for audio workout prompts through earphones              |
 | Nutrition API    | Open Food Facts API v2                | Product lookup by barcode — no API key needed                           |
 | Persistence      | `sqflite` ^2.3.3 + `path`             | Local SQLite (entries, captures, settings) — schema v11                 |
 | Background       | `workmanager` ^0.9.0                  | Periodic background captures                                            |
@@ -264,6 +266,11 @@ lib/
 │   ├── patterns/             # AI-derived trends & insights
 │   ├── capture/              # Manual capture with data-source toggles
 │   ├── sources/              # Signal source browser + live signal monitor
+│   ├── sport/                # Sport & workout feature
+│   │   ├── models/           #   SportProfile, WorkoutSession, WorkoutFeedback, WorkoutAnalysis
+│   │   ├── services/         #   WorkoutService, WorkoutAnalyticsService, VoiceCoachService
+│   │   ├── screens/          #   SportHome, ActiveWorkout, Feedback, History, ProfileSetup
+│   │   └── widgets/          #   HrZoneRing, MetricTile, BrainStateIndicator, InsightCard
 │   ├── shell/                # AppShell (3-tab nav) + DebugScreen
 │   ├── environment/          # Detailed environment view
 │   ├── shared/               # Reusable widgets
@@ -283,6 +290,8 @@ lib/
 | `CaptureAiMetadata` | AI-derived per-capture metadata: summary, themes, energy level, mood assessment, tags, notable signals, `nutritionContext`. Stored as JSON in the `captures` table.                                                                |
 | `SignalSession`     | Recorded multi-channel data from any `BleSourceProvider`: source id/name, channel descriptors, sample rate, timestamped samples. Persisted as JSON blob in `CaptureEntry`.                                                         |
 | `NutritionLog`      | Scanned food product: barcode, product name, brand, Nutri-Score, NOVA group, `NutritionFacts` per 100 g / per serving. Stored inline on `CaptureEntry` and in the `nutrition_logs` table.                                          |
+| `SportProfile`      | User fitness profile: level (beginner/intermediate/advanced), age, weight, height, resting/max HR, preferred workout types, voice coach & EEG toggles. HR zones computed via Tanaka formula.                                       |
+| `WorkoutSession`    | Full workout record: start/end time, workout type, phase progression, HR/EEG/GPS samples, AI insights, user feedback (fatigue/energy/mood/RPE), AI analysis (performance score, recovery advice). Stored as JSON in settings KV.   |
 | `JournalAiResult`   | Parsed AI output: headline, summary, full body, mood, mood emoji, tags.                                                                                                                                                            |
 
 ### Provider Architecture
@@ -339,6 +348,46 @@ default                                           →  calm
 
 Will be replaced by a classifier or LLM prompt once sufficient labelled data exists.
 
+### Sport Workout Flow
+
+The Sport module implements a complete **Start → Train → Finish → Feedback → Analyze → Predict** cycle:
+
+```
+Sport Home                          ← pick workout type, see AI prediction
+  │
+  ├─ START ─────────────────────────── Active Workout Screen
+  │   ├─ Live HR streaming (BLE)       Real-time heart rate + zone ring
+  │   ├─ GPS tracking                  Speed, distance, altitude, pace
+  │   ├─ EEG brain state  (*)         Attention, relaxation, cognitive load, fatigue
+  │   ├─ Voice Coach (TTS)             Audio prompts through earphones (level-adaptive)
+  │   ├─ AI Insights (every 2 min)     Contextual coaching: zone alerts, pacing, encouragement
+  │   └─ Phase progression             Warmup → Active → Cooldown → Finish
+  │
+  ├─ FINISH ────────────────────────── Workout Feedback Screen
+  │   ├─ Session summary               Duration, distance, avg/max HR, calories
+  │   ├─ Fatigue slider (1–10)         Perceived exertion
+  │   ├─ Energy slider (1–10)          Post-workout energy level
+  │   ├─ Mood emoji                    Quick emotional state
+  │   └─ Submit → AI Analysis          Performance score, fatigue assessment,
+  │                                    recovery recommendation, brain insight
+  │
+  ├─ PREDICT ───────────────────────── Pre-Workout Prediction (after 3+ sessions)
+  │   └─ AI readiness assessment       Based on recent feedback, HR trends, recovery
+  │
+  └─ HISTORY ───────────────────────── Workout History Screen
+      └─ Scrollable list               Past sessions with scores, stats, analysis
+```
+
+(\*) EEG brain state requires a connected Miruns headphone or compatible BLE EEG device.
+
+**User levels** adapt the entire experience:
+
+| Level           | Voice frequency | Coaching style                    | Analytics depth        |
+| --------------- | --------------- | --------------------------------- | ---------------------- |
+| 🌱 Beginner     | Every 45 s      | Gentle guidance & encouragement   | Simple summaries       |
+| 🔥 Intermediate | Every 30 s      | Balanced feedback & targets       | Zone analysis          |
+| ⚡ Advanced     | Every 20 s      | Deep analytics & performance push | Full EEG + HR + trends |
+
 ### Bring Your Own AI
 
 By default Miruns uses its built-in cloud gateway (`ai.governor-hq.com`) — no API key needed. Users can switch to any OpenAI-compatible provider from **More → AI Services**:
@@ -379,6 +428,11 @@ All providers speak the same **OpenAI chat completions** protocol, so no adapter
 | 8   | **Debug**          | `/debug`             | Raw sensor readouts — health metrics, GPS, ambient data, calendar events.                                                                                                                                                                                                                                                        |
 | 9   | **Source Browser** | `/sources`           | Browse all registered BLE signal sources (ADS1299, community boards). Each card shows channel count, sample rate, and hardware name.                                                                                                                                                                                             |
 | 10  | **Live Signal**    | `/sources/:sourceId` | Full-screen multi-channel signal monitor: scan → pick device → connect → stream. Four view modes via popup menu — **Waveform** (time-domain), **Spectral** (FFT spectrum/waterfall/bands), **Decoding** (demo neural state classifier), **Monitor** (demo signal quality dashboard). Channel toggle chips, solo mode, recording. |
+| 11  | **Sport Home**     | `/sport`             | Workout quick-start with type selector (8 activities), pulsing START button, AI pre-workout prediction (after 3+ sessions), recent workout cards, profile access. Entry point via **More → Sport**.                                                                                                                              |
+| 12  | **Active Workout** | `/sport/active`      | Full-screen real-time training: elapsed timer, HR zone ring, live metrics grid (distance, pace, speed, altitude), brain state indicators (EEG), AI coaching insights (every 2 min), voice prompts via TTS. Phase progression: warmup → active → cooldown → finish. Pause/resume controls.                                        |
+| 13  | **Feedback**       | `/sport/feedback`    | Post-workout: session summary stats, fatigue/energy sliders (1–10), mood emoji picker, optional notes. Submit triggers AI analysis showing performance score, fatigue assessment, recovery recommendation, highlights, and improvements.                                                                                         |
+| 14  | **History**        | `/sport/history`     | Scrollable list of past workouts with type emoji, date, duration, distance, avg HR, calories, performance score, feedback summary, and AI analysis excerpt.                                                                                                                                                                      |
+| 15  | **Sport Profile**  | `/sport/profile`     | User fitness profile setup: level selector (beginner/intermediate/advanced), age/weight/height, resting/max HR, preferred workout types, voice coach toggle, EEG insights toggle.                                                                                                                                                |
 
 ---
 
@@ -502,6 +556,23 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [x] BCI decoding demo — 5-state neural classifier (Focus/Relax/Motor-L/Motor-R/Meditate) with confidence ring and timeline
 - [x] BCI monitoring demo — per-channel SNR, impedance, artifact detection, data-readiness gauge
 - [x] 4-mode visualisation system (`SignalViewMode`) with animated popup menu switcher
+- [x] Sport & Workout module — full lifecycle: profile setup → quick-start → real-time training (HR/GPS/EEG) → voice coaching (TTS) → post-workout feedback → AI performance analysis → pre-workout prediction
+- [x] 8 workout types (running, cycling, walking, HIIT, strength, yoga, swimming, custom) with emoji-first UI
+- [x] 3 user levels (beginner/intermediate/advanced) driving coaching intensity, voice frequency, and analytics depth
+- [x] HR zone tracking with Tanaka formula estimation and animated zone ring visualization
+- [x] AI real-time coaching insights during workouts (every 2 min) + post-workout performance scoring + recovery recommendations
+- [x] Voice Coach service (`flutter_tts`) — audio prompts through earphones with level-adaptive cooldowns and queue management
+
+### Next — Sport & Brain Performance
+
+- [ ] Wire EEG data from BLE source into active workout (brain state indicators currently stubbed)
+- [ ] Fix HRV calculation in active workout (currently returns mean RR instead of RMSSD)
+- [ ] Record GPS samples during workout for route/trajectory visualization
+- [ ] Pause/resume should halt data collection streams (HR, GPS, AI generation)
+- [ ] Add timeouts to AI analysis calls (prevent indefinite hangs)
+- [ ] Workout detail screen (tap history card → full session review with charts)
+- [ ] Calorie estimation improvements (currently uses basic MET formula)
+- [ ] Workout-to-capture linking (associate workouts with EEG capture sessions)
 
 ### Next — BLE Peripherals
 

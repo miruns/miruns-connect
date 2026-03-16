@@ -14,6 +14,13 @@ import '../../features/shell/app_shell.dart';
 import '../../features/shell/debug_screen.dart';
 import '../../features/sources/screens/live_signal_screen.dart';
 import '../../features/sources/screens/source_browser_screen.dart';
+import '../../features/sport/models/sport_profile.dart';
+import '../../features/sport/models/workout_session.dart';
+import '../../features/sport/screens/active_workout_screen.dart';
+import '../../features/sport/screens/sport_home_screen.dart';
+import '../../features/sport/screens/sport_profile_screen.dart';
+import '../../features/sport/screens/workout_feedback_screen.dart';
+import '../../features/sport/screens/workout_history_screen.dart';
 
 class AppRouter {
   static late final GoRouter router;
@@ -194,6 +201,118 @@ class AppRouter {
                       position:
                           Tween<Offset>(
                             begin: const Offset(0, 1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+
+        // ── Sport / Workout ─────────────────────────────────────────────
+        GoRoute(
+          path: '/sport',
+          name: 'sport',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SportHomeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+        GoRoute(
+          path: '/sport/active',
+          name: 'sport-active',
+          pageBuilder: (context, state) {
+            final workoutType =
+                state.extra as WorkoutType? ?? WorkoutType.running;
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: ActiveWorkoutScreen(workoutType: workoutType),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) =>
+                      FadeTransition(opacity: animation, child: child),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/sport/feedback',
+          name: 'sport-feedback',
+          pageBuilder: (context, state) {
+            final session = state.extra as WorkoutSession;
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: WorkoutFeedbackScreen(session: session),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) =>
+                      SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                        child: child,
+                      ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/sport/history',
+          name: 'sport-history',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const WorkoutHistoryScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+        GoRoute(
+          path: '/sport/profile',
+          name: 'sport-profile',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SportProfileScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
                             end: Offset.zero,
                           ).animate(
                             CurvedAnimation(

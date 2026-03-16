@@ -10,6 +10,8 @@ class GpsMetrics {
   final double maxSpeedKmh;
   final double averageSpeedKmh;
   final double totalDistanceKm;
+  final double lat;
+  final double lon;
   final double altitudeM;
   final double heading;
   final String cardinalDirection;
@@ -22,6 +24,8 @@ class GpsMetrics {
     required this.maxSpeedKmh,
     required this.averageSpeedKmh,
     required this.totalDistanceKm,
+    required this.lat,
+    required this.lon,
     required this.altitudeM,
     required this.heading,
     required this.cardinalDirection,
@@ -35,6 +39,8 @@ class GpsMetrics {
     maxSpeedKmh: 0,
     averageSpeedKmh: 0,
     totalDistanceKm: 0,
+    lat: 0,
+    lon: 0,
     altitudeM: 0,
     heading: 0,
     cardinalDirection: '-',
@@ -114,6 +120,8 @@ class GpsMetricsService {
                 maxSpeedKmh: _maxSpeedKmh,
                 averageSpeedKmh: avgSpeedKmh,
                 totalDistanceKm: _totalDistanceM / 1000,
+                lat: position.latitude,
+                lon: position.longitude,
                 altitudeM: position.altitude,
                 heading: position.heading,
                 cardinalDirection: cardinal,
@@ -147,6 +155,8 @@ class GpsMetricsService {
         maxSpeedKmh: speedKmh,
         averageSpeedKmh: 0,
         totalDistanceKm: 0,
+        lat: position.latitude,
+        lon: position.longitude,
         altitudeM: position.altitude,
         heading: position.heading,
         cardinalDirection: _headingToCardinal(position.heading),

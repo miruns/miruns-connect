@@ -117,6 +117,12 @@ class _MoreDestination {
 /// a permanent spot in the primary navigation.
 const List<_MoreDestination> _moreDestinations = [
   _MoreDestination(
+    icon: Icons.fitness_center_rounded,
+    label: 'Sport',
+    route: '/sport',
+    description: 'Workouts, voice coaching & brain performance',
+  ),
+  _MoreDestination(
     icon: Icons.auto_stories_outlined,
     label: 'Journal',
     route: '/journal',
@@ -647,25 +653,6 @@ Widget _buildSensorBadgeDot(WidgetRef ref) {
   final color = !available ? AppTheme.fog : AppTheme.amber;
 
   return _PulseDot(color: color, size: 8, needsAttention: !granted);
-}
-
-/// Badge overlay for the More tab in the bottom nav — shows a pulsating dot
-/// when sensors need attention. Hidden when everything is healthy.
-class _SensorAttentionBadge extends ConsumerWidget {
-  const _SensorAttentionBadge();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final available = ref.watch(healthAvailableProvider).valueOrNull;
-    final granted = ref.watch(healthPermissionStatusProvider).valueOrNull;
-
-    if (available == null || granted == null) return const SizedBox.shrink();
-    if (available && granted) return const SizedBox.shrink();
-
-    final color = !available ? AppTheme.fog : AppTheme.amber;
-
-    return _PulseDot(color: color, size: 7, needsAttention: !granted);
-  }
 }
 
 /// Inline guidance banner shown at the top of the More sheet when sensors are
