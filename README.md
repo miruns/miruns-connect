@@ -246,9 +246,6 @@ lib/
 │   │   ├── sources/          #   Community signal source implementations
 │   │   │   ├── ads1299_source  # ADS1299 8-Ch EEG (EAREEG boards)
 │   │   │   └── source_registry_init  # One-line registration entry point
-│   │   ├── workout_service       # Sport profile + session CRUD (settings KV store)
-│   │   ├── workout_analytics_svc # AI real-time coaching + post-workout analysis + predictions
-│   │   ├── voice_coach_service   # TTS voice prompts (flutter_tts) through earphones
 │   │   ├── location_service  #   Geolocator wrapper
 │   │   ├── ambient_scan_service  # Environment API
 │   │   ├── gps_metrics_service   # Real-time GPS metrics
