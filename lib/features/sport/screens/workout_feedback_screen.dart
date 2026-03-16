@@ -49,7 +49,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
   @override
   void initState() {
     super.initState();
-    _workoutService = WorkoutService(db: ref.read(localDbServiceProvider));
+    _workoutService = ref.read(workoutServiceProvider);
   }
 
   @override
@@ -130,8 +130,10 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
               Center(
                 child: Column(
                   children: [
-                    Text(session.workoutType.emoji,
-                        style: const TextStyle(fontSize: 48)),
+                    Text(
+                      session.workoutType.emoji,
+                      style: const TextStyle(fontSize: 48),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       _submitted ? 'Analyzing...' : 'Great Work!',
@@ -144,10 +146,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                     const SizedBox(height: 4),
                     Text(
                       '${session.workoutType.label} · ${duration.inMinutes} min',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.fog,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: AppTheme.fog),
                     ),
                   ],
                 ),
@@ -253,8 +252,11 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         (emoji) => GestureDetector(
                           onTap: () {
                             HapticFeedback.selectionClick();
-                            setState(() => _moodEmoji =
-                                _moodEmoji == emoji ? null : emoji);
+                            setState(
+                              () => _moodEmoji = _moodEmoji == emoji
+                                  ? null
+                                  : emoji,
+                            );
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
@@ -272,8 +274,10 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                               ),
                             ),
                             alignment: Alignment.center,
-                            child:
-                                Text(emoji, style: const TextStyle(fontSize: 20)),
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 20),
+                            ),
                           ),
                         ),
                       )
@@ -287,22 +291,27 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                   controller: _noteController,
                   maxLines: 2,
                   style: const TextStyle(
-                      color: AppTheme.moonbeam, fontSize: 14),
+                    color: AppTheme.moonbeam,
+                    fontSize: 14,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Any notes about this workout? (optional)',
                     hintStyle: TextStyle(
-                        color: AppTheme.fog.withValues(alpha: 0.6)),
+                      color: AppTheme.fog.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: AppTheme.tidePool,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                          color: AppTheme.shimmer.withValues(alpha: 0.3)),
+                        color: AppTheme.shimmer.withValues(alpha: 0.3),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                          color: AppTheme.shimmer.withValues(alpha: 0.3)),
+                        color: AppTheme.shimmer.withValues(alpha: 0.3),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -357,10 +366,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         SizedBox(height: 12),
                         Text(
                           'AI is analyzing your workout...',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.fog,
-                          ),
+                          style: TextStyle(fontSize: 14, color: AppTheme.fog),
                         ),
                       ],
                     ),
@@ -381,10 +387,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         ),
                         const Text(
                           'Performance Score',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.fog,
-                          ),
+                          style: TextStyle(fontSize: 12, color: AppTheme.fog),
                         ),
                       ],
                     ),
@@ -447,15 +450,16 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('✨ ',
-                                style: TextStyle(fontSize: 14)),
+                            const Text('✨ ', style: TextStyle(fontSize: 14)),
                             Expanded(
-                              child: Text(h,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.moonbeam,
-                                    height: 1.4,
-                                  )),
+                              child: Text(
+                                h,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.moonbeam,
+                                  height: 1.4,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -480,15 +484,16 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('🎯 ',
-                                style: TextStyle(fontSize: 14)),
+                            const Text('🎯 ', style: TextStyle(fontSize: 14)),
                             Expanded(
-                              child: Text(i,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.moonbeam,
-                                    height: 1.4,
-                                  )),
+                              child: Text(
+                                i,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.moonbeam,
+                                  height: 1.4,
+                                ),
+                              ),
                             ),
                           ],
                         ),
