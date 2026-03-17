@@ -13,7 +13,6 @@ import '../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
-import '../widgets/sport_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sport Home — primary landing screen
@@ -355,365 +354,548 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: AppTheme.midnight,
-        body: CustomScrollView(
-          slivers: [
-            // ── Top bar ────────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(20, top + 16, 20, 0),
-                child: Row(
-                  children: [
-                    Text(
-                      'miruns',
-                      style: AppTheme.geist(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.moonbeam,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Profile button
-                    GestureDetector(
-                      onTap: _openProfile,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppTheme.tidePool,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.shimmer, width: 1),
+        backgroundColor: AppTheme.void_,
+        body: Stack(
+          children: [
+            // ── Background radial glow ──────────────────────────────────
+            Positioned(
+              top: -80,
+              left: 0,
+              right: 0,
+              height: 400,
+              child: AnimatedBuilder(
+                animation: _pulseAnim,
+                builder: (context, _) => DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.3),
+                      radius: 1.2,
+                      colors: [
+                        AppTheme.cyan.withValues(
+                          alpha: 0.06 + _pulseAnim.value * 0.03,
                         ),
-                        child: const Icon(
-                          Icons.person_outline_rounded,
-                          size: 18,
-                          color: AppTheme.fog,
-                        ),
-                      ),
+                        AppTheme.void_.withValues(alpha: 0),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
 
-            // ── Sensor status panel ────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: _SensorStatusPanel(
-                  eegState: _bleState,
-                  eegDeviceName: _isConnected
-                      ? (ref
-                                .read(bleSourceServiceProvider)
-                                .connectedDevice
-                                ?.platformName ??
-                            _pairedDeviceName)
-                      : _pairedDeviceName,
-                  isDemoMode: _isDemoMode,
-                  onEegTap: _bleState == BleSourceState.idle && !_isDemoMode
-                      ? _tryAutoConnect
-                      : _openHeadsetScanner,
-                  hrState: _hrState,
-                  onHrTap: _scanHr,
-                  gpsStatus: _gpsStatus,
-                  onGpsTap: _enableGps,
-                  healthStatus: _healthStatus,
-                  onHealthTap: _enableHealth,
-                ),
-              ),
-            ),
-
-            // ── Activity selector ──────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Activity',
-                      style: AppTheme.geist(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.fog,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    WorkoutTypeSelector(
-                      selected: _selectedType,
-                      onSelect: (type) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _selectedType = type);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Start button ───────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 32,
-                ),
-                child: Center(
-                  child: GestureDetector(
-                    onTap: _startWorkout,
-                    child: AnimatedBuilder(
-                      animation: _pulseAnim,
-                      builder: (context, child) {
-                        final glow = _pulseAnim.value * 0.15;
-                        return Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(9999),
-                            color: AppTheme.cyan.withValues(alpha: 0.12 + glow),
-                            border: Border.all(
-                              color: AppTheme.cyan.withValues(alpha: 0.5),
-                              width: 1.5,
+            // ── Scrollable content ──────────────────────────────────────
+            CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ── Top bar ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(24, top + 20, 24, 0),
+                    child: Row(
+                      children: [
+                        // Brand
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'miruns',
+                              style: AppTheme.geist(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.moonbeam,
+                                letterSpacing: -0.5,
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.cyan.withValues(
-                                  alpha: 0.08 + glow * 0.4,
-                                ),
-                                blurRadius: 24,
-                                spreadRadius: 0,
+                            const SizedBox(height: 2),
+                            Text(
+                              'sport',
+                              style: AppTheme.geist(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.fog,
+                                letterSpacing: 2.0,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _selectedType.icon,
-                                size: 22,
-                                color: AppTheme.cyan,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Start',
-                                style: AppTheme.geist(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.moonbeam,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // ── AI Prediction (CTA-driven) ─────────────────────────────────
-            if (_insightAvailable || _loadingPrediction || _prediction != null)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  child: _prediction != null
-                      // Show the loaded insight
-                      ? Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.tidePool,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppTheme.shimmer),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.cyan,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Pre-workout insight',
-                                    style: AppTheme.geist(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppTheme.cyan,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                _prediction!,
-                                style: AppTheme.geist(
-                                  fontSize: 13,
-                                  color: AppTheme.moonbeam,
-                                  height: 1.55,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      // Show CTA button or loading
-                      : GestureDetector(
-                          onTap: _loadingPrediction ? null : _requestInsight,
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        // History
+                        GestureDetector(
+                          onTap: _openHistory,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: AppTheme.tidePool,
-                              borderRadius: BorderRadius.circular(16),
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppTheme.cyan.withValues(alpha: 0.25),
+                                color: AppTheme.shimmer.withValues(alpha: 0.5),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.auto_awesome_rounded,
-                                  size: 18,
-                                  color: _loadingPrediction
-                                      ? AppTheme.fog
-                                      : AppTheme.cyan,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _loadingPrediction
-                                        ? 'Generating insight…'
-                                        : 'Get pre-workout insight',
-                                    style: AppTheme.geist(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: _loadingPrediction
-                                          ? AppTheme.fog
-                                          : AppTheme.cyan,
-                                    ),
-                                  ),
-                                ),
-                                if (_loadingPrediction)
-                                  const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 1.5,
-                                      color: AppTheme.cyan,
-                                    ),
-                                  )
-                                else
-                                  const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    size: 13,
-                                    color: AppTheme.cyan,
-                                  ),
-                              ],
+                            child: const Icon(
+                              Icons.bar_chart_rounded,
+                              size: 18,
+                              color: AppTheme.fog,
                             ),
                           ),
                         ),
-                ),
-              ),
-
-            // ── Recent Sessions ────────────────────────────────────────────
-            if (_recentWorkouts != null && _recentWorkouts!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Recent',
-                            style: AppTheme.geist(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                        const SizedBox(width: 10),
+                        // Profile
+                        GestureDetector(
+                          onTap: _openProfile,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.tidePool,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.shimmer.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.person_outline_rounded,
+                              size: 18,
                               color: AppTheme.fog,
-                              letterSpacing: 0.5,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: _openHistory,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Sensor status pills (compact horizontal row) ───────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: _SensorPillRow(
+                      eegState: _bleState,
+                      eegDeviceName: _isConnected
+                          ? (ref
+                                    .read(bleSourceServiceProvider)
+                                    .connectedDevice
+                                    ?.platformName ??
+                                _pairedDeviceName)
+                          : _pairedDeviceName,
+                      isDemoMode: _isDemoMode,
+                      onEegTap: _bleState == BleSourceState.idle && !_isDemoMode
+                          ? _tryAutoConnect
+                          : _openHeadsetScanner,
+                      hrState: _hrState,
+                      onHrTap: _scanHr,
+                      gpsStatus: _gpsStatus,
+                      onGpsTap: _enableGps,
+                      healthStatus: _healthStatus,
+                      onHealthTap: _enableHealth,
+                    ),
+                  ),
+                ),
+
+                // ── Hero: selected activity ─────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          // Large icon with glow
+                          AnimatedBuilder(
+                            animation: _pulseAnim,
+                            builder: (context, _) {
+                              final glow = _pulseAnim.value * 0.12;
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppTheme.cyan.withValues(
+                                    alpha: 0.06 + glow,
+                                  ),
+                                  border: Border.all(
+                                    color: AppTheme.cyan.withValues(
+                                      alpha: 0.15 + glow,
+                                    ),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.cyan.withValues(
+                                        alpha: 0.08 + glow * 0.5,
+                                      ),
+                                      blurRadius: 40,
+                                      spreadRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  child: Icon(
+                                    _selectedType.icon,
+                                    key: ValueKey(_selectedType),
+                                    size: 42,
+                                    color: AppTheme.cyan,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          // Activity name — big and bold
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
                             child: Text(
-                              'View all',
+                              _selectedType.label,
+                              key: ValueKey(_selectedType.label),
                               style: AppTheme.geist(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.cyan,
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.moonbeam,
+                                letterSpacing: -1.0,
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Select activity below',
+                            style: AppTheme.geist(
+                              fontSize: 13,
+                              color: AppTheme.fog,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      ..._recentWorkouts!
-                          .take(3)
-                          .map((w) => _RecentWorkoutCard(session: w)),
-                    ],
+                    ),
                   ),
                 ),
-              ),
 
-            // ── Empty state ────────────────────────────────────────────────
-            if (_recentWorkouts != null && _recentWorkouts!.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(40),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.directions_run_outlined,
-                        size: 48,
-                        color: AppTheme.shimmer,
+                // ── Activity type selector (horizontal scroll) ─────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 28),
+                    child: SizedBox(
+                      height: 88,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: WorkoutType.values.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final type = WorkoutType.values[index];
+                          final isSelected = type == _selectedType;
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _selectedType = type);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOut,
+                              width: 76,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppTheme.cyan.withValues(alpha: 0.10)
+                                    : AppTheme.tidePool.withValues(alpha: 0.6),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppTheme.cyan.withValues(alpha: 0.6)
+                                      : AppTheme.shimmer.withValues(alpha: 0.3),
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: AppTheme.cyan.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                          blurRadius: 16,
+                                          spreadRadius: 0,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    type.icon,
+                                    size: 26,
+                                    color: isSelected
+                                        ? AppTheme.cyan
+                                        : AppTheme.fog,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    type.label,
+                                    style: AppTheme.geist(
+                                      fontSize: 10,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                      color: isSelected
+                                          ? AppTheme.cyan
+                                          : AppTheme.fog,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Ready when you are',
-                        style: AppTheme.geist(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.moonbeam,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Pick your activity and tap Start.\nFocus on your sport — miruns handles the rest.',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.geist(
-                          fontSize: 13,
-                          color: AppTheme.fog,
-                          height: 1.55,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
 
-            // Bottom safe area padding
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                // ── AI Prediction (CTA-driven) ─────────────────────────
+                if (_insightAvailable ||
+                    _loadingPrediction ||
+                    _prediction != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                      child: _prediction != null
+                          ? Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    AppTheme.cyan.withValues(alpha: 0.06),
+                                    AppTheme.tidePool,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppTheme.cyan.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.cyan.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.auto_awesome_rounded,
+                                              size: 12,
+                                              color: AppTheme.cyan,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'AI INSIGHT',
+                                              style: AppTheme.geist(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppTheme.cyan,
+                                                letterSpacing: 1.0,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _prediction!,
+                                    style: AppTheme.geist(
+                                      fontSize: 13,
+                                      color: AppTheme.moonbeam,
+                                      height: 1.6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : GestureDetector(
+                              onTap: _loadingPrediction
+                                  ? null
+                                  : _requestInsight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.tidePool,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppTheme.cyan.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome_rounded,
+                                      size: 18,
+                                      color: _loadingPrediction
+                                          ? AppTheme.fog
+                                          : AppTheme.cyan,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _loadingPrediction
+                                            ? 'Generating insight…'
+                                            : 'Get pre-workout insight',
+                                        style: AppTheme.geist(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: _loadingPrediction
+                                              ? AppTheme.fog
+                                              : AppTheme.cyan,
+                                        ),
+                                      ),
+                                    ),
+                                    if (_loadingPrediction)
+                                      const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.5,
+                                          color: AppTheme.cyan,
+                                        ),
+                                      )
+                                    else
+                                      const Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        size: 13,
+                                        color: AppTheme.cyan,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+
+                // ── Recent Sessions ─────────────────────────────────────
+                if (_recentWorkouts != null && _recentWorkouts!.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'RECENT',
+                                style: AppTheme.geist(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.fog,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _openHistory,
+                                child: Text(
+                                  'View all',
+                                  style: AppTheme.geist(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.cyan,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          ..._recentWorkouts!
+                              .take(3)
+                              .map((w) => _RecentWorkoutCard(session: w)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // ── Empty state ─────────────────────────────────────────
+                if (_recentWorkouts != null && _recentWorkouts!.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.shimmer.withValues(alpha: 0.2),
+                            ),
+                            child: const Icon(
+                              Icons.directions_run_outlined,
+                              size: 32,
+                              color: AppTheme.fog,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Ready when you are',
+                            style: AppTheme.geist(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.moonbeam,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pick your activity and tap Start.\nmiruns handles the rest.',
+                            textAlign: TextAlign.center,
+                            style: AppTheme.geist(
+                              fontSize: 13,
+                              color: AppTheme.fog,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Bottom padding for fixed bar
+                SliverToBoxAdapter(child: SizedBox(height: 140 + bottom)),
+              ],
+            ),
+
+            // ── Fixed bottom Start bar ──────────────────────────────────
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _FixedStartBar(
+                selectedType: _selectedType,
+                pulseAnim: _pulseAnim,
+                onStart: _startWorkout,
+                bottomPadding: bottom,
+              ),
+            ),
           ],
         ),
       ),
@@ -728,10 +910,97 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 enum _SensorStatus { unknown, ready, noPermission, off, unavailable }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sensor status panel — shows all sensors in a compact grid
+// Fixed bottom Start bar — always visible, glassmorphism effect
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _SensorStatusPanel extends StatelessWidget {
+class _FixedStartBar extends StatelessWidget {
+  final WorkoutType selectedType;
+  final Animation<double> pulseAnim;
+  final VoidCallback onStart;
+  final double bottomPadding;
+
+  const _FixedStartBar({
+    required this.selectedType,
+    required this.pulseAnim,
+    required this.onStart,
+    required this.bottomPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.void_.withValues(alpha: 0),
+            AppTheme.void_.withValues(alpha: 0.85),
+            AppTheme.void_,
+          ],
+          stops: const [0.0, 0.4, 1.0],
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, bottomPadding + 20),
+      child: GestureDetector(
+        onTap: onStart,
+        child: AnimatedBuilder(
+          animation: pulseAnim,
+          builder: (context, _) {
+            final glow = pulseAnim.value * 0.1;
+            return Container(
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.cyan,
+                    AppTheme.cyan.withValues(alpha: 0.85),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.cyan.withValues(alpha: 0.25 + glow),
+                    blurRadius: 32,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: AppTheme.cyan.withValues(alpha: 0.08 + glow * 0.5),
+                    blurRadius: 64,
+                    spreadRadius: 8,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(selectedType.icon, size: 22, color: AppTheme.void_),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Start ${selectedType.label}',
+                    style: AppTheme.geist(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.void_,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compact sensor pill row — minimal horizontal indicators
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SensorPillRow extends StatelessWidget {
   final BleSourceState eegState;
   final String? eegDeviceName;
   final bool isDemoMode;
@@ -743,7 +1012,7 @@ class _SensorStatusPanel extends StatelessWidget {
   final _SensorStatus healthStatus;
   final VoidCallback onHealthTap;
 
-  const _SensorStatusPanel({
+  const _SensorPillRow({
     required this.eegState,
     this.eegDeviceName,
     required this.isDemoMode,
@@ -758,297 +1027,167 @@ class _SensorStatusPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.shimmer),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          Text(
-            'Sensors',
-            style: AppTheme.geist(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.fog,
-              letterSpacing: 0.5,
-            ),
+          _buildPill(
+            icon: Icons.headphones_rounded,
+            label: 'EEG',
+            state: _eegPillState(),
+            onTap: onEegTap,
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _buildEegTile()),
-              const SizedBox(width: 8),
-              Expanded(child: _buildHrTile()),
-            ],
+          const SizedBox(width: 8),
+          _buildPill(
+            icon: Icons.favorite_rounded,
+            label: 'HR',
+            state: _hrPillState(),
+            onTap: onHrTap,
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _buildGpsTile()),
-              const SizedBox(width: 8),
-              Expanded(child: _buildHealthTile()),
-            ],
+          const SizedBox(width: 8),
+          _buildPill(
+            icon: Icons.gps_fixed_rounded,
+            label: 'GPS',
+            state: _gpsPillState(),
+            onTap: onGpsTap,
+          ),
+          const SizedBox(width: 8),
+          _buildPill(
+            icon: Icons.monitor_heart_outlined,
+            label: 'Health',
+            state: _healthPillState(),
+            onTap: onHealthTap,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEegTile() {
-    final bool isActive = eegState == BleSourceState.streaming;
-    final bool isBusy =
-        eegState == BleSourceState.scanning ||
-        eegState == BleSourceState.connecting;
-    final bool isError = eegState == BleSourceState.error;
-
-    String status;
-    Color color;
-    String action;
-    if (isActive) {
-      status = eegDeviceName ?? 'Connected';
-      color = AppTheme.seaGreen;
-      action = '';
-    } else if (isDemoMode) {
-      status = 'Demo mode';
-      color = AppTheme.amber;
-      action = '';
-    } else if (isBusy) {
-      status = eegState == BleSourceState.scanning
-          ? 'Scanning…'
-          : 'Connecting…';
-      color = AppTheme.cyan;
-      action = '';
-    } else if (isError) {
-      status = 'Error';
-      color = AppTheme.crimson;
-      action = 'Retry';
-    } else {
-      status = eegDeviceName != null ? 'Disconnected' : 'Not paired';
-      color = AppTheme.fog;
-      action = eegDeviceName != null ? 'Reconnect' : 'Scan';
-    }
-
-    return _SensorTile(
-      icon: Icons.headphones_rounded,
-      label: 'EEG',
-      status: status,
-      action: action,
-      color: color,
-      isBusy: isBusy,
-      onTap: onEegTap,
-    );
+  _PillState _eegPillState() {
+    if (eegState == BleSourceState.streaming) return _PillState.ready;
+    if (isDemoMode) return _PillState.warning;
+    if (eegState == BleSourceState.scanning ||
+        eegState == BleSourceState.connecting)
+      return _PillState.busy;
+    if (eegState == BleSourceState.error) return _PillState.error;
+    return _PillState.idle;
   }
 
-  Widget _buildHrTile() {
-    final bool isActive = hrState == BleConnectionState.streaming;
-    final bool isBusy =
-        hrState == BleConnectionState.scanning ||
-        hrState == BleConnectionState.connecting;
-
-    String status;
-    Color color;
-    String action;
-    if (isActive) {
-      status = 'Streaming';
-      color = AppTheme.seaGreen;
-      action = '';
-    } else if (isBusy) {
-      status = 'Scanning…';
-      color = AppTheme.cyan;
-      action = '';
-    } else if (hrState == BleConnectionState.error) {
-      status = 'Error';
-      color = AppTheme.crimson;
-      action = 'Retry';
-    } else {
-      status = 'Not connected';
-      color = AppTheme.fog;
-      action = 'Scan';
-    }
-
-    return _SensorTile(
-      icon: Icons.favorite_rounded,
-      label: 'Heart rate',
-      status: status,
-      action: action,
-      color: color,
-      isBusy: isBusy,
-      onTap: onHrTap,
-    );
+  _PillState _hrPillState() {
+    if (hrState == BleConnectionState.streaming) return _PillState.ready;
+    if (hrState == BleConnectionState.scanning ||
+        hrState == BleConnectionState.connecting)
+      return _PillState.busy;
+    if (hrState == BleConnectionState.error) return _PillState.error;
+    return _PillState.idle;
   }
 
-  Widget _buildGpsTile() {
-    String status;
-    Color color;
-    String action;
+  _PillState _gpsPillState() {
     switch (gpsStatus) {
       case _SensorStatus.ready:
-        status = 'Ready';
-        color = AppTheme.seaGreen;
-        action = '';
+        return _PillState.ready;
       case _SensorStatus.noPermission:
-        status = 'No permission';
-        color = AppTheme.amber;
-        action = 'Enable';
       case _SensorStatus.off:
-        status = 'Disabled';
-        color = AppTheme.amber;
-        action = 'Enable';
+        return _PillState.warning;
       case _SensorStatus.unavailable:
-        status = 'Unavailable';
-        color = AppTheme.crimson;
-        action = '';
+        return _PillState.error;
       case _SensorStatus.unknown:
-        status = 'Checking…';
-        color = AppTheme.fog;
-        action = '';
+        return _PillState.busy;
     }
-
-    return _SensorTile(
-      icon: Icons.gps_fixed_rounded,
-      label: 'GPS',
-      status: status,
-      action: action,
-      color: color,
-      isBusy: gpsStatus == _SensorStatus.unknown,
-      onTap: onGpsTap,
-    );
   }
 
-  Widget _buildHealthTile() {
-    String status;
-    Color color;
-    String action;
+  _PillState _healthPillState() {
     switch (healthStatus) {
       case _SensorStatus.ready:
-        status = 'Connected';
-        color = AppTheme.seaGreen;
-        action = '';
+        return _PillState.ready;
       case _SensorStatus.noPermission:
-        status = 'No permission';
-        color = AppTheme.amber;
-        action = 'Enable';
+        return _PillState.warning;
       case _SensorStatus.off:
       case _SensorStatus.unavailable:
-        status = 'Unavailable';
-        color = AppTheme.crimson;
-        action = '';
+        return _PillState.error;
       case _SensorStatus.unknown:
-        status = 'Checking…';
-        color = AppTheme.fog;
-        action = '';
+        return _PillState.busy;
+    }
+  }
+
+  Widget _buildPill({
+    required IconData icon,
+    required String label,
+    required _PillState state,
+    required VoidCallback onTap,
+  }) {
+    final Color dotColor;
+    switch (state) {
+      case _PillState.ready:
+        dotColor = AppTheme.seaGreen;
+      case _PillState.busy:
+        dotColor = AppTheme.cyan;
+      case _PillState.warning:
+        dotColor = AppTheme.amber;
+      case _PillState.error:
+        dotColor = AppTheme.crimson;
+      case _PillState.idle:
+        dotColor = AppTheme.fog;
     }
 
-    return _SensorTile(
-      icon: Icons.monitor_heart_outlined,
-      label: 'Health',
-      status: status,
-      action: action,
-      color: color,
-      isBusy: healthStatus == _SensorStatus.unknown,
-      onTap: onHealthTap,
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Individual sensor tile
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _SensorTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String status;
-  final String action;
-  final Color color;
-  final bool isBusy;
-  final VoidCallback onTap;
-
-  const _SensorTile({
-    required this.icon,
-    required this.label,
-    required this.status,
-    required this.action,
-    required this.color,
-    required this.isBusy,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.18)),
+          color: AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: dotColor.withValues(alpha: 0.2)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                if (isBusy)
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      color: color,
-                    ),
-                  )
-                else
-                  Icon(icon, size: 15, color: color),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.geist(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.moonbeam,
-                    ),
-                  ),
+            // Status dot
+            if (state == _PillState.busy)
+              SizedBox(
+                width: 10,
+                height: 10,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: dotColor,
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              status,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.geist(fontSize: 11, color: color),
-            ),
-            if (action.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              )
+            else
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                width: 7,
+                height: 7,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-                child: Text(
-                  action,
-                  style: AppTheme.geist(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
+                  shape: BoxShape.circle,
+                  color: dotColor,
+                  boxShadow: state == _PillState.ready
+                      ? [
+                          BoxShadow(
+                            color: dotColor.withValues(alpha: 0.5),
+                            blurRadius: 6,
+                          ),
+                        ]
+                      : null,
                 ),
               ),
-            ],
+            const SizedBox(width: 6),
+            Icon(icon, size: 13, color: AppTheme.fog),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: AppTheme.geist(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.fog,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+enum _PillState { ready, busy, warning, error, idle }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Recent workout card
@@ -1070,17 +1209,30 @@ class _RecentWorkoutCard extends StatelessWidget {
         : '$daysAgo days ago';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.shimmer),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
-          Icon(session.workoutType.icon, size: 24, color: AppTheme.cyan),
-          const SizedBox(width: 12),
+          // Activity icon with subtle background
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppTheme.cyan.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              session.workoutType.icon,
+              size: 22,
+              color: AppTheme.cyan,
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1089,11 +1241,11 @@ class _RecentWorkoutCard extends StatelessWidget {
                   session.workoutType.label,
                   style: AppTheme.geist(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.moonbeam,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   '$when  ·  ${duration.inMinutes} min${session.totalDistanceKm != null ? '  ·  ${session.totalDistanceKm!.toStringAsFixed(1)} km' : ''}',
                   style: AppTheme.geistMono(fontSize: 11, color: AppTheme.fog),
@@ -1103,16 +1255,16 @@ class _RecentWorkoutCard extends StatelessWidget {
           ),
           if (session.analysis != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppTheme.cyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(9999),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '${session.analysis!.performanceScore}',
                 style: AppTheme.geistMono(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: AppTheme.cyan,
                 ),
               ),
