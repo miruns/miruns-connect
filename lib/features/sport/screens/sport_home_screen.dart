@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -51,6 +53,19 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   Timer? _reconnectTimer;
   bool _autoConnecting = false;
 
+  // Heart rate sensor state
+  BleConnectionState _hrState = BleConnectionState.idle;
+  StreamSubscription<BleConnectionState>? _hrSub;
+
+  // GPS sensor state
+  _SensorStatus _gpsStatus = _SensorStatus.unknown;
+
+  // Health service state
+  _SensorStatus _healthStatus = _SensorStatus.unknown;
+
+  // Pre-workout insight: CTA-driven (not auto)
+  bool _insightAvailable = false;
+
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
 
@@ -78,6 +93,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       }
     });
 
+    // Track HR sensor state
+    final hrService = ref.read(bleHeartRateServiceProvider);
+    _hrState = hrService.state;
+    _hrSub = hrService.stateStream.listen((s) {
+      if (mounted) setState(() => _hrState = s);
+    });
+
     _loadData();
   }
 
@@ -85,6 +107,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   void dispose() {
     _pulseCtrl.dispose();
     _bleSub?.cancel();
+    _hrSub?.cancel();
     _devicesScanSub?.cancel();
     _reconnectTimer?.cancel();
     super.dispose();
@@ -117,8 +140,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     // Auto-scan for headset on open (like Garmin looking for its watch).
     _tryAutoConnect();
 
+    // Check sensor statuses
+    _checkGpsStatus();
+    _checkHealthStatus();
+
+    // Mark insight available if enough data (but don't auto-load)
     if (workouts.where((w) => w.feedback != null).length >= 3) {
-      _loadPrediction(profile, workouts);
+      if (mounted) setState(() => _insightAvailable = true);
     }
   }
 
@@ -185,16 +213,79 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     });
   }
 
-  Future<void> _loadPrediction(
-    SportProfile profile,
-    List<WorkoutSession> history,
-  ) async {
+  Future<void> _checkGpsStatus() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!mounted) return;
+      if (!serviceEnabled) {
+        setState(() => _gpsStatus = _SensorStatus.off);
+      } else if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        setState(() => _gpsStatus = _SensorStatus.noPermission);
+      } else {
+        setState(() => _gpsStatus = _SensorStatus.ready);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _gpsStatus = _SensorStatus.unavailable);
+    }
+  }
+
+  Future<void> _checkHealthStatus() async {
+    try {
+      final healthService = ref.read(healthServiceProvider);
+      final available = await healthService.isHealthAvailable();
+      if (!mounted) return;
+      if (!available) {
+        setState(() => _healthStatus = _SensorStatus.unavailable);
+        return;
+      }
+      final hasPerms = await healthService.hasPermissionsProbe();
+      if (mounted) {
+        setState(
+          () => _healthStatus = hasPerms
+              ? _SensorStatus.ready
+              : _SensorStatus.noPermission,
+        );
+      }
+    } catch (_) {
+      if (mounted) setState(() => _healthStatus = _SensorStatus.unavailable);
+    }
+  }
+
+  Future<void> _enableGps() async {
+    HapticFeedback.selectionClick();
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else if (permission == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    } else {
+      await Geolocator.openLocationSettings();
+    }
+    await _checkGpsStatus();
+  }
+
+  Future<void> _enableHealth() async {
+    HapticFeedback.selectionClick();
+    final healthService = ref.read(healthServiceProvider);
+    await healthService.requestAuthorization();
+    await _checkHealthStatus();
+  }
+
+  void _scanHr() {
+    HapticFeedback.selectionClick();
+    context.push('/sources');
+  }
+
+  Future<void> _requestInsight() async {
+    if (_profile == null || _recentWorkouts == null) return;
     setState(() => _loadingPrediction = true);
     try {
       final analytics = ref.read(workoutAnalyticsServiceProvider);
       final prediction = await analytics.generatePreWorkoutPrediction(
-        profile: profile,
-        history: history,
+        profile: _profile!,
+        history: _recentWorkouts!,
         plannedType: _selectedType,
       );
       if (mounted) setState(() => _prediction = prediction);
@@ -274,21 +365,15 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
             // ── Top bar ────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, top + 16, 20, 8),
+                padding: EdgeInsets.fromLTRB(20, top + 16, 20, 0),
                 child: Row(
                   children: [
-                    // Headset status banner
-                    Expanded(
-                      child: _HeadsetStatusBanner(
-                        state: _bleState,
-                        isDemoMode: _isDemoMode,
-                        deviceName: _pairedDeviceName,
-                        connectedDeviceName: ref
-                            .read(bleSourceServiceProvider)
-                            .connectedDevice
-                            ?.platformName,
-                        onTap: _openHeadsetScanner,
-                        onRetry: _tryAutoConnect,
+                    Text(
+                      'miruns',
+                      style: AppTheme.geist(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.moonbeam,
                       ),
                     ),
                     const Spacer(),
@@ -311,6 +396,33 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+
+            // ── Sensor status panel ────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: _SensorStatusPanel(
+                  eegState: _bleState,
+                  eegDeviceName: _isConnected
+                      ? (ref
+                                .read(bleSourceServiceProvider)
+                                .connectedDevice
+                                ?.platformName ??
+                            _pairedDeviceName)
+                      : _pairedDeviceName,
+                  isDemoMode: _isDemoMode,
+                  onEegTap: _bleState == BleSourceState.idle && !_isDemoMode
+                      ? _tryAutoConnect
+                      : _openHeadsetScanner,
+                  hrState: _hrState,
+                  onHrTap: _scanHr,
+                  gpsStatus: _gpsStatus,
+                  onGpsTap: _enableGps,
+                  healthStatus: _healthStatus,
+                  onHealthTap: _enableHealth,
                 ),
               ),
             ),
@@ -405,69 +517,117 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
               ),
             ),
 
-            // ── AI Prediction ──────────────────────────────────────────────
-            if (_loadingPrediction || _prediction != null)
+            // ── AI Prediction (CTA-driven) ─────────────────────────────────
+            if (_insightAvailable || _loadingPrediction || _prediction != null)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 8,
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.tidePool,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.shimmer),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.cyan,
-                                shape: BoxShape.circle,
+                  child: _prediction != null
+                      // Show the loaded insight
+                      ? Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.tidePool,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppTheme.shimmer),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.cyan,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Pre-workout insight',
+                                    style: AppTheme.geist(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppTheme.cyan,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                _prediction!,
+                                style: AppTheme.geist(
+                                  fontSize: 13,
+                                  color: AppTheme.moonbeam,
+                                  height: 1.55,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      // Show CTA button or loading
+                      : GestureDetector(
+                          onTap: _loadingPrediction ? null : _requestInsight,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.tidePool,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.cyan.withValues(alpha: 0.25),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Pre-workout insight',
-                              style: AppTheme.geist(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.cyan,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        if (_loadingPrediction)
-                          const Center(
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                color: AppTheme.cyan,
-                              ),
-                            ),
-                          )
-                        else
-                          Text(
-                            _prediction!,
-                            style: AppTheme.geist(
-                              fontSize: 13,
-                              color: AppTheme.moonbeam,
-                              height: 1.55,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 18,
+                                  color: _loadingPrediction
+                                      ? AppTheme.fog
+                                      : AppTheme.cyan,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _loadingPrediction
+                                        ? 'Generating insight…'
+                                        : 'Get pre-workout insight',
+                                    style: AppTheme.geist(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: _loadingPrediction
+                                          ? AppTheme.fog
+                                          : AppTheme.cyan,
+                                    ),
+                                  ),
+                                ),
+                                if (_loadingPrediction)
+                                  const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.5,
+                                      color: AppTheme.cyan,
+                                    ),
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 13,
+                                    color: AppTheme.cyan,
+                                  ),
+                              ],
                             ),
                           ),
-                      ],
-                    ),
-                  ),
+                        ),
                 ),
               ),
 
@@ -562,130 +722,331 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Headset status banner — Garmin-style connection indicator in header
+// Sensor status enum for non-BLE sensors
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _HeadsetStatusBanner extends StatelessWidget {
-  final BleSourceState state;
-  final bool isDemoMode;
-  final String? deviceName;
-  final String? connectedDeviceName;
-  final VoidCallback onTap;
-  final VoidCallback onRetry;
+enum _SensorStatus { unknown, ready, noPermission, off, unavailable }
 
-  const _HeadsetStatusBanner({
-    required this.state,
+// ─────────────────────────────────────────────────────────────────────────────
+// Sensor status panel — shows all sensors in a compact grid
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SensorStatusPanel extends StatelessWidget {
+  final BleSourceState eegState;
+  final String? eegDeviceName;
+  final bool isDemoMode;
+  final VoidCallback onEegTap;
+  final BleConnectionState hrState;
+  final VoidCallback onHrTap;
+  final _SensorStatus gpsStatus;
+  final VoidCallback onGpsTap;
+  final _SensorStatus healthStatus;
+  final VoidCallback onHealthTap;
+
+  const _SensorStatusPanel({
+    required this.eegState,
+    this.eegDeviceName,
     required this.isDemoMode,
-    required this.deviceName,
-    this.connectedDeviceName,
-    required this.onTap,
-    required this.onRetry,
+    required this.onEegTap,
+    required this.hrState,
+    required this.onHrTap,
+    required this.gpsStatus,
+    required this.onGpsTap,
+    required this.healthStatus,
+    required this.onHealthTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final (IconData icon, String label, Color color, Color bgColor) =
-        _resolveStyle();
-
-    return GestureDetector(
-      onTap: state == BleSourceState.idle && !isDemoMode ? onRetry : onTap,
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(9999),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Animated scanning indicator or static icon
-            if (state == BleSourceState.scanning ||
-                state == BleSourceState.connecting)
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: color,
-                ),
-              )
-            else
-              Icon(icon, size: 16, color: color),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.geist(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: color,
-                ),
-              ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.tidePool,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.shimmer),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sensors',
+            style: AppTheme.geist(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.fog,
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _buildEegTile()),
+              const SizedBox(width: 8),
+              Expanded(child: _buildHrTile()),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildGpsTile()),
+              const SizedBox(width: 8),
+              Expanded(child: _buildHealthTile()),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  (IconData, String, Color, Color) _resolveStyle() {
-    switch (state) {
-      case BleSourceState.streaming:
-        final name = connectedDeviceName ?? deviceName ?? 'Headset';
-        return (
-          Icons.headphones_rounded,
-          name,
-          AppTheme.seaGreen,
-          AppTheme.seaGreen.withValues(alpha: 0.1),
-        );
-      case BleSourceState.scanning:
-        return (
-          Icons.bluetooth_searching_rounded,
-          'Scanning…',
-          AppTheme.cyan,
-          AppTheme.cyan.withValues(alpha: 0.08),
-        );
-      case BleSourceState.connecting:
-        return (
-          Icons.bluetooth_connected_rounded,
-          'Connecting…',
-          AppTheme.amber,
-          AppTheme.amber.withValues(alpha: 0.08),
-        );
-      case BleSourceState.error:
-        return (
-          Icons.bluetooth_disabled_rounded,
-          'Connection error',
-          AppTheme.crimson,
-          AppTheme.crimson.withValues(alpha: 0.08),
-        );
-      case BleSourceState.idle:
-        if (isDemoMode) {
-          return (
-            Icons.headphones_outlined,
-            'Demo mode',
-            AppTheme.amber,
-            AppTheme.amber.withValues(alpha: 0.08),
-          );
-        }
-        if (deviceName != null) {
-          return (
-            Icons.headphones_outlined,
-            'Tap to reconnect',
-            AppTheme.fog,
-            AppTheme.fog.withValues(alpha: 0.08),
-          );
-        }
-        return (
-          Icons.headphones_outlined,
-          'No headset',
-          AppTheme.fog,
-          AppTheme.fog.withValues(alpha: 0.08),
-        );
+  Widget _buildEegTile() {
+    final bool isActive = eegState == BleSourceState.streaming;
+    final bool isBusy =
+        eegState == BleSourceState.scanning ||
+        eegState == BleSourceState.connecting;
+    final bool isError = eegState == BleSourceState.error;
+
+    String status;
+    Color color;
+    String action;
+    if (isActive) {
+      status = eegDeviceName ?? 'Connected';
+      color = AppTheme.seaGreen;
+      action = '';
+    } else if (isDemoMode) {
+      status = 'Demo mode';
+      color = AppTheme.amber;
+      action = '';
+    } else if (isBusy) {
+      status = eegState == BleSourceState.scanning
+          ? 'Scanning…'
+          : 'Connecting…';
+      color = AppTheme.cyan;
+      action = '';
+    } else if (isError) {
+      status = 'Error';
+      color = AppTheme.crimson;
+      action = 'Retry';
+    } else {
+      status = eegDeviceName != null ? 'Disconnected' : 'Not paired';
+      color = AppTheme.fog;
+      action = eegDeviceName != null ? 'Reconnect' : 'Scan';
     }
+
+    return _SensorTile(
+      icon: Icons.headphones_rounded,
+      label: 'EEG',
+      status: status,
+      action: action,
+      color: color,
+      isBusy: isBusy,
+      onTap: onEegTap,
+    );
+  }
+
+  Widget _buildHrTile() {
+    final bool isActive = hrState == BleConnectionState.streaming;
+    final bool isBusy =
+        hrState == BleConnectionState.scanning ||
+        hrState == BleConnectionState.connecting;
+
+    String status;
+    Color color;
+    String action;
+    if (isActive) {
+      status = 'Streaming';
+      color = AppTheme.seaGreen;
+      action = '';
+    } else if (isBusy) {
+      status = 'Scanning…';
+      color = AppTheme.cyan;
+      action = '';
+    } else if (hrState == BleConnectionState.error) {
+      status = 'Error';
+      color = AppTheme.crimson;
+      action = 'Retry';
+    } else {
+      status = 'Not connected';
+      color = AppTheme.fog;
+      action = 'Scan';
+    }
+
+    return _SensorTile(
+      icon: Icons.favorite_rounded,
+      label: 'Heart rate',
+      status: status,
+      action: action,
+      color: color,
+      isBusy: isBusy,
+      onTap: onHrTap,
+    );
+  }
+
+  Widget _buildGpsTile() {
+    String status;
+    Color color;
+    String action;
+    switch (gpsStatus) {
+      case _SensorStatus.ready:
+        status = 'Ready';
+        color = AppTheme.seaGreen;
+        action = '';
+      case _SensorStatus.noPermission:
+        status = 'No permission';
+        color = AppTheme.amber;
+        action = 'Enable';
+      case _SensorStatus.off:
+        status = 'Disabled';
+        color = AppTheme.amber;
+        action = 'Enable';
+      case _SensorStatus.unavailable:
+        status = 'Unavailable';
+        color = AppTheme.crimson;
+        action = '';
+      case _SensorStatus.unknown:
+        status = 'Checking…';
+        color = AppTheme.fog;
+        action = '';
+    }
+
+    return _SensorTile(
+      icon: Icons.gps_fixed_rounded,
+      label: 'GPS',
+      status: status,
+      action: action,
+      color: color,
+      isBusy: gpsStatus == _SensorStatus.unknown,
+      onTap: onGpsTap,
+    );
+  }
+
+  Widget _buildHealthTile() {
+    String status;
+    Color color;
+    String action;
+    switch (healthStatus) {
+      case _SensorStatus.ready:
+        status = 'Connected';
+        color = AppTheme.seaGreen;
+        action = '';
+      case _SensorStatus.noPermission:
+        status = 'No permission';
+        color = AppTheme.amber;
+        action = 'Enable';
+      case _SensorStatus.off:
+      case _SensorStatus.unavailable:
+        status = 'Unavailable';
+        color = AppTheme.crimson;
+        action = '';
+      case _SensorStatus.unknown:
+        status = 'Checking…';
+        color = AppTheme.fog;
+        action = '';
+    }
+
+    return _SensorTile(
+      icon: Icons.monitor_heart_outlined,
+      label: 'Health',
+      status: status,
+      action: action,
+      color: color,
+      isBusy: healthStatus == _SensorStatus.unknown,
+      onTap: onHealthTap,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Individual sensor tile
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SensorTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String status;
+  final String action;
+  final Color color;
+  final bool isBusy;
+  final VoidCallback onTap;
+
+  const _SensorTile({
+    required this.icon,
+    required this.label,
+    required this.status,
+    required this.action,
+    required this.color,
+    required this.isBusy,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (isBusy)
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: color,
+                    ),
+                  )
+                else
+                  Icon(icon, size: 15, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.geist(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.moonbeam,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              status,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.geist(fontSize: 11, color: color),
+            ),
+            if (action.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                child: Text(
+                  action,
+                  style: AppTheme.geist(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
