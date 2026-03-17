@@ -124,7 +124,46 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 
   void _startWorkout() {
     HapticFeedback.mediumImpact();
-    context.push('/sport/active', extra: _selectedType);
+
+    // Already connected → go straight to workout.
+    if (_isConnected) {
+      context.push('/sport/active', extra: _selectedType);
+      return;
+    }
+
+    // Demo mode → skip headset, go to workout.
+    if (_isDemoMode) {
+      context.push('/sport/active', extra: _selectedType);
+      return;
+    }
+
+    // Show headset connection sheet (auto-scans if paired device exists).
+    _showHeadsetConnectionSheet();
+  }
+
+  void _showHeadsetConnectionSheet() {
+    final bleService = ref.read(bleSourceServiceProvider);
+    final registry = ref.read(bleSourceRegistryProvider);
+    final eegProvider = registry.getById('ads1299');
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _HeadsetScanSheet(
+        bleService: bleService,
+        provider: eegProvider,
+        pairedDeviceName: _pairedDeviceName,
+        onConnected: () {
+          Navigator.of(context).pop(); // close sheet
+          context.push('/sport/active', extra: _selectedType);
+        },
+        onSkip: () {
+          Navigator.of(context).pop(); // close sheet
+          context.push('/sport/active', extra: _selectedType);
+        },
+      ),
+    );
   }
 
   void _openHistory() {
@@ -590,6 +629,342 @@ class _RecentWorkoutCard extends StatelessWidget {
               ],
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Headset scan bottom sheet — shown before starting a workout
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HeadsetScanSheet extends StatefulWidget {
+  final BleSourceService bleService;
+  final BleSourceProvider? provider;
+  final String? pairedDeviceName;
+  final VoidCallback onConnected;
+  final VoidCallback onSkip;
+
+  const _HeadsetScanSheet({
+    required this.bleService,
+    required this.provider,
+    required this.pairedDeviceName,
+    required this.onConnected,
+    required this.onSkip,
+  });
+
+  @override
+  State<_HeadsetScanSheet> createState() => _HeadsetScanSheetState();
+}
+
+class _HeadsetScanSheetState extends State<_HeadsetScanSheet> {
+  List<BleSourceDevice> _devices = [];
+  BleSourceState _state = BleSourceState.idle;
+  StreamSubscription<List<BleSourceDevice>>? _devicesSub;
+  StreamSubscription<BleSourceState>? _stateSub;
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _state = widget.bleService.state;
+    _stateSub = widget.bleService.stateStream.listen((s) {
+      if (mounted) {
+        setState(() => _state = s);
+        if (s == BleSourceState.streaming) {
+          widget.onConnected();
+        }
+      }
+    });
+    _devicesSub = widget.bleService.devicesStream.listen((d) {
+      if (mounted) setState(() => _devices = d);
+    });
+
+    // Auto-start scan.
+    if (widget.provider != null && _state != BleSourceState.streaming) {
+      _startScan();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stateSub?.cancel();
+    _devicesSub?.cancel();
+    // Don't stop scan on dispose — let connection continue if in progress.
+    if (_state == BleSourceState.scanning) {
+      widget.bleService.stopScan();
+    }
+    super.dispose();
+  }
+
+  Future<void> _startScan() async {
+    if (widget.provider == null) return;
+    setState(() => _devices = []);
+    try {
+      await widget.bleService.startScan(widget.provider!);
+    } catch (_) {}
+  }
+
+  Future<void> _connectDevice(BleSourceDevice device) async {
+    if (_connecting) return;
+    setState(() => _connecting = true);
+    HapticFeedback.mediumImpact();
+    try {
+      await widget.bleService.connectAndStream(device.device, widget.provider!);
+      // stateStream listener will call onConnected.
+    } catch (e) {
+      if (mounted) {
+        setState(() => _connecting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isScanning = _state == BleSourceState.scanning;
+    final isConnecting = _connecting || _state == BleSourceState.connecting;
+    final noProvider = widget.provider == null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.current,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.paddingOf(context).bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.shimmer,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Title
+          Row(
+            children: [
+              const Icon(
+                Icons.headphones_outlined,
+                color: AppTheme.cyan,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Connect headset',
+                style: AppTheme.geist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.moonbeam,
+                ),
+              ),
+              const Spacer(),
+              if (isScanning)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppTheme.cyan,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.pairedDeviceName != null
+                  ? 'Looking for ${widget.pairedDeviceName}…'
+                  : 'Scanning for nearby headsets…',
+              style: AppTheme.geist(fontSize: 13, color: AppTheme.fog),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Device list or status
+          if (noProvider)
+            _statusTile(
+              Icons.bluetooth_disabled_rounded,
+              'No EEG source configured',
+              'You can still start without a headset.',
+            )
+          else if (isConnecting)
+            _statusTile(
+              Icons.bluetooth_searching_rounded,
+              'Connecting…',
+              'Setting up headset link',
+            )
+          else if (_devices.isEmpty && !isScanning)
+            _statusTile(
+              Icons.search_off_rounded,
+              'No headset found',
+              'Make sure the headset is on and nearby.',
+            )
+          else ...[
+            for (final device in _devices)
+              _DeviceTile(device: device, onTap: () => _connectDevice(device)),
+          ],
+
+          const SizedBox(height: 16),
+
+          // Action buttons
+          Row(
+            children: [
+              // Re-scan
+              if (!isScanning && !isConnecting && !noProvider)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _startScan,
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.tidePool,
+                        borderRadius: BorderRadius.circular(9999),
+                        border: Border.all(color: AppTheme.shimmer),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Scan again',
+                          style: AppTheme.geist(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.fog,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (!isScanning && !isConnecting && !noProvider)
+                const SizedBox(width: 12),
+
+              // Skip → start without headset
+              Expanded(
+                child: GestureDetector(
+                  onTap: isConnecting ? null : widget.onSkip,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(9999),
+                      color: AppTheme.cyan.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: AppTheme.cyan.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Start without',
+                        style: AppTheme.geist(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.cyan,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusTile(IconData icon, String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 28, color: AppTheme.fog),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTheme.geist(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.moonbeam,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTheme.geist(fontSize: 12, color: AppTheme.fog),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeviceTile extends StatelessWidget {
+  final BleSourceDevice device;
+  final VoidCallback onTap;
+
+  const _DeviceTile({required this.device, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.shimmer),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.bluetooth_rounded, size: 20, color: AppTheme.cyan),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    device.name,
+                    style: AppTheme.geist(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.moonbeam,
+                    ),
+                  ),
+                  Text(
+                    'RSSI: ${device.rssi} dBm',
+                    style: AppTheme.geistMono(
+                      fontSize: 11,
+                      color: AppTheme.fog,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.fog,
+            ),
+          ],
+        ),
       ),
     );
   }
