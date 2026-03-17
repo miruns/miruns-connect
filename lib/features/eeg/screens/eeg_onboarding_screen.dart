@@ -16,11 +16,11 @@ import '../widgets/m_signal_logo.dart';
 // EEG Onboarding — first-run experience for the miruns EEG headset companion
 //
 // Pages:
-//   0 · Welcome      — animated M logo + tagline + "Begin"
-//   1 · Features     — three value-prop cards
-//   2 · Pair          — BLE scan for EAREEG, demo-mode escape hatch
-//   3 · Signal check — animated electrode quality grid (or demo waveform)
-//   4 · Ready        — confirmation + enter app
+//   0 · Welcome       — animated M logo + tagline + "Begin"
+//   1 · Device choice  — have a headset? → pair, or → demo mode
+//   2 · Pair           — BLE scan for EAREEG
+//   3 · Signal check   — animated electrode quality grid (or demo waveform)
+//   4 · Ready          — confirmation + enter app
 // ─────────────────────────────────────────────────────────────────────────────
 
 class EegOnboardingScreen extends ConsumerStatefulWidget {
@@ -133,6 +133,26 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
     setState(() => _page = page);
     if (page == 2) _beginScan();
     if (page == 3) _startSignalSimulation();
+  }
+
+  // ── Device choice actions ──────────────────────────────────────────────────
+
+  void _onHaveDevice() {
+    _goNext(); // advance to pair page
+  }
+
+  void _onNoDevice() async {
+    setState(() => _isDemoMode = true);
+    HapticFeedback.lightImpact();
+    final db = ref.read(localDbServiceProvider);
+    await db.setSetting('eeg_demo_mode', 'true');
+    await _bleService.stopScan();
+    // Skip pair + signal check, jump to ready
+    _pageCtrl.animateToPage(
+      _totalPages - 1,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   // ── BLE scanning ───────────────────────────────────────────────────────────
@@ -293,7 +313,10 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
                 showBegin: _showBegin,
                 onBegin: _goNext,
               ),
-              _FeaturesPage(onContinue: _goNext),
+              _DeviceChoicePage(
+                onHaveDevice: _onHaveDevice,
+                onNoDevice: _onNoDevice,
+              ),
               _PairPage(
                 bleState: _bleState,
                 foundDevices: _foundDevices,
@@ -430,12 +453,16 @@ class _WelcomePage extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE 1 — Features
+// PAGE 1 — Device choice
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _FeaturesPage extends StatelessWidget {
-  final VoidCallback onContinue;
-  const _FeaturesPage({required this.onContinue});
+class _DeviceChoicePage extends StatelessWidget {
+  final VoidCallback onHaveDevice;
+  final VoidCallback onNoDevice;
+  const _DeviceChoicePage({
+    required this.onHaveDevice,
+    required this.onNoDevice,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +473,7 @@ class _FeaturesPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What miruns\nsees in you',
+            'Do you have a\nmiruns headset?',
             style: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.w600,
@@ -457,36 +484,71 @@ class _FeaturesPage extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'EEG monitoring for athletes\nand curious minds.',
+            'The headset captures your live signals\nand streams them to the app.',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: AppTheme.fog,
               height: 1.55,
             ),
           ),
-          const SizedBox(height: 36),
-          _FeatureCard(
-            icon: Icons.sensors_rounded,
-            color: AppTheme.glow,
-            title: 'Live EEG',
-            subtitle: '8 channels · 250 Hz · real-time brain activity',
+          const SizedBox(height: 32),
+
+          // Data-type chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: const [
+              _DataChip(
+                icon: Icons.psychology_rounded,
+                label: 'EEG',
+                color: AppTheme.glow,
+              ),
+              _DataChip(
+                icon: Icons.favorite_rounded,
+                label: 'Heart rate',
+                color: AppTheme.crimson,
+              ),
+              _DataChip(
+                icon: Icons.bloodtype_rounded,
+                label: 'PPG',
+                color: AppTheme.aurora,
+              ),
+              _DataChip(
+                icon: Icons.wb_sunny_rounded,
+                label: 'Infrared',
+                color: AppTheme.amber,
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          _FeatureCard(
-            icon: Icons.radio_button_checked_rounded,
-            color: AppTheme.aurora,
-            title: 'Capture sessions',
-            subtitle: 'Record any mental state — focus, rest, flow',
-          ),
-          const SizedBox(height: 14),
-          _FeatureCard(
-            icon: Icons.auto_graph_rounded,
-            color: AppTheme.starlight,
-            title: 'Find your patterns',
-            subtitle: 'AI reads trends across sessions and time',
-          ),
+
           const Spacer(),
-          _PrimaryButton(label: 'Continue', onTap: onContinue),
+
+          // ── "I have a device" button ───────────────────────────────────────
+          _PrimaryButton(label: 'I have a device', onTap: onHaveDevice),
+          const SizedBox(height: 14),
+
+          // ── "I don't have one" secondary button ────────────────────────────
+          GestureDetector(
+            onTap: onNoDevice,
+            child: Container(
+              width: double.infinity,
+              height: 54,
+              decoration: BoxDecoration(
+                color: AppTheme.tidePool,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTheme.shimmer, width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                "I don't have one — demo mode",
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.fog,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -809,64 +871,39 @@ class _ProgressDots extends StatelessWidget {
   }
 }
 
-// ── Feature card ───────────────────────────────────────────────────────────────
+// ── Data chip (sensor type pill) ──────────────────────────────────────────────
 
-class _FeatureCard extends StatelessWidget {
+class _DataChip extends StatelessWidget {
   final IconData icon;
+  final String label;
   final Color color;
-  final String title;
-  final String subtitle;
 
-  const _FeatureCard({
+  const _DataChip({
     required this.icon,
+    required this.label,
     required this.color,
-    required this.title,
-    required this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.shimmer, width: 0.5),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.moonbeam,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppTheme.fog,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: color,
             ),
           ),
         ],
