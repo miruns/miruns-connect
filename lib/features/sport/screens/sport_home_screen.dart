@@ -274,7 +274,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 
   void _scanHr() {
     HapticFeedback.selectionClick();
-    context.push('/sources');
+    final hrService = ref.read(bleHeartRateServiceProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _HrScanSheet(hrService: hrService),
+    );
   }
 
   Future<void> _requestInsight() async {
@@ -1565,6 +1571,318 @@ class _HeadsetScanSheetState extends State<_HeadsetScanSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HR scan bottom sheet — scan and connect to BLE Heart Rate monitors
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HrScanSheet extends StatefulWidget {
+  final BleHeartRateService hrService;
+
+  const _HrScanSheet({required this.hrService});
+
+  @override
+  State<_HrScanSheet> createState() => _HrScanSheetState();
+}
+
+class _HrScanSheetState extends State<_HrScanSheet> {
+  List<BleHrDevice> _devices = [];
+  BleConnectionState _state = BleConnectionState.idle;
+  StreamSubscription<List<BleHrDevice>>? _devicesSub;
+  StreamSubscription<BleConnectionState>? _stateSub;
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _state = widget.hrService.state;
+    _stateSub = widget.hrService.stateStream.listen((s) {
+      if (mounted) {
+        setState(() => _state = s);
+        if (s == BleConnectionState.streaming) {
+          Navigator.of(context).pop();
+        }
+      }
+    });
+    _devicesSub = widget.hrService.devicesStream.listen((d) {
+      if (mounted) setState(() => _devices = d);
+    });
+
+    if (_state != BleConnectionState.streaming) {
+      _startScan();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stateSub?.cancel();
+    _devicesSub?.cancel();
+    if (_state == BleConnectionState.scanning) {
+      widget.hrService.stopScan();
+    }
+    super.dispose();
+  }
+
+  Future<void> _startScan() async {
+    setState(() => _devices = []);
+    try {
+      await widget.hrService.startScan();
+    } catch (_) {}
+  }
+
+  Future<void> _connectDevice(BleHrDevice device) async {
+    if (_connecting) return;
+    setState(() => _connecting = true);
+    HapticFeedback.mediumImpact();
+    try {
+      await widget.hrService.connectAndStream(device.device);
+    } catch (_) {
+      if (mounted) setState(() => _connecting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isScanning = _state == BleConnectionState.scanning;
+    final isConnecting = _connecting || _state == BleConnectionState.connecting;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.current,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.paddingOf(context).bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.fog.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Title
+          Row(
+            children: [
+              const Icon(
+                Icons.favorite_rounded,
+                size: 20,
+                color: AppTheme.crimson,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Heart Rate Monitor',
+                style: AppTheme.geist(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.moonbeam,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Scanning for BLE Heart Rate devices…',
+              style: AppTheme.geist(fontSize: 13, color: AppTheme.fog),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          if (isConnecting)
+            _hrStatusTile(
+              Icons.bluetooth_connected_rounded,
+              'Connecting…',
+              'Please wait',
+            )
+          else if (_devices.isEmpty && !isScanning)
+            _hrStatusTile(
+              Icons.bluetooth_searching_rounded,
+              'No HR devices found',
+              'Make sure your sensor is nearby and active',
+            )
+          else ...[
+            for (final device in _devices)
+              _HrDeviceTile(
+                device: device,
+                onTap: () => _connectDevice(device),
+              ),
+          ],
+
+          const SizedBox(height: 16),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.tidePool,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.shimmer),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Close',
+                      style: AppTheme.geist(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: isScanning ? null : _startScan,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isScanning
+                          ? AppTheme.tidePool
+                          : AppTheme.cyan.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isScanning
+                            ? AppTheme.shimmer
+                            : AppTheme.cyan.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: isScanning
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.cyan,
+                            ),
+                          )
+                        : Text(
+                            'Re-scan',
+                            style: AppTheme.geist(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.cyan,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hrStatusTile(IconData icon, String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 28, color: AppTheme.fog),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTheme.geist(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.moonbeam,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTheme.geist(fontSize: 12, color: AppTheme.fog),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HrDeviceTile extends StatelessWidget {
+  final BleHrDevice device;
+  final VoidCallback onTap;
+
+  const _HrDeviceTile({required this.device, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.shimmer),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.favorite_rounded,
+              size: 20,
+              color: AppTheme.crimson,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    device.name,
+                    style: AppTheme.geist(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.moonbeam,
+                    ),
+                  ),
+                  Text(
+                    'RSSI: ${device.rssi} dBm',
+                    style: AppTheme.geistMono(
+                      fontSize: 11,
+                      color: AppTheme.fog,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.fog,
+            ),
+          ],
+        ),
       ),
     );
   }
