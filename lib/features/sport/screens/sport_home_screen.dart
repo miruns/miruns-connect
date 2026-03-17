@@ -44,8 +44,12 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   // BLE headset connection state
   BleSourceState _bleState = BleSourceState.idle;
   StreamSubscription<BleSourceState>? _bleSub;
+  StreamSubscription<List<BleSourceDevice>>? _devicesScanSub;
   String? _pairedDeviceName;
+  String? _pairedDeviceId;
   bool _isDemoMode = false;
+  Timer? _reconnectTimer;
+  bool _autoConnecting = false;
 
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
@@ -65,7 +69,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     final bleService = ref.read(bleSourceServiceProvider);
     _bleState = bleService.state;
     _bleSub = bleService.stateStream.listen((s) {
-      if (mounted) setState(() => _bleState = s);
+      if (!mounted) return;
+      final prev = _bleState;
+      setState(() => _bleState = s);
+      // Auto-reconnect: if we lost connection, schedule a re-scan.
+      if (prev == BleSourceState.streaming && s == BleSourceState.idle) {
+        _scheduleReconnect();
+      }
     });
 
     _loadData();
@@ -75,6 +85,8 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   void dispose() {
     _pulseCtrl.dispose();
     _bleSub?.cancel();
+    _devicesScanSub?.cancel();
+    _reconnectTimer?.cancel();
     super.dispose();
   }
 
@@ -84,6 +96,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     // Load headset prefs
     final db = ref.read(localDbServiceProvider);
     final name = await db.getSetting('eeg_paired_device_name');
+    final id = await db.getSetting('eeg_paired_device_id');
     final demo = await db.getSetting('eeg_demo_mode');
 
     final profile = await _workoutService.loadProfile();
@@ -91,6 +104,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     if (mounted) {
       setState(() {
         _pairedDeviceName = name;
+        _pairedDeviceId = id;
         _isDemoMode = demo == 'true';
         _profile = profile;
         _recentWorkouts = workouts;
@@ -100,9 +114,75 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       });
     }
 
+    // Auto-scan for headset on open (like Garmin looking for its watch).
+    _tryAutoConnect();
+
     if (workouts.where((w) => w.feedback != null).length >= 3) {
       _loadPrediction(profile, workouts);
     }
+  }
+
+  /// Scan for the paired headset and auto-connect if found.
+  Future<void> _tryAutoConnect() async {
+    // Skip if already connected, in demo mode, or no paired device.
+    final bleService = ref.read(bleSourceServiceProvider);
+    if (bleService.isStreaming) return;
+    if (_isDemoMode) return;
+    if (_pairedDeviceId == null && _pairedDeviceName == null) return;
+
+    final registry = ref.read(bleSourceRegistryProvider);
+    final eegProvider = registry.getById('ads1299');
+    if (eegProvider == null) return;
+
+    // Don't double-scan.
+    if (_bleState == BleSourceState.scanning ||
+        _bleState == BleSourceState.connecting) {
+      return;
+    }
+
+    _autoConnecting = true;
+
+    // Listen for scan results and auto-connect to the paired device.
+    _devicesScanSub?.cancel();
+    _devicesScanSub = bleService.devicesStream.listen((devices) {
+      if (!_autoConnecting) return;
+      for (final d in devices) {
+        final matchesId =
+            _pairedDeviceId != null && d.device.remoteId.str == _pairedDeviceId;
+        final matchesName =
+            _pairedDeviceName != null &&
+            d.name.toUpperCase().contains(_pairedDeviceName!.toUpperCase());
+        if (matchesId || matchesName) {
+          _autoConnecting = false;
+          _devicesScanSub?.cancel();
+          bleService.connectAndStream(d.device, eegProvider).catchError((_) {
+            // Connection failed — will auto-retry via _scheduleReconnect.
+          });
+          return;
+        }
+      }
+    });
+
+    try {
+      await bleService.startScan(eegProvider);
+    } catch (_) {}
+
+    // If scan finished without finding the device, clean up.
+    if (_autoConnecting) {
+      _autoConnecting = false;
+      _devicesScanSub?.cancel();
+    }
+  }
+
+  /// Schedule a background re-scan after a delay (like Garmin retry loop).
+  void _scheduleReconnect() {
+    if (_isDemoMode) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && _bleState == BleSourceState.idle) {
+        _tryAutoConnect();
+      }
+    });
   }
 
   Future<void> _loadPrediction(
@@ -197,22 +277,18 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                 padding: EdgeInsets.fromLTRB(20, top + 16, 20, 8),
                 child: Row(
                   children: [
-                    // Headset icon with connection dot
-                    _HeadsetStatusIcon(
-                      isConnected: _isConnected,
-                      isDemoMode: _isDemoMode,
-                      deviceName: _pairedDeviceName,
-                      onTap: _openHeadsetScanner,
-                    ),
-                    const SizedBox(width: 14),
-                    // miruns wordmark
-                    Text(
-                      'miruns',
-                      style: AppTheme.geist(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w300,
-                        color: AppTheme.moonbeam,
-                        letterSpacing: -0.5,
+                    // Headset status banner
+                    Expanded(
+                      child: _HeadsetStatusBanner(
+                        state: _bleState,
+                        isDemoMode: _isDemoMode,
+                        deviceName: _pairedDeviceName,
+                        connectedDeviceName: ref
+                            .read(bleSourceServiceProvider)
+                            .connectedDevice
+                            ?.platformName,
+                        onTap: _openHeadsetScanner,
+                        onRetry: _tryAutoConnect,
                       ),
                     ),
                     const Spacer(),
@@ -486,56 +562,66 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Headset status icon — top-left, shows connection as colored dot
+// Headset status banner — Garmin-style connection indicator in header
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _HeadsetStatusIcon extends StatelessWidget {
-  final bool isConnected;
+class _HeadsetStatusBanner extends StatelessWidget {
+  final BleSourceState state;
   final bool isDemoMode;
   final String? deviceName;
+  final String? connectedDeviceName;
   final VoidCallback onTap;
+  final VoidCallback onRetry;
 
-  const _HeadsetStatusIcon({
-    required this.isConnected,
+  const _HeadsetStatusBanner({
+    required this.state,
     required this.isDemoMode,
     required this.deviceName,
+    this.connectedDeviceName,
     required this.onTap,
+    required this.onRetry,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Color dotColor = isConnected
-        ? AppTheme.seaGreen
-        : isDemoMode
-        ? AppTheme.amber
-        : AppTheme.fog;
+    final (IconData icon, String label, Color color, Color bgColor) =
+        _resolveStyle();
 
     return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 32,
-        height: 32,
-        child: Stack(
-          clipBehavior: Clip.none,
+      onTap: state == BleSourceState.idle && !isDemoMode ? onRetry : onTap,
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(9999),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Center(
-              child: Icon(
-                Icons.headphones_outlined,
-                size: 24,
-                color: isConnected ? AppTheme.moonbeam : AppTheme.fog,
-              ),
-            ),
-            // Status dot
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.midnight, width: 1.5),
+            // Animated scanning indicator or static icon
+            if (state == BleSourceState.scanning ||
+                state == BleSourceState.connecting)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: color,
+                ),
+              )
+            else
+              Icon(icon, size: 16, color: color),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.geist(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: color,
                 ),
               ),
             ),
@@ -543,6 +629,63 @@ class _HeadsetStatusIcon extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  (IconData, String, Color, Color) _resolveStyle() {
+    switch (state) {
+      case BleSourceState.streaming:
+        final name = connectedDeviceName ?? deviceName ?? 'Headset';
+        return (
+          Icons.headphones_rounded,
+          name,
+          AppTheme.seaGreen,
+          AppTheme.seaGreen.withValues(alpha: 0.1),
+        );
+      case BleSourceState.scanning:
+        return (
+          Icons.bluetooth_searching_rounded,
+          'Scanning…',
+          AppTheme.cyan,
+          AppTheme.cyan.withValues(alpha: 0.08),
+        );
+      case BleSourceState.connecting:
+        return (
+          Icons.bluetooth_connected_rounded,
+          'Connecting…',
+          AppTheme.amber,
+          AppTheme.amber.withValues(alpha: 0.08),
+        );
+      case BleSourceState.error:
+        return (
+          Icons.bluetooth_disabled_rounded,
+          'Connection error',
+          AppTheme.crimson,
+          AppTheme.crimson.withValues(alpha: 0.08),
+        );
+      case BleSourceState.idle:
+        if (isDemoMode) {
+          return (
+            Icons.headphones_outlined,
+            'Demo mode',
+            AppTheme.amber,
+            AppTheme.amber.withValues(alpha: 0.08),
+          );
+        }
+        if (deviceName != null) {
+          return (
+            Icons.headphones_outlined,
+            'Tap to reconnect',
+            AppTheme.fog,
+            AppTheme.fog.withValues(alpha: 0.08),
+          );
+        }
+        return (
+          Icons.headphones_outlined,
+          'No headset',
+          AppTheme.fog,
+          AppTheme.fog.withValues(alpha: 0.08),
+        );
+    }
   }
 }
 
