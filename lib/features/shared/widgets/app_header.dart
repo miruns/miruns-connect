@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/theme_provider.dart';
+import 'nav_menu_button.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppHeader — shared top-bar for all main screens
@@ -106,6 +107,8 @@ class AppHeader extends ConsumerWidget {
             tooltip: themeLabel,
             icon: Icon(themeIcon, color: dimColor, size: 22),
           ),
+          // ── Navigation menu ───────────────────────────────────────────
+          const NavMenuButton(),
         ],
       ),
     );

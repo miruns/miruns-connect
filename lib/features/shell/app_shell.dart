@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/services/service_providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../shared/widgets/nav_menu_button.dart';
 
-/// Root scaffold with a hamburger FAB for navigation.
+/// Root scaffold that provides navigation menu access to child screens.
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
 
@@ -14,20 +14,12 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Capture tab (index 2) takes over full-screen like a camera app —
-    // hide the FAB so it doesn't compete.
-    final isCaptureTab = navigationShell.currentIndex == 2;
-
     return Scaffold(
       extendBody: true,
-      body: navigationShell,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: isCaptureTab
-          ? null
-          : _MenuFab(
-              currentIndex: navigationShell.currentIndex,
-              onOpenMenu: () => _showNavSheet(context),
-            ),
+      body: NavMenuScope(
+        onOpenMenu: () => _showNavSheet(context),
+        child: navigationShell,
+      ),
     );
   }
 
@@ -159,59 +151,6 @@ const List<_MoreDestination> _moreDestinations = [
     description: 'Developer panel',
   ),
 ];
-
-// ─── Hamburger FAB ────────────────────────────────────────────────────────────
-
-class _MenuFab extends ConsumerWidget {
-  const _MenuFab({required this.currentIndex, required this.onOpenMenu});
-
-  final int currentIndex;
-  final VoidCallback onOpenMenu;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final available = ref.watch(healthAvailableProvider).valueOrNull;
-    final granted = ref.watch(healthPermissionStatusProvider).valueOrNull;
-    final needsAttention =
-        available != null && granted != null && !(available && granted);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onOpenMenu();
-        },
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppTheme.tidePool,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.shimmer, width: 1),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              Icon(Icons.menu_rounded, size: 20, color: AppTheme.moonbeam),
-              if (needsAttention)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: _PulseDot(
-                    color: AppTheme.amber,
-                    size: 6,
-                    needsAttention: true,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Full navigation sheet ────────────────────────────────────────────────────
 

@@ -76,6 +76,7 @@ class _PatternsScreenState extends ConsumerState<PatternsScreen> {
   // ── Narrative ───────────────────────────────────────────────────────────
   String? _narrative;
   bool _narrativeLoading = false;
+
   /// Track which analysis hash we last requested narrative for.
   int _lastNarrativeHash = 0;
 

@@ -10,6 +10,7 @@ import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
@@ -470,6 +471,9 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                             ),
                           ),
                         ),
+                        const SizedBox(width: 10),
+                        // Navigation menu
+                        const NavMenuButton(),
                       ],
                     ),
                   ),

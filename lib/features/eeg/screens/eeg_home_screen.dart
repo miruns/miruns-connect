@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../shared/widgets/nav_menu_button.dart';
 import '../widgets/m_signal_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,6 +139,9 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                   const SizedBox(width: 10),
                   // Expert mode toggle
                   _ExpertToggle(active: _expertMode, onTap: _toggleExpert),
+                  const SizedBox(width: 10),
+                  // Navigation menu
+                  const NavMenuButton(),
                 ],
               ),
 
