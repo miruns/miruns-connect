@@ -41,15 +41,9 @@ void main() async {
       onTimeout: () => debugPrint('[main] bgService.initialize() timed out'),
     );
 
-    // Skip onboarding once the user has completed the EEG first-run flow.
-    // Permissions (health, location, calendar) are requested lazily when
-    // the features that need them are first used — not as a gate at startup.
-    final db = container.read(localDbServiceProvider);
-    final eegDone = await db
-        .getSetting('eeg_onboarding_done')
-        .timeout(const Duration(seconds: 3), onTimeout: () => null);
-    // DEV: To force onboarding on every reload, replace with: skipOnboarding = false;
-    skipOnboarding = eegDone == 'true';
+    // Always show the intro screens on launch.
+    // Users can tap "Skip" to jump straight to the main app.
+    skipOnboarding = false;
 
     // Schedule the two hardcoded daily pushes (08:30 + 20:00).
     // Request permission first — on Android 13+ this is required at runtime.

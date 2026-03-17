@@ -318,6 +318,31 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
             ],
           ),
 
+          // ── Skip button — always visible so first-time and returning
+          //    users can jump straight to the main app. ──────────────────────
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 12,
+            right: 16,
+            child: TextButton(
+              onPressed: () => context.go('/eeg-home'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.fog,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+              ),
+              child: Text(
+                'Skip',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.fog,
+                ),
+              ),
+            ),
+          ),
+
           // ── Progress pill (hidden on welcome + ready) ───────────────────────
           if (_page > 0 && _page < _totalPages - 1)
             Positioned(
