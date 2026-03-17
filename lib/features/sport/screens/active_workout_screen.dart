@@ -1,25 +1,21 @@
-import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/services/ble_heart_rate_service.dart';
-import '../../../core/services/gps_metrics_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
-import '../services/eeg_metrics_service.dart';
-import '../services/voice_coach_service.dart';
-import '../services/workout_service.dart';
 import '../widgets/sport_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Active Workout — full-screen real-time training interface
+//
+// All recording state lives in [ActiveWorkoutNotifier] so the workout
+// keeps running even when the user navigates to another tab. This screen
+// is a pure UI layer that reads from the notifier.
 //
 // Shows:
 //   · Elapsed timer (large, always visible)
@@ -41,341 +37,33 @@ class ActiveWorkoutScreen extends ConsumerStatefulWidget {
 }
 
 class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
-  late final WorkoutService _workoutService;
-  late final BleHeartRateService _bleHrService;
-  late final GpsMetricsService _gpsService;
-  late final VoiceCoachService _voiceCoach;
-
-  late WorkoutSession _session;
-  late SportProfile _profile;
-
-  // Live state
-  int _currentHr = 0;
-  GpsMetrics _gpsMetrics = GpsMetrics.empty();
-  WorkoutEegSample? _latestEeg;
-  final List<WorkoutInsight> _recentInsights = [];
-  Duration _elapsed = Duration.zero;
-
-  // Streams
-  StreamSubscription<BleHrReading>? _hrSub;
-  StreamSubscription<GpsMetrics>? _gpsSub;
-  StreamSubscription<WorkoutEegSample>? _eegSub;
-  EegMetricsService? _eegMetrics;
-  Timer? _ticker;
-  Timer? _insightTimer;
-  Timer? _metricAnnounceTimer;
-
-  // BLE state
-  BleConnectionState _bleState = BleConnectionState.idle;
-  StreamSubscription<BleConnectionState>? _bleStateSub;
-
-  bool _isPaused = false;
-  bool _finishing = false;
-
   @override
   void initState() {
     super.initState();
-    _workoutService = ref.read(workoutServiceProvider);
-    _bleHrService = ref.read(bleHeartRateServiceProvider);
-    _gpsService = ref.read(gpsMetricsServiceProvider);
-    _voiceCoach = ref.read(voiceCoachServiceProvider);
 
-    // Create session
-    _session = WorkoutSession(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      startTime: DateTime.now(),
-      workoutType: widget.workoutType,
-      phase: WorkoutPhase.warmup,
-    );
-
-    _profile = const SportProfile();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    // Load profile
-    _profile = await _workoutService.loadProfile();
-
-    // Initialize voice coach
-    await _voiceCoach.initialize();
-    _voiceCoach.setLevel(_profile.level);
-    _voiceCoach.setEnabled(_profile.voiceCoachEnabled);
-    await _voiceCoach.announceWorkoutStart(widget.workoutType);
-
-    // Start elapsed timer
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!_isPaused && mounted) {
-        setState(
-          () => _elapsed = DateTime.now().difference(_session.startTime),
-        );
-      }
-    });
-
-    // Start HR monitoring
-    _bleState = _bleHrService.state;
-    _bleStateSub = _bleHrService.stateStream.listen((state) {
-      if (mounted) setState(() => _bleState = state);
-    });
-
-    if (_bleState == BleConnectionState.streaming ||
-        _bleState == BleConnectionState.idle) {
-      _startHrMonitoring();
+    // Start a new workout if one isn't already running (user may be
+    // returning to this screen via the banner while the workout is live).
+    final notifier = ref.read(activeWorkoutProvider);
+    if (!notifier.isActive) {
+      notifier.startWorkout(widget.workoutType);
     }
-
-    // Start GPS tracking
-    _startGpsTracking();
-
-    // Start EEG monitoring (if headset is streaming)
-    _startEegMonitoring();
-
-    // Start periodic AI insight generation
-    _insightTimer = Timer.periodic(const Duration(minutes: 2), (_) {
-      _generateInsight();
-    });
-
-    // Start periodic metric announcements (every 5 min for beginners, 3 for others)
-    final announceInterval = _profile.level == SportLevel.beginner
-        ? const Duration(minutes: 5)
-        : const Duration(minutes: 3);
-    _metricAnnounceTimer = Timer.periodic(announceInterval, (_) {
-      _announceMetrics();
-    });
-
-    setState(() {});
-  }
-
-  void _startHrMonitoring() {
-    _hrSub = _bleHrService.hrStream.listen((reading) {
-      if (!mounted) return;
-      setState(() => _currentHr = reading.bpm);
-
-      // Don't record samples while paused.
-      if (_isPaused) return;
-
-      // Record HR sample
-      final sample = WorkoutHrSample(
-        timestamp: DateTime.now(),
-        bpm: reading.bpm,
-        rrMs: reading.rrMs.isNotEmpty ? reading.rrMs.last : null,
-      );
-      _session = _session.copyWith(hrSamples: [..._session.hrSamples, sample]);
-    });
-  }
-
-  void _startGpsTracking() {
-    _gpsSub = _gpsService.startTracking().listen((metrics) {
-      if (!mounted) return;
-      setState(() => _gpsMetrics = metrics);
-
-      // Don't record samples while paused.
-      if (_isPaused) return;
-
-      // Record GPS sample (already throttled by the 5 m distanceFilter)
-      final sample = WorkoutGpsSample(
-        timestamp: DateTime.now(),
-        lat: metrics.lat,
-        lon: metrics.lon,
-        altitudeM: metrics.altitudeM,
-        speedKmh: metrics.currentSpeedKmh,
-      );
-      _session = _session.copyWith(
-        gpsSamples: [..._session.gpsSamples, sample],
-      );
-    });
-  }
-
-  void _startEegMonitoring() {
-    final bleSource = ref.read(bleSourceServiceProvider);
-    if (!bleSource.isStreaming) return;
-
-    _eegMetrics = EegMetricsService(bleSource.signalStream);
-    _eegSub = _eegMetrics!.metricsStream.listen((sample) {
-      if (!mounted) return;
-      setState(() => _latestEeg = sample);
-
-      // Don't record samples while paused.
-      if (_isPaused) return;
-
-      _session = _session.copyWith(
-        eegSamples: [..._session.eegSamples, sample],
-      );
-    });
-  }
-
-  Future<void> _generateInsight() async {
-    if (_isPaused || _currentHr == 0) return;
-
-    try {
-      final analytics = ref.read(workoutAnalyticsServiceProvider);
-      final history = await _workoutService.loadWorkouts(limit: 5);
-      final insight = await analytics.generateRealtimeInsight(
-        session: _session,
-        profile: _profile,
-        currentHr: _currentHr,
-        currentSpeedKmh: _gpsMetrics.currentSpeedKmh > 0
-            ? _gpsMetrics.currentSpeedKmh
-            : null,
-        latestEeg: _latestEeg,
-        recentSessions: history,
-      );
-
-      if (insight != null && mounted) {
-        setState(() {
-          _recentInsights.insert(0, insight);
-          if (_recentInsights.length > 5) _recentInsights.removeLast();
-        });
-
-        // Speak insight through earphones
-        await _voiceCoach.speakInsight(insight);
-      }
-    } catch (_) {}
-  }
-
-  void _announceMetrics() {
-    if (_isPaused || _currentHr == 0) return;
-    final zone = _profile.zoneForHr(_currentHr);
-    final pace = _gpsMetrics.totalDistanceKm > 0 && _elapsed.inMinutes > 0
-        ? _elapsed.inMinutes / _gpsMetrics.totalDistanceKm
-        : null;
-
-    _voiceCoach.announceMetrics(
-      elapsed: _elapsed,
-      currentHr: _currentHr,
-      zoneName: zone.name,
-      distanceKm: _gpsMetrics.totalDistanceKm > 0
-          ? _gpsMetrics.totalDistanceKm
-          : null,
-      paceMinPerKm: pace,
-    );
   }
 
   void _advancePhase() {
     HapticFeedback.mediumImpact();
-    final next = switch (_session.phase) {
-      WorkoutPhase.warmup => WorkoutPhase.active,
-      WorkoutPhase.active => WorkoutPhase.cooldown,
-      WorkoutPhase.cooldown => WorkoutPhase.finished,
-      WorkoutPhase.finished => WorkoutPhase.finished,
-    };
+    final notifier = ref.read(activeWorkoutProvider);
+    notifier.advancePhase();
 
-    setState(() {
-      _session = _session.copyWith(phase: next);
-    });
-    _voiceCoach.announcePhaseChange(next);
-
-    if (next == WorkoutPhase.finished) {
-      _finishWorkout();
+    // If workout just finished, navigate to feedback.
+    final finished = notifier.consumeFinishedSession();
+    if (finished != null && mounted) {
+      context.pushReplacement('/sport/feedback', extra: finished);
     }
   }
 
   void _togglePause() {
     HapticFeedback.selectionClick();
-    setState(() => _isPaused = !_isPaused);
-  }
-
-  Future<void> _finishWorkout() async {
-    if (_finishing) return;
-    setState(() => _finishing = true);
-
-    // Compute summary metrics
-    final hrSamples = _session.hrSamples;
-    int? avgHr, maxHr, minHr;
-    double? avgHrvMs;
-
-    if (hrSamples.isNotEmpty) {
-      final bpms = hrSamples.map((s) => s.bpm).toList();
-      avgHr = (bpms.reduce((a, b) => a + b) / bpms.length).round();
-      maxHr = bpms.reduce((a, b) => a > b ? a : b);
-      minHr = bpms.reduce((a, b) => a < b ? a : b);
-
-      final rrs = hrSamples
-          .where((s) => s.rrMs != null)
-          .map((s) => s.rrMs!)
-          .toList();
-      if (rrs.length > 1) {
-        var sumSqDiffs = 0.0;
-        for (var i = 1; i < rrs.length; i++) {
-          final diff = rrs[i] - rrs[i - 1];
-          sumSqDiffs += diff * diff;
-        }
-        avgHrvMs = sqrt(sumSqDiffs / (rrs.length - 1));
-      }
-    }
-
-    // Zone time map
-    final zoneMap = <int, Duration>{};
-    if (hrSamples.length > 1) {
-      for (var i = 1; i < hrSamples.length; i++) {
-        final zone = _profile.zoneForHr(hrSamples[i].bpm);
-        final dt = hrSamples[i].timestamp.difference(
-          hrSamples[i - 1].timestamp,
-        );
-        zoneMap[zone.zone] = (zoneMap[zone.zone] ?? Duration.zero) + dt;
-      }
-    }
-
-    // EEG averages
-    double? avgAttention, avgFatigue;
-    if (_session.eegSamples.isNotEmpty) {
-      avgAttention =
-          _session.eegSamples.map((s) => s.attention).reduce((a, b) => a + b) /
-          _session.eegSamples.length;
-      avgFatigue =
-          _session.eegSamples
-              .map((s) => s.mentalFatigue)
-              .reduce((a, b) => a + b) /
-          _session.eegSamples.length;
-    }
-
-    // Calorie estimate (rough: based on avg HR and duration)
-    int? calories;
-    if (avgHr != null) {
-      // Simplified calorie formula
-      final weight = _profile.weightKg ?? 70.0;
-      final durationHours = _elapsed.inSeconds / 3600;
-      calories = ((avgHr - 55) * weight * 0.002 * 60 * durationHours).round();
-      if (calories < 0) calories = 0;
-    }
-
-    final finishedSession = _session.copyWith(
-      endTime: DateTime.now(),
-      phase: WorkoutPhase.finished,
-      totalDistanceKm: _gpsMetrics.totalDistanceKm > 0
-          ? _gpsMetrics.totalDistanceKm
-          : null,
-      avgSpeedKmh: _gpsMetrics.averageSpeedKmh > 0
-          ? _gpsMetrics.averageSpeedKmh
-          : null,
-      maxSpeedKmh: _gpsMetrics.maxSpeedKmh > 0 ? _gpsMetrics.maxSpeedKmh : null,
-      avgHr: avgHr,
-      maxHr: maxHr,
-      minHr: minHr,
-      avgHrvMs: avgHrvMs,
-      caloriesBurned: calories,
-      zoneTimeMap: zoneMap.isNotEmpty ? zoneMap : null,
-      avgAttention: avgAttention,
-      avgMentalFatigue: avgFatigue,
-      insights: _recentInsights,
-    );
-
-    // Save to DB
-    await _workoutService.saveWorkout(finishedSession);
-
-    // Cleanup
-    _hrSub?.cancel();
-    _gpsSub?.cancel();
-    _eegSub?.cancel();
-    _eegMetrics?.dispose();
-    _gpsService.stopTracking();
-    _ticker?.cancel();
-    _insightTimer?.cancel();
-    _metricAnnounceTimer?.cancel();
-    await _voiceCoach.stop();
-
-    if (mounted) {
-      // Navigate to feedback screen
-      context.pushReplacement('/sport/feedback', extra: finishedSession);
-    }
+    ref.read(activeWorkoutProvider).togglePause();
   }
 
   Future<void> _confirmStop() async {
@@ -407,42 +95,58 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       ),
     );
     if (result == true) {
-      _session = _session.copyWith(phase: WorkoutPhase.finished);
-      _finishWorkout();
+      final notifier = ref.read(activeWorkoutProvider);
+      await notifier.finishWorkout();
+      final finished = notifier.consumeFinishedSession();
+      if (finished != null && mounted) {
+        context.pushReplacement('/sport/feedback', extra: finished);
+      }
+    }
+  }
+
+  /// Navigate back to the home screen while keeping the workout alive.
+  void _minimise() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/sport');
     }
   }
 
   @override
-  void dispose() {
-    _hrSub?.cancel();
-    _gpsSub?.cancel();
-    _eegSub?.cancel();
-    _eegMetrics?.dispose();
-    _bleStateSub?.cancel();
-    _gpsService.stopTracking();
-    _ticker?.cancel();
-    _insightTimer?.cancel();
-    _metricAnnounceTimer?.cancel();
-    _voiceCoach.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final zone = _currentHr > 0
-        ? _profile.zoneForHr(_currentHr)
-        : _profile.hrZones.first;
+    final notifier = ref.watch(activeWorkoutProvider);
+    final state = notifier.state;
+
+    // If the notifier has no active workout (e.g. finished while we were
+    // building), check for a finished session to hand off.
+    if (state == null) {
+      final finished = notifier.consumeFinishedSession();
+      if (finished != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.pushReplacement('/sport/feedback', extra: finished);
+          }
+        });
+      }
+      return const Scaffold(
+        backgroundColor: AppTheme.void_,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final zone = state.currentHr > 0
+        ? state.profile.zoneForHr(state.currentHr)
+        : state.profile.hrZones.first;
     final zoneColor = Color(int.parse(zone.color));
 
-    final pace = _gpsMetrics.totalDistanceKm > 0 && _elapsed.inMinutes > 0
-        ? _elapsed.inMinutes / _gpsMetrics.totalDistanceKm
+    final pace =
+        state.gpsMetrics.totalDistanceKm > 0 && state.elapsed.inMinutes > 0
+        ? state.elapsed.inMinutes / state.gpsMetrics.totalDistanceKm
         : null;
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _confirmStop();
-      },
+      canPop: true,
       child: Scaffold(
         backgroundColor: AppTheme.void_,
         body: SafeArea(
@@ -457,29 +161,46 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Phase badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: zoneColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _session.phase.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: zoneColor,
+                    // Minimise (back arrow — keeps workout alive)
+                    GestureDetector(
+                      onTap: _minimise,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.shimmer.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22,
+                          color: AppTheme.fog,
                         ),
                       ),
                     ),
-                    // Activity label
+                    // Phase badge + Activity label
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: zoneColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            state.session.phase.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: zoneColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Icon(
                           widget.workoutType.icon,
                           size: 18,
@@ -519,7 +240,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
               // ── Elapsed time ───────────────────────────────────────────
               Text(
-                _formatDuration(_elapsed),
+                _formatDuration(state.elapsed),
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 48,
                   fontWeight: FontWeight.w300,
@@ -534,11 +255,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      if (_currentHr > 0)
+                      if (state.currentHr > 0)
                         HrZoneRing(
-                          currentHr: _currentHr,
+                          currentHr: state.currentHr,
                           zone: zone,
-                          maxHr: _profile.estimatedMaxHr,
+                          maxHr: state.profile.estimatedMaxHr,
                           size: 160,
                         )
                       else
@@ -553,10 +274,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            if (_gpsMetrics.totalDistanceKm > 0)
+                            if (state.gpsMetrics.totalDistanceKm > 0)
                               MetricTile(
                                 label: 'Distance',
-                                value: _gpsMetrics.totalDistanceKm
+                                value: state.gpsMetrics.totalDistanceKm
                                     .toStringAsFixed(2),
                                 unit: 'km',
                                 icon: Icons.straighten,
@@ -568,18 +289,19 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                                 unit: '/km',
                                 icon: Icons.speed,
                               ),
-                            if (_gpsMetrics.currentSpeedKmh > 0)
+                            if (state.gpsMetrics.currentSpeedKmh > 0)
                               MetricTile(
                                 label: 'Speed',
-                                value: _gpsMetrics.currentSpeedKmh
+                                value: state.gpsMetrics.currentSpeedKmh
                                     .toStringAsFixed(1),
                                 unit: 'km/h',
                                 icon: Icons.speed,
                               ),
-                            if (_gpsMetrics.altitudeM > 0)
+                            if (state.gpsMetrics.altitudeM > 0)
                               MetricTile(
                                 label: 'Altitude',
-                                value: _gpsMetrics.altitudeM.toStringAsFixed(0),
+                                value: state.gpsMetrics.altitudeM
+                                    .toStringAsFixed(0),
                                 unit: 'm',
                                 icon: Icons.terrain,
                               ),
@@ -588,23 +310,23 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                       ),
 
                       // ── Brain State (EEG) ────────────────────────────
-                      if (_latestEeg != null) ...[
+                      if (state.latestEeg != null) ...[
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: BrainStateIndicator(
-                            attention: _latestEeg!.attention,
-                            relaxation: _latestEeg!.relaxation,
-                            mentalFatigue: _latestEeg!.mentalFatigue,
-                            cognitiveLoad: _latestEeg!.cognitiveLoad,
+                            attention: state.latestEeg!.attention,
+                            relaxation: state.latestEeg!.relaxation,
+                            mentalFatigue: state.latestEeg!.mentalFatigue,
+                            cognitiveLoad: state.latestEeg!.cognitiveLoad,
                           ),
                         ),
                       ],
 
                       // ── AI Insights ──────────────────────────────────
-                      if (_recentInsights.isNotEmpty) ...[
+                      if (state.recentInsights.isNotEmpty) ...[
                         const SizedBox(height: 16),
-                        ..._recentInsights
+                        ...state.recentInsights
                             .take(3)
                             .map(
                               (insight) => InsightCard(
@@ -639,20 +361,20 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                   children: [
                     // Pause / Resume
                     _ControlButton(
-                      icon: _isPaused
+                      icon: state.isPaused
                           ? Icons.play_arrow_rounded
                           : Icons.pause_rounded,
-                      label: _isPaused ? 'Resume' : 'Pause',
+                      label: state.isPaused ? 'Resume' : 'Pause',
                       color: AppTheme.fog,
                       onTap: _togglePause,
                     ),
                     // Next Phase
-                    if (_session.phase != WorkoutPhase.finished)
+                    if (state.session.phase != WorkoutPhase.finished)
                       _ControlButton(
-                        icon: _session.phase == WorkoutPhase.cooldown
+                        icon: state.session.phase == WorkoutPhase.cooldown
                             ? Icons.flag_rounded
                             : Icons.skip_next_rounded,
-                        label: switch (_session.phase) {
+                        label: switch (state.session.phase) {
                           WorkoutPhase.warmup => 'Go Active',
                           WorkoutPhase.active => 'Cool Down',
                           WorkoutPhase.cooldown => 'Finish',

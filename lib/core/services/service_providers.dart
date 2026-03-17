@@ -1,6 +1,7 @@
 // ignore_for_file: directives_ordering
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/sport/services/active_workout_notifier.dart';
 import '../../features/sport/services/voice_coach_service.dart';
 import '../../features/sport/services/workout_analytics_service.dart';
 import '../../features/sport/services/workout_service.dart';
@@ -222,6 +223,23 @@ final voiceCoachServiceProvider = Provider<VoiceCoachService>((ref) {
   final svc = VoiceCoachService();
   ref.onDispose(svc.dispose);
   return svc;
+});
+
+/// Active workout notifier — keeps workout state alive across navigation.
+///
+/// Read from any screen to check if a workout is in progress and to display
+/// the persistent workout banner.
+final activeWorkoutProvider = ChangeNotifierProvider<ActiveWorkoutNotifier>((
+  ref,
+) {
+  return ActiveWorkoutNotifier(
+    bleHrService: ref.read(bleHeartRateServiceProvider),
+    gpsService: ref.read(gpsMetricsServiceProvider),
+    voiceCoach: ref.read(voiceCoachServiceProvider),
+    workoutService: ref.read(workoutServiceProvider),
+    analyticsService: ref.read(workoutAnalyticsServiceProvider),
+    bleSourceService: ref.read(bleSourceServiceProvider),
+  );
 });
 
 // ── Health permission reactive status ───────────────────────────────────────

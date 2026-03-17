@@ -5,20 +5,33 @@ import 'package:go_router/go_router.dart';
 import '../../core/services/service_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../shared/widgets/nav_menu_button.dart';
+import '../sport/widgets/active_workout_banner.dart';
 
 /// Root scaffold that provides navigation menu access to child screens.
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the active workout to show/hide the banner.
+    final hasActiveWorkout = ref.watch(
+      activeWorkoutProvider.select((n) => n.isActive),
+    );
+
     return Scaffold(
       extendBody: true,
       body: NavMenuScope(
         onOpenMenu: () => _showNavSheet(context),
-        child: navigationShell,
+        child: Column(
+          children: [
+            // Persistent workout banner — visible on every tab
+            if (hasActiveWorkout)
+              SafeArea(bottom: false, child: const ActiveWorkoutBanner()),
+            Expanded(child: navigationShell),
+          ],
+        ),
       ),
     );
   }
