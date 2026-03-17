@@ -396,75 +396,74 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
                   ),
                 ),
             ] else ...[
-              // ── Normal view ────────────────────────────────────────────
-
-              // Tabs section label
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
-                child: Row(
-                  children: [
-                    Text(
-                      'NAVIGATE',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.fog,
-                        letterSpacing: 0.4,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Main tabs
-              ...List.generate(mainItems.length, (i) {
-                return _buildNavRow(
-                  context,
-                  mainItems[i],
-                  i,
-                  i == widget.currentIndex,
-                );
-              }),
-
-              // Divider
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                child: Divider(
-                  color: AppTheme.shimmer.withValues(alpha: 0.20),
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // More section label
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                child: Row(
-                  children: [
-                    Text(
-                      'MORE',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.fog,
-                        letterSpacing: 0.4,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Sensor guidance
-              _SensorGuidanceBanner(ref: ref),
-
-              // More destinations
+              // ── Normal view (scrollable) ───────────────────────────────
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.only(bottom: 12),
                   children: [
+                    // Tabs section label
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                      child: Row(
+                        children: [
+                          Text(
+                            'NAVIGATE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.fog,
+                              letterSpacing: 0.4,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Main tabs
+                    ...List.generate(mainItems.length, (i) {
+                      return _buildNavRow(
+                        context,
+                        mainItems[i],
+                        i,
+                        i == widget.currentIndex,
+                      );
+                    }),
+
+                    // Divider
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                      child: Divider(
+                        color: AppTheme.shimmer.withValues(alpha: 0.20),
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // More section label
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            'MORE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.fog,
+                              letterSpacing: 0.4,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Sensor guidance
+                    _SensorGuidanceBanner(ref: ref),
+
+                    // More destinations
                     ..._moreDestinations.map(
                       (dest) => _MoreTile(
                         destination: dest,
@@ -480,8 +479,6 @@ class _FullNavSheetState extends ConsumerState<_FullNavSheet> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 12),
             ],
           ],
         ),
