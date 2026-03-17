@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,6 +67,18 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   // Pre-workout insight: CTA-driven (not auto)
   bool _insightAvailable = false;
 
+  // Live sensor data for hero slider
+  final List<double> _hrBuffer = [];
+  final List<double> _rrBuffer = [];
+  final List<List<double>> _eegBuffer = [];
+  int? _currentBpm;
+  double? _currentRmssd;
+  StreamSubscription<BleHrReading>? _hrDataSub;
+  StreamSubscription<SignalSample>? _eegDataSub;
+  final PageController _sensorPageCtrl = PageController();
+  int _sensorPage = 0;
+  static const int _maxBuffer = 60;
+
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
 
@@ -100,6 +113,33 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       if (mounted) setState(() => _hrState = s);
     });
 
+    // Live HR data for slider graphs
+    _hrDataSub = hrService.hrStream.listen((reading) {
+      if (!mounted) return;
+      setState(() {
+        _currentBpm = reading.bpm;
+        _hrBuffer.add(reading.bpm.toDouble());
+        if (_hrBuffer.length > _maxBuffer) _hrBuffer.removeAt(0);
+        if (reading.rrMs.isNotEmpty) {
+          _rrBuffer.addAll(reading.rrMs);
+          if (_rrBuffer.length > _maxBuffer) {
+            _rrBuffer.removeRange(0, _rrBuffer.length - _maxBuffer);
+          }
+          final hrv = BleHrvMetrics.compute(_rrBuffer);
+          _currentRmssd = hrv?.rmssd;
+        }
+      });
+    });
+
+    // Live EEG data for slider graph
+    _eegDataSub = bleService.signalStream.listen((sample) {
+      if (!mounted) return;
+      setState(() {
+        _eegBuffer.add(sample.channels);
+        if (_eegBuffer.length > _maxBuffer) _eegBuffer.removeAt(0);
+      });
+    });
+
     _loadData();
   }
 
@@ -108,8 +148,11 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     _pulseCtrl.dispose();
     _bleSub?.cancel();
     _hrSub?.cancel();
+    _hrDataSub?.cancel();
+    _eegDataSub?.cancel();
     _devicesScanSub?.cancel();
     _reconnectTimer?.cancel();
+    _sensorPageCtrl.dispose();
     super.dispose();
   }
 
@@ -506,78 +549,84 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                   ),
                 ),
 
-                // ── Hero: selected activity ─────────────────────────────
+                // ── Live sensor slider ──────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          // Large icon with glow
-                          AnimatedBuilder(
-                            animation: _pulseAnim,
-                            builder: (context, _) {
-                              final glow = _pulseAnim.value * 0.12;
-                              return Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppTheme.cyan.withValues(
-                                    alpha: 0.06 + glow,
-                                  ),
-                                  border: Border.all(
-                                    color: AppTheme.cyan.withValues(
-                                      alpha: 0.15 + glow,
-                                    ),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.cyan.withValues(
-                                        alpha: 0.08 + glow * 0.5,
-                                      ),
-                                      blurRadius: 40,
-                                      spreadRadius: 8,
-                                    ),
-                                  ],
+                    padding: const EdgeInsets.only(top: 24),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 130,
+                          child: PageView(
+                            controller: _sensorPageCtrl,
+                            onPageChanged: (i) =>
+                                setState(() => _sensorPage = i),
+                            children: [
+                              _LiveSensorCard(
+                                label: 'HEART RATE',
+                                value: _currentBpm != null
+                                    ? '$_currentBpm bpm'
+                                    : '-- bpm',
+                                color: AppTheme.crimson,
+                                icon: Icons.favorite_rounded,
+                                child: _MiniWaveGraph(
+                                  data: _hrBuffer,
+                                  color: AppTheme.crimson,
+                                  maxBuffer: _maxBuffer,
+                                  baselineMin: 40,
+                                  baselineMax: 200,
                                 ),
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: Icon(
-                                    _selectedType.icon,
-                                    key: ValueKey(_selectedType),
-                                    size: 42,
-                                    color: AppTheme.cyan,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          // Activity name — big and bold
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            child: Text(
-                              _selectedType.label,
-                              key: ValueKey(_selectedType.label),
-                              style: AppTheme.geist(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.moonbeam,
-                                letterSpacing: -1.0,
                               ),
-                            ),
+                              _LiveSensorCard(
+                                label: 'HRV  (RMSSD)',
+                                value: _currentRmssd != null
+                                    ? '${_currentRmssd!.toStringAsFixed(0)} ms'
+                                    : '-- ms',
+                                color: AppTheme.seaGreen,
+                                icon: Icons.timeline_rounded,
+                                child: _MiniBarGraph(
+                                  data: _rrBuffer,
+                                  color: AppTheme.seaGreen,
+                                  maxBuffer: _maxBuffer,
+                                ),
+                              ),
+                              _LiveSensorCard(
+                                label: 'EEG',
+                                value: _eegBuffer.isNotEmpty
+                                    ? '${_eegBuffer.last.length}ch live'
+                                    : '-- idle',
+                                color: AppTheme.cyan,
+                                icon: Icons.waves_rounded,
+                                child: _MiniMultiChannelGraph(
+                                  data: _eegBuffer,
+                                  color: AppTheme.cyan,
+                                  maxBuffer: _maxBuffer,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Select activity below',
-                            style: AppTheme.geist(
-                              fontSize: 13,
-                              color: AppTheme.fog,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Page dots
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(3, (i) {
+                            final active = i == _sensorPage;
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: active ? 18 : 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(3),
+                                color: active
+                                    ? AppTheme.cyan
+                                    : AppTheme.shimmer,
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1948,4 +1997,383 @@ class _DeviceTile extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live sensor card — single page in the sensor slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LiveSensorCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+  final Widget child;
+
+  const _LiveSensorCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Graph fills backdrop
+            Positioned.fill(child: child),
+            // Labels overlay
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, size: 14, color: color),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: AppTheme.geist(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    value,
+                    style: AppTheme.geist(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.moonbeam,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini wave graph — smooth line chart for HR data
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MiniWaveGraph extends StatelessWidget {
+  final List<double> data;
+  final Color color;
+  final int maxBuffer;
+  final double baselineMin;
+  final double baselineMax;
+
+  const _MiniWaveGraph({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+    this.baselineMin = 0,
+    this.baselineMax = 100,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _WavePainter(
+        data: data,
+        color: color,
+        maxBuffer: maxBuffer,
+        baselineMin: baselineMin,
+        baselineMax: baselineMax,
+      ),
+    );
+  }
+}
+
+class _WavePainter extends CustomPainter {
+  final List<double> data;
+  final Color color;
+  final int maxBuffer;
+  final double baselineMin;
+  final double baselineMax;
+
+  _WavePainter({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+    required this.baselineMin,
+    required this.baselineMax,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) {
+      _paintPlaceholder(canvas, size);
+      return;
+    }
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.6)
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color.withValues(alpha: 0.12), color.withValues(alpha: 0.0)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final minV = data.reduce(math.min).clamp(baselineMin, baselineMax);
+    final maxV = data.reduce(math.max).clamp(baselineMin, baselineMax);
+    final range = (maxV - minV).clamp(10.0, double.infinity);
+
+    final path = Path();
+    final fillPath = Path();
+    final stepX = size.width / (maxBuffer - 1);
+
+    for (var i = 0; i < data.length; i++) {
+      final x = (maxBuffer - data.length + i) * stepX;
+      final y =
+          size.height -
+          ((data[i] - minV) / range) * size.height * 0.7 -
+          size.height * 0.15;
+      if (i == 0) {
+        path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+
+    fillPath.lineTo((maxBuffer - 1) * stepX, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  void _paintPlaceholder(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.08)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+    final path = Path();
+    final midY = size.height * 0.5;
+    path.moveTo(0, midY);
+    for (var x = 0.0; x < size.width; x += 4) {
+      path.lineTo(x, midY + math.sin(x * 0.05) * 8);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_WavePainter old) => true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini bar graph — RR interval variability for HRV
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MiniBarGraph extends StatelessWidget {
+  final List<double> data;
+  final Color color;
+  final int maxBuffer;
+
+  const _MiniBarGraph({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BarPainter(data: data, color: color, maxBuffer: maxBuffer),
+    );
+  }
+}
+
+class _BarPainter extends CustomPainter {
+  final List<double> data;
+  final Color color;
+  final int maxBuffer;
+
+  _BarPainter({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) {
+      _paintPlaceholder(canvas, size);
+      return;
+    }
+
+    final barWidth = (size.width / maxBuffer).clamp(2.0, 6.0);
+    const gap = 1.0;
+    final minV = data.reduce(math.min);
+    final maxV = data.reduce(math.max);
+    final range = (maxV - minV).clamp(50.0, double.infinity);
+
+    for (var i = 0; i < data.length; i++) {
+      final x = (maxBuffer - data.length + i) * (barWidth + gap);
+      if (x > size.width) continue;
+      final norm = ((data[i] - minV) / range).clamp(0.1, 1.0);
+      final h = norm * size.height * 0.6;
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, size.height - h - size.height * 0.1, barWidth, h),
+        const Radius.circular(1.5),
+      );
+      canvas.drawRRect(
+        rect,
+        Paint()..color = color.withValues(alpha: 0.15 + norm * 0.4),
+      );
+    }
+  }
+
+  void _paintPlaceholder(Canvas canvas, Size size) {
+    final rng = math.Random(42);
+    const barW = 3.0;
+    const gap = 2.0;
+    final count = (size.width / (barW + gap)).floor();
+    for (var i = 0; i < count; i++) {
+      final h = 8.0 + rng.nextDouble() * 20;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(i * (barW + gap), size.height - h - 10, barW, h),
+          const Radius.circular(1.5),
+        ),
+        Paint()..color = color.withValues(alpha: 0.06),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BarPainter old) => true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini multi-channel graph — overlapping EEG channels
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MiniMultiChannelGraph extends StatelessWidget {
+  final List<List<double>> data;
+  final Color color;
+  final int maxBuffer;
+
+  const _MiniMultiChannelGraph({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _MultiChannelPainter(
+        data: data,
+        color: color,
+        maxBuffer: maxBuffer,
+      ),
+    );
+  }
+}
+
+class _MultiChannelPainter extends CustomPainter {
+  final List<List<double>> data;
+  final Color color;
+  final int maxBuffer;
+
+  _MultiChannelPainter({
+    required this.data,
+    required this.color,
+    required this.maxBuffer,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) {
+      _paintPlaceholder(canvas, size);
+      return;
+    }
+
+    final nCh = data.first.length.clamp(1, 8);
+    final stepX = size.width / (maxBuffer - 1);
+    final bandH = size.height / nCh;
+
+    for (var ch = 0; ch < nCh; ch++) {
+      final paint = Paint()
+        ..color = color.withValues(alpha: 0.25 + (ch % 3) * 0.15)
+        ..strokeWidth = 1.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
+      // Find channel range
+      double cMin = double.infinity, cMax = double.negativeInfinity;
+      for (final s in data) {
+        if (ch < s.length) {
+          if (s[ch] < cMin) cMin = s[ch];
+          if (s[ch] > cMax) cMax = s[ch];
+        }
+      }
+      final range = (cMax - cMin).clamp(1.0, double.infinity);
+      final midY = bandH * (ch + 0.5);
+
+      final path = Path();
+      for (var i = 0; i < data.length; i++) {
+        if (ch >= data[i].length) continue;
+        final x = (maxBuffer - data.length + i) * stepX;
+        final norm = (data[i][ch] - cMin) / range - 0.5;
+        final y = midY + norm * bandH * 0.7;
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  void _paintPlaceholder(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.06)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    for (var ch = 0; ch < 4; ch++) {
+      final midY = size.height * (ch + 0.5) / 4;
+      final path = Path();
+      path.moveTo(0, midY);
+      for (var x = 0.0; x < size.width; x += 3) {
+        path.lineTo(x, midY + math.sin(x * 0.08 + ch * 1.5) * 6);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MultiChannelPainter old) => true;
 }
