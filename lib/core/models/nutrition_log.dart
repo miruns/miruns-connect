@@ -244,8 +244,9 @@ class NutritionFacts {
     final parts = <String>[];
     if (energyKcal != null) parts.add('${energyKcal!.toStringAsFixed(0)} kcal');
     if (proteins != null) parts.add('P ${proteins!.toStringAsFixed(1)}g');
-    if (carbohydrates != null)
+    if (carbohydrates != null) {
       parts.add('C ${carbohydrates!.toStringAsFixed(1)}g');
+    }
     if (fat != null) parts.add('F ${fat!.toStringAsFixed(1)}g');
     if (sugars != null) parts.add('S ${sugars!.toStringAsFixed(1)}g');
     return parts.join(' · ');

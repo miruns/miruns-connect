@@ -1,13 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:miruns_flutter/core/models/ai_models.dart';
 import 'package:miruns_flutter/core/models/body_blog_entry.dart';
 import 'package:miruns_flutter/core/models/capture_entry.dart';
 import 'package:miruns_flutter/core/services/ai_service.dart';
 import 'package:miruns_flutter/core/services/journal_ai_service.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 
 /// A fake [AiService] that returns controlled responses.
 class _FakeAiService extends AiService {
@@ -15,9 +15,7 @@ class _FakeAiService extends AiService {
   final bool shouldThrow;
 
   _FakeAiService({this.response, this.shouldThrow = false})
-      : super(
-          client: MockClient((_) async => http.Response('', 500)),
-        );
+    : super(client: MockClient((_) async => http.Response('', 500)));
 
   @override
   Future<String> ask(
@@ -60,7 +58,7 @@ void main() {
       expect(result.summary, '');
       expect(result.fullBody, '');
       expect(result.mood, 'calm');
-      expect(result.moodEmoji, '🌿');
+      expect(result.moodEmoji, '🫀');
       expect(result.tags, isEmpty);
     });
 
@@ -167,9 +165,7 @@ void main() {
     });
 
     test('returns null when AI throws', () async {
-      final service = JournalAiService(
-        ai: _FakeAiService(shouldThrow: true),
-      );
+      final service = JournalAiService(ai: _FakeAiService(shouldThrow: true));
 
       final captures = [
         CaptureEntry(
@@ -270,12 +266,8 @@ class _CapturingAiService extends AiService {
   final String aiResponse;
   final void Function(String) onPrompt;
 
-  _CapturingAiService({
-    required this.aiResponse,
-    required this.onPrompt,
-  }) : super(
-          client: MockClient((_) async => http.Response('', 500)),
-        );
+  _CapturingAiService({required this.aiResponse, required this.onPrompt})
+    : super(client: MockClient((_) async => http.Response('', 500)));
 
   @override
   Future<String> ask(

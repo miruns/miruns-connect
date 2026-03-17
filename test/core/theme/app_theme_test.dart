@@ -1,7 +1,7 @@
-import 'package:miruns_flutter/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:miruns_flutter/core/theme/app_theme.dart';
 
 void main() {
   setUpAll(() {
@@ -12,26 +12,26 @@ void main() {
   group('AppTheme', () {
     // ── Color constants ──
 
-    // ── Midnight Ocean palette ──
+    // ── Geist-inspired palette ──
     test('primary and accent colors are defined', () {
-      // Primary = moonlit teal glow
-      expect(AppTheme.primaryColor, const Color(0xFF4DD4C8));
-      // Accent = pale sky starlight
-      expect(AppTheme.accentColor, const Color(0xFFB0CCEF));
-      expect(AppTheme.successColor, const Color(0xFF38C87E));
-      expect(AppTheme.warningColor, const Color(0xFFFFBD5A));
-      expect(AppTheme.errorColor, const Color(0xFFFF5A7A));
+      // Primary = glow blue
+      expect(AppTheme.primaryColor, const Color(0xFF0070F3));
+      // Accent = starlight cyan
+      expect(AppTheme.accentColor, const Color(0xFF79FFE1));
+      expect(AppTheme.successColor, const Color(0xFF00B37E));
+      expect(AppTheme.warningColor, const Color(0xFFF59E0B));
+      expect(AppTheme.errorColor, const Color(0xFFFF4444));
     });
 
     test('background and surface colors are defined', () {
-      expect(AppTheme.backgroundColor, const Color(0xFF0A0E1A));
-      expect(AppTheme.surfaceColor, const Color(0xFF101625));
-      expect(AppTheme.cardColor, const Color(0xFF172036));
+      expect(AppTheme.backgroundColor, const Color(0xFF0A0A0A));
+      expect(AppTheme.surfaceColor, const Color(0xFF0D0D0D));
+      expect(AppTheme.cardColor, const Color(0xFF111111));
     });
 
     test('secondary color is defined', () {
-      // Secondary = amethyst aurora
-      expect(AppTheme.secondaryColor, const Color(0xFF8B78F5));
+      // Secondary = aurora violet
+      expect(AppTheme.secondaryColor, const Color(0xFF7928CA));
     });
   });
 }

@@ -87,8 +87,9 @@ class BodyDialogueSession {
     if (s.restingHeartRate > 0) {
       buf.writeln('Resting HR: ${s.restingHeartRate} bpm');
     }
-    if (s.hrv != null)
+    if (s.hrv != null) {
       buf.writeln('HRV (SDNN): ${s.hrv!.toStringAsFixed(1)} ms');
+    }
     if (s.workouts > 0) buf.writeln('Workouts: ${s.workouts}');
     if (s.distanceKm > 0) {
       buf.writeln('Distance: ${s.distanceKm.toStringAsFixed(1)} km');

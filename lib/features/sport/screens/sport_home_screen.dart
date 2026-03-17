@@ -1073,8 +1073,9 @@ class _SensorPillRow extends StatelessWidget {
     if (eegState == BleSourceState.streaming) return _PillState.ready;
     if (isDemoMode) return _PillState.warning;
     if (eegState == BleSourceState.scanning ||
-        eegState == BleSourceState.connecting)
+        eegState == BleSourceState.connecting) {
       return _PillState.busy;
+    }
     if (eegState == BleSourceState.error) return _PillState.error;
     return _PillState.idle;
   }
@@ -1082,8 +1083,9 @@ class _SensorPillRow extends StatelessWidget {
   _PillState _hrPillState() {
     if (hrState == BleConnectionState.streaming) return _PillState.ready;
     if (hrState == BleConnectionState.scanning ||
-        hrState == BleConnectionState.connecting)
+        hrState == BleConnectionState.connecting) {
       return _PillState.busy;
+    }
     if (hrState == BleConnectionState.error) return _PillState.error;
     return _PillState.idle;
   }

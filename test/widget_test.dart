@@ -28,6 +28,12 @@ class _TestLocalDbService extends LocalDbService {
 
   @override
   Future<BodyBlogEntry?> loadEntry(DateTime date) async => null;
+
+  @override
+  Future<String?> getSetting(String key) async => null;
+
+  @override
+  Future<void> setSetting(String key, String value) async {}
 }
 
 /// Stub [BodyBlogService] — avoids Health / GPS / Calendar platform channels

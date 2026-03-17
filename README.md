@@ -9,7 +9,7 @@
 > **AI-assisted development.** Portions of this codebase, including data-processing logic and application code were developed with the assistance of AI tools. Outputs have been reviewed by human developers, but no guarantee of correctness or completeness is implied at this stage.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
-![Version](https://img.shields.io/badge/version-1.0.20-informational)
+![Version](https://img.shields.io/badge/version-1.0.21-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
@@ -231,6 +231,7 @@ lib/
 │   ├── services/             # All business logic
 │   │   ├── service_providers #   ★ Central Riverpod provider registry
 │   │   ├── body_blog_service #   Smart-refresh orchestrator
+│   │   ├── body_dialogue_service  # First-person body narrative builder
 │   │   ├── journal_ai_service  # Prompt → AI → JournalAiResult
 │   │   ├── capture_metadata_service  # Per-capture background AI metadata
 │   │   ├── ai_service        #   HTTP client for any OpenAI-compatible endpoint
@@ -251,6 +252,9 @@ lib/
 │   │   ├── gps_metrics_service   # Real-time GPS metrics
 │   │   ├── calendar_service  #   Device calendar read
 │   │   ├── notification_service  # Local notification scheduling
+│   │   ├── notification_content_service  # Notification content builder
+│   │   ├── foreground_task_service  # Foreground task lifecycle
+│   │   ├── app_update_service  # In-app update checker
 │   │   └── permission_service    # Permission orchestration
 │   ├── widgets/              # Shared low-level widgets
 │   │   ├── live_hr_waveform  #   60 fps ECG-style PQRST waveform (BLE HR)
@@ -261,11 +265,14 @@ lib/
 │   └── theme/                # Material 3 (light + dark)
 ├── features/
 │   ├── onboarding/           # Step-by-step permission flow
+│   ├── eeg/                  # EEG home dashboard + onboarding setup
+│   │   └── screens/          #   EegHomeScreen, EegOnboardingScreen
 │   ├── journal/              # Journal tab — paginated daily narrative
 │   ├── body_blog/            # Blog screen & widgets (detail, cards, AI badge)
 │   ├── patterns/             # AI-derived trends & insights
 │   ├── capture/              # Manual capture with data-source toggles
 │   ├── sources/              # Signal source browser + live signal monitor
+│   ├── sensors/              # Sensor health status dashboard
 │   ├── sport/                # Sport & workout feature
 │   │   ├── models/           #   SportProfile, WorkoutSession, WorkoutFeedback, WorkoutAnalysis
 │   │   ├── services/         #   WorkoutService, WorkoutAnalyticsService, VoiceCoachService
@@ -273,9 +280,10 @@ lib/
 │   │   └── widgets/          #   HrZoneRing, MetricTile, BrainStateIndicator, InsightCard
 │   ├── shell/                # AppShell (3-tab nav) + DebugScreen
 │   ├── environment/          # Detailed environment view
+│   ├── permissions/          # Runtime permission management screen
 │   ├── shared/               # Reusable widgets
 │   ├── ai_settings/          # Bring-your-own-AI provider settings
-│   └── …                     # health, location, calendar, ai_test, permissions
+│   └── …                     # health, location, calendar, ai_test
 └── main.dart                 # App entry point
 ```
 
@@ -419,20 +427,24 @@ All providers speak the same **OpenAI chat completions** protocol, so no adapter
 | #   | Screen             | Route                | Description                                                                                                                                                                                                                                                                                                                      |
 | --- | ------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **Onboarding**     | `/onboarding`        | Permission flow — location, health, calendar. Every step skippable.                                                                                                                                                                                                                                                              |
-| 2   | **Journal**        | `/journal` (Tab 0)   | Paginated daily blog. Swipe between days. Pull-to-refresh + "Refresh day" on today's card.                                                                                                                                                                                                                                       |
-| 3   | **Journal Detail** | —                    | Full narrative: Sleep, Movement, Heart, Environment, Agenda. AI regeneration & mood/note editor.                                                                                                                                                                                                                                 |
-| 4   | **Patterns**       | `/patterns` (Tab 1)  | Energy distribution, top themes, keyword tags, notable signals, recent moments timeline.                                                                                                                                                                                                                                         |
-| 5   | **Capture**        | `/capture` (Tab 2)   | Manual capture with toggleable data sources. **BLE HR chip** opens a device scanner; once connected, a live ECG-style waveform slides in. **Scan Food chip** opens a barcode scanner; scanned products show Nutri-Score, macros, and feed into the AI prompt for nutrition-health correlation.                                   |
-| 6   | **Environment**    | `/environment`       | Expanded environmental data view.                                                                                                                                                                                                                                                                                                |
-| 7   | **AI Services**    | `/ai-settings`       | Choose AI provider, enter API key, set model, test connection. Supports 11 providers including local inference.                                                                                                                                                                                                                  |
-| 8   | **Debug**          | `/debug`             | Raw sensor readouts — health metrics, GPS, ambient data, calendar events.                                                                                                                                                                                                                                                        |
-| 9   | **Source Browser** | `/sources`           | Browse all registered BLE signal sources (ADS1299, community boards). Each card shows channel count, sample rate, and hardware name.                                                                                                                                                                                             |
-| 10  | **Live Signal**    | `/sources/:sourceId` | Full-screen multi-channel signal monitor: scan → pick device → connect → stream. Four view modes via popup menu — **Waveform** (time-domain), **Spectral** (FFT spectrum/waterfall/bands), **Decoding** (demo neural state classifier), **Monitor** (demo signal quality dashboard). Channel toggle chips, solo mode, recording. |
-| 11  | **Sport Home**     | `/sport`             | Workout quick-start with type selector (8 activities), pulsing START button, AI pre-workout prediction (after 3+ sessions), recent workout cards, profile access. Entry point via **More → Sport**.                                                                                                                              |
-| 12  | **Active Workout** | `/sport/active`      | Full-screen real-time training: elapsed timer, HR zone ring, live metrics grid (distance, pace, speed, altitude), brain state indicators (EEG), AI coaching insights (every 2 min), voice prompts via TTS. Phase progression: warmup → active → cooldown → finish. Pause/resume controls.                                        |
-| 13  | **Feedback**       | `/sport/feedback`    | Post-workout: session summary stats, fatigue/energy sliders (1–10), mood emoji picker, optional notes. Submit triggers AI analysis showing performance score, fatigue assessment, recovery recommendation, highlights, and improvements.                                                                                         |
-| 14  | **History**        | `/sport/history`     | Scrollable list of past workouts with type emoji, date, duration, distance, avg HR, calories, performance score, feedback summary, and AI analysis excerpt.                                                                                                                                                                      |
-| 15  | **Sport Profile**  | `/sport/profile`     | User fitness profile setup: level selector (beginner/intermediate/advanced), age/weight/height, resting/max HR, preferred workout types, voice coach toggle, EEG insights toggle.                                                                                                                                                |
+| 2   | **EEG Home**       | `/eeg-home`          | Brain signal dashboard — EEG device status, neural metrics overview, quick access to live signal monitoring.                                                                                                                                                                                                                     |
+| 3   | **EEG Onboarding** | `/eeg-onboarding`    | First-time EEG setup — device pairing guidance, signal quality check, baseline calibration.                                                                                                                                                                                                                                      |
+| 4   | **Journal**        | `/journal` (Tab 0)   | Paginated daily blog. Swipe between days. Pull-to-refresh + "Refresh day" on today's card.                                                                                                                                                                                                                                       |
+| 5   | **Journal Detail** | —                    | Full narrative: Sleep, Movement, Heart, Environment, Agenda. AI regeneration & mood/note editor.                                                                                                                                                                                                                                 |
+| 6   | **Patterns**       | `/patterns` (Tab 1)  | Energy distribution, top themes, keyword tags, notable signals, recent moments timeline.                                                                                                                                                                                                                                         |
+| 7   | **Capture**        | `/capture` (Tab 2)   | Manual capture with toggleable data sources. **BLE HR chip** opens a device scanner; once connected, a live ECG-style waveform slides in. **Scan Food chip** opens a barcode scanner; scanned products show Nutri-Score, macros, and feed into the AI prompt for nutrition-health correlation.                                   |
+| 8   | **Environment**    | `/environment`       | Expanded environmental data view.                                                                                                                                                                                                                                                                                                |
+| 9   | **AI Services**    | `/ai-settings`       | Choose AI provider, enter API key, set model, test connection. Supports 11 providers including local inference.                                                                                                                                                                                                                  |
+| 10  | **Sensors**        | `/sensors`           | Sensor health dashboard — status of all connected devices and data sources.                                                                                                                                                                                                                                                      |
+| 11  | **Permissions**    | —                    | Runtime permission management — review and toggle individual permissions.                                                                                                                                                                                                                                                        |
+| 12  | **Debug**          | `/debug`             | Raw sensor readouts — health metrics, GPS, ambient data, calendar events.                                                                                                                                                                                                                                                        |
+| 13  | **Source Browser** | `/sources`           | Browse all registered BLE signal sources (ADS1299, community boards). Each card shows channel count, sample rate, and hardware name.                                                                                                                                                                                             |
+| 14  | **Live Signal**    | `/sources/:sourceId` | Full-screen multi-channel signal monitor: scan → pick device → connect → stream. Four view modes via popup menu — **Waveform** (time-domain), **Spectral** (FFT spectrum/waterfall/bands), **Decoding** (demo neural state classifier), **Monitor** (demo signal quality dashboard). Channel toggle chips, solo mode, recording. |
+| 15  | **Sport Home**     | `/sport`             | Workout quick-start with type selector (8 activities), pulsing START button, AI pre-workout prediction (after 3+ sessions), recent workout cards, profile access. Entry point via **More → Sport**.                                                                                                                              |
+| 16  | **Active Workout** | `/sport/active`      | Full-screen real-time training: elapsed timer, HR zone ring, live metrics grid (distance, pace, speed, altitude), brain state indicators (EEG), AI coaching insights (every 2 min), voice prompts via TTS. Phase progression: warmup → active → cooldown → finish. Pause/resume controls.                                        |
+| 17  | **Feedback**       | `/sport/feedback`    | Post-workout: session summary stats, fatigue/energy sliders (1–10), mood emoji picker, optional notes. Submit triggers AI analysis showing performance score, fatigue assessment, recovery recommendation, highlights, and improvements.                                                                                         |
+| 18  | **History**        | `/sport/history`     | Scrollable list of past workouts with type emoji, date, duration, distance, avg HR, calories, performance score, feedback summary, and AI analysis excerpt.                                                                                                                                                                      |
+| 19  | **Sport Profile**  | `/sport/profile`     | User fitness profile setup: level selector (beginner/intermediate/advanced), age/weight/height, resting/max HR, preferred workout types, voice coach toggle, EEG insights toggle.                                                                                                                                                |
 
 ---
 
