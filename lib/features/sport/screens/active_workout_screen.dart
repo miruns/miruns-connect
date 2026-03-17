@@ -13,6 +13,7 @@ import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
+import '../services/eeg_metrics_service.dart';
 import '../services/voice_coach_service.dart';
 import '../services/workout_service.dart';
 import '../widgets/sport_widgets.dart';
@@ -58,6 +59,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   // Streams
   StreamSubscription<BleHrReading>? _hrSub;
   StreamSubscription<GpsMetrics>? _gpsSub;
+  StreamSubscription<WorkoutEegSample>? _eegSub;
+  EegMetricsService? _eegMetrics;
   Timer? _ticker;
   Timer? _insightTimer;
   Timer? _metricAnnounceTimer;
@@ -122,6 +125,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     // Start GPS tracking
     _startGpsTracking();
 
+    // Start EEG monitoring (if headset is streaming)
+    _startEegMonitoring();
+
     // Start periodic AI insight generation
     _insightTimer = Timer.periodic(const Duration(minutes: 2), (_) {
       _generateInsight();
@@ -143,6 +149,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       if (!mounted) return;
       setState(() => _currentHr = reading.bpm);
 
+      // Don't record samples while paused.
+      if (_isPaused) return;
+
       // Record HR sample
       final sample = WorkoutHrSample(
         timestamp: DateTime.now(),
@@ -158,6 +167,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       if (!mounted) return;
       setState(() => _gpsMetrics = metrics);
 
+      // Don't record samples while paused.
+      if (_isPaused) return;
+
       // Record GPS sample (already throttled by the 5 m distanceFilter)
       final sample = WorkoutGpsSample(
         timestamp: DateTime.now(),
@@ -168,6 +180,24 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       );
       _session = _session.copyWith(
         gpsSamples: [..._session.gpsSamples, sample],
+      );
+    });
+  }
+
+  void _startEegMonitoring() {
+    final bleSource = ref.read(bleSourceServiceProvider);
+    if (!bleSource.isStreaming) return;
+
+    _eegMetrics = EegMetricsService(bleSource.signalStream);
+    _eegSub = _eegMetrics!.metricsStream.listen((sample) {
+      if (!mounted) return;
+      setState(() => _latestEeg = sample);
+
+      // Don't record samples while paused.
+      if (_isPaused) return;
+
+      _session = _session.copyWith(
+        eegSamples: [..._session.eegSamples, sample],
       );
     });
   }
@@ -334,6 +364,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     // Cleanup
     _hrSub?.cancel();
     _gpsSub?.cancel();
+    _eegSub?.cancel();
+    _eegMetrics?.dispose();
     _gpsService.stopTracking();
     _ticker?.cancel();
     _insightTimer?.cancel();
@@ -384,6 +416,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   void dispose() {
     _hrSub?.cancel();
     _gpsSub?.cancel();
+    _eegSub?.cancel();
+    _eegMetrics?.dispose();
     _bleStateSub?.cancel();
     _gpsService.stopTracking();
     _ticker?.cancel();
