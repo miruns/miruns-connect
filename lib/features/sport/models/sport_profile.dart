@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+
 /// User fitness level — drives coaching intensity, voice prompt frequency,
 /// and workout recommendation complexity.
 enum SportLevel {
@@ -13,10 +15,10 @@ enum SportLevel {
     advanced => 'Advanced',
   };
 
-  String get emoji => switch (this) {
-    beginner => '🌱',
-    intermediate => '🔥',
-    advanced => '⚡',
+  IconData get icon => switch (this) {
+    beginner => Icons.eco_outlined,
+    intermediate => Icons.local_fire_department_outlined,
+    advanced => Icons.bolt_outlined,
   };
 
   String get description => switch (this) {
@@ -48,15 +50,15 @@ enum WorkoutType {
     custom => 'Custom',
   };
 
-  String get emoji => switch (this) {
-    running => '🏃',
-    cycling => '🚴',
-    walking => '🚶',
-    hiit => '🏋️',
-    strength => '💪',
-    yoga => '🧘',
-    swimming => '🏊',
-    custom => '⭐',
+  IconData get icon => switch (this) {
+    running => Icons.directions_run_outlined,
+    cycling => Icons.directions_bike_outlined,
+    walking => Icons.directions_walk_outlined,
+    hiit => Icons.fitness_center_outlined,
+    strength => Icons.fitness_center_outlined,
+    yoga => Icons.self_improvement_outlined,
+    swimming => Icons.pool_outlined,
+    custom => Icons.tune_outlined,
   };
 }
 

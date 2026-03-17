@@ -78,8 +78,9 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
       heightCm: double.tryParse(_heightController.text),
       restingHr: int.tryParse(_restingHrController.text),
       maxHr: int.tryParse(_maxHrController.text),
-      preferredWorkouts:
-          _preferredWorkouts.isEmpty ? [WorkoutType.running] : _preferredWorkouts,
+      preferredWorkouts: _preferredWorkouts.isEmpty
+          ? [WorkoutType.running]
+          : _preferredWorkouts,
       voiceCoachEnabled: _voiceCoachEnabled,
       eegInsightsEnabled: _eegInsightsEnabled,
     );
@@ -135,7 +136,9 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppTheme.glow),
+                strokeWidth: 2,
+                color: AppTheme.glow,
+              ),
             )
           : SafeArea(
               child: CustomScrollView(
@@ -241,7 +244,9 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 8),
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: selected
                                       ? AppTheme.glow.withValues(alpha: 0.15)
@@ -250,19 +255,33 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
                                   border: Border.all(
                                     color: selected
                                         ? AppTheme.glow
-                                        : AppTheme.shimmer
-                                            .withValues(alpha: 0.3),
+                                        : AppTheme.shimmer.withValues(
+                                            alpha: 0.3,
+                                          ),
                                   ),
                                 ),
-                                child: Text(
-                                  '${t.emoji} ${t.label}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: selected
-                                        ? AppTheme.glow
-                                        : AppTheme.moonbeam,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      t.icon,
+                                      size: 14,
+                                      color: selected
+                                          ? AppTheme.glow
+                                          : AppTheme.fog,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      t.label,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: selected
+                                            ? AppTheme.glow
+                                            : AppTheme.moonbeam,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
@@ -305,14 +324,14 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
   // ── Helpers ──
 
   Widget _sectionTitle(String title) => Text(
-        title,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.moonbeam,
-          letterSpacing: 0.3,
-        ),
-      );
+    title,
+    style: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+      color: AppTheme.moonbeam,
+      letterSpacing: 0.3,
+    ),
+  );
 
   Widget _levelCard(SportLevel level) {
     final selected = _level == level;
@@ -331,13 +350,19 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
               : AppTheme.tidePool,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? AppTheme.glow : AppTheme.shimmer.withValues(alpha: 0.3),
+            color: selected
+                ? AppTheme.glow
+                : AppTheme.shimmer.withValues(alpha: 0.3),
             width: selected ? 1.5 : 1,
           ),
         ),
         child: Row(
           children: [
-            Text(level.emoji, style: const TextStyle(fontSize: 28)),
+            Icon(
+              level.icon,
+              size: 28,
+              color: selected ? AppTheme.glow : AppTheme.fog,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -354,7 +379,10 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
                   Text(
                     level.description,
                     style: const TextStyle(
-                        fontSize: 11, color: AppTheme.fog, height: 1.4),
+                      fontSize: 11,
+                      color: AppTheme.fog,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -376,34 +404,44 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 11, color: AppTheme.fog)),
+        Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.fog)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+          ],
           style: const TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.moonbeam),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.moonbeam,
+          ),
           decoration: InputDecoration(
             hintText: hint ?? '',
             hintStyle: TextStyle(
-                fontSize: 12, color: AppTheme.fog.withValues(alpha: 0.5)),
+              fontSize: 12,
+              color: AppTheme.fog.withValues(alpha: 0.5),
+            ),
             suffixText: suffix,
             suffixStyle: const TextStyle(fontSize: 11, color: AppTheme.fog),
             filled: true,
             fillColor: AppTheme.tidePool,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                  color: AppTheme.shimmer.withValues(alpha: 0.3)),
+                color: AppTheme.shimmer.withValues(alpha: 0.3),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                  color: AppTheme.shimmer.withValues(alpha: 0.3)),
+                color: AppTheme.shimmer.withValues(alpha: 0.3),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -437,14 +475,22 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.moonbeam)),
-                Text(subtitle,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppTheme.fog, height: 1.3)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.moonbeam,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.fog,
+                    height: 1.3,
+                  ),
+                ),
               ],
             ),
           ),

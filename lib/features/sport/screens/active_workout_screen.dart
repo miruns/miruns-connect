@@ -446,9 +446,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          widget.workoutType.emoji,
-                          style: const TextStyle(fontSize: 18),
+                        Icon(
+                          widget.workoutType.icon,
+                          size: 18,
+                          color: AppTheme.fog,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -574,7 +575,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                             .map(
                               (insight) => InsightCard(
                                 message: insight.message,
-                                emoji: insight.type.emoji,
+                                label: insight.type.label,
                               ),
                             ),
                       ],

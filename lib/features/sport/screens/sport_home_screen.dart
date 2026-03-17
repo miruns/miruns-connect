@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
@@ -12,14 +14,14 @@ import '../services/workout_service.dart';
 import '../widgets/sport_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sport Home — primary sport landing screen
+// Sport Home — primary landing screen
 //
 // Layout:
-//   · Header    : "miruns sport" branding
-//   · Quick start: big workout start button
-//   · AI prediction: pre-workout insight (after 3+ sessions)
-//   · Recent    : last workout summary card
-//   · History   : link to full workout history
+//   · Top bar    : headset status icon (left) · "miruns" wordmark · profile (right)
+//   · Activity   : workout type selector
+//   · Start      : pill-shaped launch button (triggers BLE scan + workout)
+//   · Insight    : AI prediction card (after 3+ sessions)
+//   · Recent     : last workout summaries
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SportHomeScreen extends ConsumerStatefulWidget {
@@ -39,6 +41,12 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   bool _loadingPrediction = false;
   WorkoutType _selectedType = WorkoutType.running;
 
+  // BLE headset connection state
+  BleSourceState _bleState = BleSourceState.idle;
+  StreamSubscription<BleSourceState>? _bleSub;
+  String? _pairedDeviceName;
+  bool _isDemoMode = false;
+
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
 
@@ -53,20 +61,37 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     )..repeat(reverse: true);
     _pulseAnim = CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut);
 
+    // Track BLE headset state
+    final bleService = ref.read(bleSourceServiceProvider);
+    _bleState = bleService.state;
+    _bleSub = bleService.stateStream.listen((s) {
+      if (mounted) setState(() => _bleState = s);
+    });
+
     _loadData();
   }
 
   @override
   void dispose() {
     _pulseCtrl.dispose();
+    _bleSub?.cancel();
     super.dispose();
   }
 
+  bool get _isConnected => _bleState == BleSourceState.streaming;
+
   Future<void> _loadData() async {
+    // Load headset prefs
+    final db = ref.read(localDbServiceProvider);
+    final name = await db.getSetting('eeg_paired_device_name');
+    final demo = await db.getSetting('eeg_demo_mode');
+
     final profile = await _workoutService.loadProfile();
     final workouts = await _workoutService.loadWorkouts(limit: 5);
     if (mounted) {
       setState(() {
+        _pairedDeviceName = name;
+        _isDemoMode = demo == 'true';
         _profile = profile;
         _recentWorkouts = workouts;
         _selectedType = profile.preferredWorkouts.isNotEmpty
@@ -75,7 +100,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       });
     }
 
-    // Generate AI prediction if enough data
     if (workouts.where((w) => w.feedback != null).length >= 3) {
       _loadPrediction(profile, workouts);
     }
@@ -113,110 +137,83 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     context.push('/sport/profile');
   }
 
+  void _openHeadsetScanner() {
+    HapticFeedback.selectionClick();
+    context.push('/sources');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasProfile = _profile != null;
+    final top = MediaQuery.paddingOf(context).top;
 
-    return Scaffold(
-      backgroundColor: AppTheme.midnight,
-      body: SafeArea(
-        child: CustomScrollView(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: AppTheme.midnight,
+        body: CustomScrollView(
           slivers: [
-            // ── Header ─────────────────────────────────────────────────────
+            // ── Top bar ────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
+                padding: EdgeInsets.fromLTRB(20, top + 16, 20, 8),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'miruns',
-                          style: GoogleFonts.inter(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.moonbeam,
-                            letterSpacing: -1.2,
-                          ),
-                        ),
-                        Text(
-                          'sport',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: AppTheme.glow,
-                            letterSpacing: 3,
-                          ),
-                        ),
-                      ],
+                    // Headset icon with connection dot
+                    _HeadsetStatusIcon(
+                      isConnected: _isConnected,
+                      isDemoMode: _isDemoMode,
+                      deviceName: _pairedDeviceName,
+                      onTap: _openHeadsetScanner,
                     ),
-                    Row(
-                      children: [
-                        if (hasProfile)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.glow.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${_profile!.level.emoji} ${_profile!.level.label}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.glow,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: _openProfile,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppTheme.tidePool,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppTheme.shimmer,
-                                width: 1,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.person_outline,
-                              size: 18,
-                              color: AppTheme.fog,
-                            ),
-                          ),
+                    const SizedBox(width: 14),
+                    // miruns wordmark
+                    Text(
+                      'miruns',
+                      style: AppTheme.geist(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w300,
+                        color: AppTheme.moonbeam,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Profile button
+                    GestureDetector(
+                      onTap: _openProfile,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.tidePool,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.shimmer, width: 1),
                         ),
-                      ],
+                        child: const Icon(
+                          Icons.person_outline_rounded,
+                          size: 18,
+                          color: AppTheme.fog,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // ── Workout Type Selection ──────────────────────────────────
+            // ── Activity selector ──────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'What are you training today?',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.moonbeam,
+                    Text(
+                      'Activity',
+                      style: AppTheme.geist(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -232,65 +229,68 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
               ),
             ),
 
-            // ── Start Button ────────────────────────────────────────────
+            // ── Start button ───────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 32,
+                ),
                 child: Center(
                   child: GestureDetector(
                     onTap: _startWorkout,
                     child: AnimatedBuilder(
                       animation: _pulseAnim,
-                      builder: (context, child) => Transform.scale(
-                        scale: 0.95 + (_pulseAnim.value * 0.05),
-                        child: child,
-                      ),
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              AppTheme.glow,
-                              AppTheme.glow.withValues(alpha: 0.7),
+                      builder: (context, child) {
+                        final glow = _pulseAnim.value * 0.15;
+                        return Container(
+                          width: double.infinity,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(9999),
+                            color: AppTheme.cyan.withValues(alpha: 0.12 + glow),
+                            border: Border.all(
+                              color: AppTheme.cyan.withValues(alpha: 0.5),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.cyan.withValues(
+                                  alpha: 0.08 + glow * 0.4,
+                                ),
+                                blurRadius: 24,
+                                spreadRadius: 0,
+                              ),
                             ],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.glow.withValues(alpha: 0.3),
-                              blurRadius: 24,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _selectedType.emoji,
-                              style: const TextStyle(fontSize: 32),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'START',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: 2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _selectedType.icon,
+                                size: 22,
+                                color: AppTheme.cyan,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Start',
+                                style: AppTheme.geist(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.moonbeam,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
               ),
             ),
 
-            // ── AI Prediction ──────────────────────────────────────────
+            // ── AI Prediction ──────────────────────────────────────────────
             if (_loadingPrediction || _prediction != null)
               SliverToBoxAdapter(
                 child: Padding(
@@ -299,54 +299,55 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                     vertical: 8,
                   ),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppTheme.tidePool,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppTheme.aurora.withValues(alpha: 0.3),
-                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.shimmer),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              size: 16,
-                              color: AppTheme.aurora,
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.cyan,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 8),
                             Text(
-                              'AI Prediction',
-                              style: TextStyle(
+                              'Pre-workout insight',
+                              style: AppTheme.geist(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.aurora,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.cyan,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         if (_loadingPrediction)
                           const Center(
                             child: SizedBox(
-                              width: 20,
-                              height: 20,
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppTheme.aurora,
+                                strokeWidth: 1.5,
+                                color: AppTheme.cyan,
                               ),
                             ),
                           )
                         else
                           Text(
                             _prediction!,
-                            style: const TextStyle(
+                            style: AppTheme.geist(
                               fontSize: 13,
                               color: AppTheme.moonbeam,
-                              height: 1.5,
+                              height: 1.55,
                             ),
                           ),
                       ],
@@ -355,13 +356,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                 ),
               ),
 
-            // ── Recent Workouts ─────────────────────────────────────────
+            // ── Recent Sessions ────────────────────────────────────────────
             if (_recentWorkouts != null && _recentWorkouts!.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 8,
+                    vertical: 12,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,22 +370,23 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Recent Sessions',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.moonbeam,
+                          Text(
+                            'Recent',
+                            style: AppTheme.geist(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.fog,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           GestureDetector(
                             onTap: _openHistory,
-                            child: const Text(
-                              'View All',
-                              style: TextStyle(
+                            child: Text(
+                              'View all',
+                              style: AppTheme.geist(
                                 fontSize: 12,
-                                color: AppTheme.glow,
                                 fontWeight: FontWeight.w500,
+                                color: AppTheme.cyan,
                               ),
                             ),
                           ),
@@ -399,31 +401,35 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                 ),
               ),
 
-            // ── Empty state ─────────────────────────────────────────────
+            // ── Empty state ────────────────────────────────────────────────
             if (_recentWorkouts != null && _recentWorkouts!.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(40),
+                  padding: const EdgeInsets.all(40),
                   child: Column(
                     children: [
-                      Text('🏃', style: TextStyle(fontSize: 48)),
-                      SizedBox(height: 12),
+                      Icon(
+                        Icons.directions_run_outlined,
+                        size: 48,
+                        color: AppTheme.shimmer,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        'Ready for your first workout?',
-                        style: TextStyle(
+                        'Ready when you are',
+                        style: AppTheme.geist(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.moonbeam,
                         ),
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        'Select your activity and hit START.\nJust focus on your sport — we handle the rest.',
+                        'Pick your activity and tap Start.\nFocus on your sport — miruns handles the rest.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: AppTheme.geist(
                           fontSize: 13,
                           color: AppTheme.fog,
-                          height: 1.5,
+                          height: 1.55,
                         ),
                       ),
                     ],
@@ -431,8 +437,8 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                 ),
               ),
 
-            // Bottom padding
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            // Bottom safe area padding
+            const SliverToBoxAdapter(child: SizedBox(height: 96)),
           ],
         ),
       ),
@@ -440,7 +446,71 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   }
 }
 
-/// Compact recent workout summary card.
+// ─────────────────────────────────────────────────────────────────────────────
+// Headset status icon — top-left, shows connection as colored dot
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HeadsetStatusIcon extends StatelessWidget {
+  final bool isConnected;
+  final bool isDemoMode;
+  final String? deviceName;
+  final VoidCallback onTap;
+
+  const _HeadsetStatusIcon({
+    required this.isConnected,
+    required this.isDemoMode,
+    required this.deviceName,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color dotColor = isConnected
+        ? AppTheme.seaGreen
+        : isDemoMode
+        ? AppTheme.amber
+        : AppTheme.fog;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 32,
+        height: 32,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Icon(
+                Icons.headphones_outlined,
+                size: 24,
+                color: isConnected ? AppTheme.moonbeam : AppTheme.fog,
+              ),
+            ),
+            // Status dot
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.midnight, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recent workout card
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _RecentWorkoutCard extends StatelessWidget {
   final WorkoutSession session;
 
@@ -458,15 +528,15 @@ class _RecentWorkoutCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
+        border: Border.all(color: AppTheme.shimmer),
       ),
       child: Row(
         children: [
-          Text(session.workoutType.emoji, style: const TextStyle(fontSize: 28)),
+          Icon(session.workoutType.icon, size: 24, color: AppTheme.cyan),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -474,33 +544,33 @@ class _RecentWorkoutCard extends StatelessWidget {
               children: [
                 Text(
                   session.workoutType.label,
-                  style: const TextStyle(
+                  style: AppTheme.geist(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: AppTheme.moonbeam,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$when · ${duration.inMinutes}min${session.totalDistanceKm != null ? ' · ${session.totalDistanceKm!.toStringAsFixed(1)}km' : ''}',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.fog),
+                  '$when  ·  ${duration.inMinutes} min${session.totalDistanceKm != null ? '  ·  ${session.totalDistanceKm!.toStringAsFixed(1)} km' : ''}',
+                  style: AppTheme.geistMono(fontSize: 11, color: AppTheme.fog),
                 ),
               ],
             ),
           ),
           if (session.analysis != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.glow.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.cyan.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(9999),
               ),
               child: Text(
                 '${session.analysis!.performanceScore}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.glow,
+                style: AppTheme.geistMono(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.cyan,
                 ),
               ),
             ),
@@ -509,13 +579,13 @@ class _RecentWorkoutCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '⚡${session.feedback!.energyLevel}',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.fog),
+                  'E ${session.feedback!.energyLevel}',
+                  style: AppTheme.geistMono(fontSize: 11, color: AppTheme.fog),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Text(
-                  '😓${session.feedback!.fatigueLevel}',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.fog),
+                  'F ${session.feedback!.fatigueLevel}',
+                  style: AppTheme.geistMono(fontSize: 11, color: AppTheme.fog),
                 ),
               ],
             ),

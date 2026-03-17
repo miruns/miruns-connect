@@ -60,39 +60,42 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
       body: _workouts == null
           ? const Center(
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppTheme.glow))
+                strokeWidth: 2,
+                color: AppTheme.glow,
+              ),
+            )
           : _workouts!.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🏃', style: TextStyle(fontSize: 48)),
-                      SizedBox(height: 12),
-                      Text(
-                        'No workouts yet',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.moonbeam,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Start your first workout from the Sport tab.',
-                        style: TextStyle(fontSize: 13, color: AppTheme.fog),
-                      ),
-                    ],
+          ? const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🏃', style: TextStyle(fontSize: 48)),
+                  SizedBox(height: 12),
+                  Text(
+                    'No workouts yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.moonbeam,
+                    ),
                   ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _workouts!.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final w = _workouts![index];
-                    return _WorkoutHistoryCard(session: w);
-                  },
-                ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Start your first workout from the Sport tab.',
+                    style: TextStyle(fontSize: 13, color: AppTheme.fog),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _workouts!.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final w = _workouts![index];
+                return _WorkoutHistoryCard(session: w);
+              },
+            ),
     );
   }
 }
@@ -120,8 +123,7 @@ class _WorkoutHistoryCard extends StatelessWidget {
           // Header row
           Row(
             children: [
-              Text(session.workoutType.emoji,
-                  style: const TextStyle(fontSize: 28)),
+              Icon(session.workoutType.icon, size: 28, color: AppTheme.cyan),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -137,16 +139,17 @@ class _WorkoutHistoryCard extends StatelessWidget {
                     ),
                     Text(
                       dateStr,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppTheme.fog),
+                      style: const TextStyle(fontSize: 11, color: AppTheme.fog),
                     ),
                   ],
                 ),
               ),
               if (session.analysis != null)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.glow.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -176,18 +179,14 @@ class _WorkoutHistoryCard extends StatelessWidget {
           // Stats row
           Row(
             children: [
-              _StatChip(
-                  icon: Icons.timer, value: '${duration.inMinutes} min'),
+              _StatChip(icon: Icons.timer, value: '${duration.inMinutes} min'),
               if (session.totalDistanceKm != null)
                 _StatChip(
                   icon: Icons.straighten,
                   value: '${session.totalDistanceKm!.toStringAsFixed(1)} km',
                 ),
               if (session.avgHr != null)
-                _StatChip(
-                  icon: Icons.favorite,
-                  value: '${session.avgHr} bpm',
-                ),
+                _StatChip(icon: Icons.favorite, value: '${session.avgHr} bpm'),
               if (session.caloriesBurned != null)
                 _StatChip(
                   icon: Icons.local_fire_department,
@@ -212,8 +211,10 @@ class _WorkoutHistoryCard extends StatelessWidget {
                 ),
                 if (session.feedback!.moodEmoji != null) ...[
                   const SizedBox(width: 12),
-                  Text(session.feedback!.moodEmoji!,
-                      style: const TextStyle(fontSize: 14)),
+                  Text(
+                    session.feedback!.moodEmoji!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ],
               ],
             ),

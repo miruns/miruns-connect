@@ -28,9 +28,9 @@ class AppRouter {
   /// Call once before [runApp] to set the initial route based on user prefs.
   static void init({bool skipOnboarding = false}) {
     router = GoRouter(
-      initialLocation: skipOnboarding ? '/eeg-home' : '/eeg-onboarding',
+      initialLocation: '/sport',
       routes: [
-        // ── EEG onboarding (first-run, no bottom nav) ───────────────────
+        // ── EEG onboarding (kept for headset pairing flow) ──────────────
         GoRoute(
           path: '/eeg-onboarding',
           name: 'eeg-onboarding',
@@ -55,12 +55,23 @@ class AppRouter {
           ),
         ),
 
-        // ── Main shell with bottom navigation (3 tabs) ─────────────────
+        // ── Main shell with bottom navigation ──────────────────────────
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
               AppShell(navigationShell: navigationShell),
           branches: [
-            // Tab 0 — EEG Home
+            // Tab 0 — Sport (primary)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/sport',
+                  name: 'sport-home',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: SportHomeScreen()),
+                ),
+              ],
+            ),
+            // Tab 1 — EEG Home
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -71,7 +82,7 @@ class AppRouter {
                 ),
               ],
             ),
-            // Tab 1 — Patterns
+            // Tab 2 — Patterns
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -214,29 +225,6 @@ class AppRouter {
         ),
 
         // ── Sport / Workout ─────────────────────────────────────────────
-        GoRoute(
-          path: '/sport',
-          name: 'sport',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            key: state.pageKey,
-            child: const SportHomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    SlideTransition(
-                      position:
-                          Tween<Offset>(
-                            begin: const Offset(1, 0),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          ),
-                      child: child,
-                    ),
-          ),
-        ),
         GoRoute(
           path: '/sport/active',
           name: 'sport-active',

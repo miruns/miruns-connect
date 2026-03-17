@@ -71,22 +71,28 @@ class _NavItem {
 
 const List<_NavItem> _navItems = [
   _NavItem(
+    icon: Icons.directions_run_outlined,
+    activeIcon: Icons.directions_run_rounded,
+    label: 'Sport',
+    numeral: 'I',
+  ),
+  _NavItem(
     icon: Icons.sensors_outlined,
     activeIcon: Icons.sensors_rounded,
     label: 'EEG',
-    numeral: 'I',
+    numeral: 'II',
   ),
   _NavItem(
     icon: Icons.insights_outlined,
     activeIcon: Icons.insights,
     label: 'Patterns',
-    numeral: 'II',
+    numeral: 'III',
   ),
   _NavItem(
     icon: Icons.edit_note_rounded,
     activeIcon: Icons.edit_note_rounded,
     label: 'Capture',
-    numeral: 'III',
+    numeral: 'IV',
   ),
   _NavItem(
     icon: Icons.grid_view_outlined,
@@ -117,12 +123,6 @@ class _MoreDestination {
 /// a permanent spot in the primary navigation.
 const List<_MoreDestination> _moreDestinations = [
   _MoreDestination(
-    icon: Icons.fitness_center_rounded,
-    label: 'Sport',
-    route: '/sport',
-    description: 'Workouts, voice coaching & brain performance',
-  ),
-  _MoreDestination(
     icon: Icons.auto_stories_outlined,
     label: 'Journal',
     route: '/journal',
@@ -144,7 +144,7 @@ const List<_MoreDestination> _moreDestinations = [
     icon: Icons.psychology_alt,
     label: 'Signal Sources',
     route: '/sources',
-    description: 'BLE signal hardware (EEG, EMG, …)',
+    description: 'BLE signal hardware (EEG, EMG)',
   ),
   _MoreDestination(
     icon: Icons.tune_rounded,

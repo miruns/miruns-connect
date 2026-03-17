@@ -332,13 +332,13 @@ class _BarRow extends StatelessWidget {
 /// Live insight card shown during workout.
 class InsightCard extends StatelessWidget {
   final String message;
-  final String emoji;
+  final String label;
   final Color? accentColor;
 
   const InsightCard({
     super.key,
     required this.message,
-    required this.emoji,
+    required this.label,
     this.accentColor,
   });
 
@@ -356,7 +356,21 @@ class InsightCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: (accentColor ?? AppTheme.cyan).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: accentColor ?? AppTheme.cyan,
+              ),
+            ),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -374,7 +388,7 @@ class InsightCard extends StatelessWidget {
   }
 }
 
-/// Workout type selector with emoji-first cards — accessible for all ages.
+/// Workout type selector with icon-first cards.
 class WorkoutTypeSelector extends StatelessWidget {
   final WorkoutType? selected;
   final ValueChanged<WorkoutType> onSelect;
@@ -396,12 +410,12 @@ class WorkoutTypeSelector extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppTheme.glow.withValues(alpha: 0.15)
+                  ? AppTheme.cyan.withValues(alpha: 0.10)
                   : AppTheme.tidePool,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isSelected
-                    ? AppTheme.glow
+                    ? AppTheme.cyan
                     : AppTheme.shimmer.withValues(alpha: 0.3),
                 width: isSelected ? 1.5 : 1,
               ),
@@ -409,14 +423,18 @@ class WorkoutTypeSelector extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(type.emoji, style: const TextStyle(fontSize: 28)),
+                Icon(
+                  type.icon,
+                  size: 26,
+                  color: isSelected ? AppTheme.cyan : AppTheme.fog,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   type.label,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? AppTheme.glow : AppTheme.fog,
+                    color: isSelected ? AppTheme.cyan : AppTheme.fog,
                   ),
                 ),
               ],

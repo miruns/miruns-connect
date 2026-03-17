@@ -722,8 +722,8 @@ class _SignalCheckPage extends StatelessWidget {
             ),
           ),
 
-          // ── Waveform preview ─────────────────────────────────────────────────
-          if (checkDone) ...[
+          // ── Waveform preview (real headset only) ────────────────────────────
+          if (checkDone && !isDemoMode) ...[
             const SizedBox(height: 28),
             Container(
               height: 64,

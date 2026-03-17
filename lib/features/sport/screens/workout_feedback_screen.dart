@@ -130,9 +130,10 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
               Center(
                 child: Column(
                   children: [
-                    Text(
-                      session.workoutType.emoji,
-                      style: const TextStyle(fontSize: 48),
+                    Icon(
+                      session.workoutType.icon,
+                      size: 48,
+                      color: AppTheme.cyan,
                     ),
                     const SizedBox(height: 8),
                     Text(

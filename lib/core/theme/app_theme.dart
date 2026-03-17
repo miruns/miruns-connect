@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Clean, minimal — true black neutral palette with focused blue accent.
-/// Inspired by Apple's iOS dark mode and Vercel's design language.
+/// miruns brand theme — neuroscience meets sport.
+/// Dark theme is primary. Inter typeface, cyan accent, clean surfaces.
 class AppTheme {
   // ─── The Palette ──────────────────────────────────────────────────────────
 
@@ -11,7 +11,7 @@ class AppTheme {
   static const Color void_ = Color(0xFF000000);
 
   /// Primary scaffold background.
-  static const Color midnight = Color(0xFF060606);
+  static const Color midnight = Color(0xFF0A0A0A);
 
   /// Surface — elevated container.
   static const Color deepSea = Color(0xFF0D0D0D);
@@ -23,10 +23,13 @@ class AppTheme {
   static const Color current = Color(0xFF1A1A1A);
 
   /// Border — structural separator / outline.
-  static const Color shimmer = Color(0xFF2E2E2E);
+  static const Color shimmer = Color(0xFF222222);
 
-  /// Primary accent — Vercel blue / Apple system blue.
+  /// Primary accent — light-mode blue.
   static const Color glow = Color(0xFF0070F3);
+
+  /// Dark-mode accent — cyan. Neural activity.
+  static const Color cyan = Color(0xFF00E5FF);
 
   /// Secondary accent — violet.
   static const Color aurora = Color(0xFF7928CA);
@@ -35,10 +38,10 @@ class AppTheme {
   static const Color starlight = Color(0xFF79FFE1);
 
   /// Primary text — near white.
-  static const Color moonbeam = Color(0xFFF5F5F5);
+  static const Color moonbeam = Color(0xFFEDEDED);
 
   /// Muted text — secondary content.
-  static const Color fog = Color(0xFF666666);
+  static const Color fog = Color(0xFF888888);
 
   // Semantic
   static const Color seaGreen = Color(0xFF00B37E);
@@ -56,91 +59,110 @@ class AppTheme {
   static const Color warningColor = amber;
   static const Color errorColor = crimson;
 
+  // ─── Geist helper ─────────────────────────────────────────────────────────
+  static TextStyle geist({
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.w400,
+    double? letterSpacing,
+    Color? color,
+    double? height,
+  }) => GoogleFonts.inter(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    letterSpacing: letterSpacing,
+    color: color,
+    height: height,
+  );
+
+  static TextStyle geistMono({
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.w400,
+    double? letterSpacing,
+    Color? color,
+  }) => GoogleFonts.jetBrainsMono(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    letterSpacing: letterSpacing,
+    color: color,
+  );
+
   // ─── Typography ───────────────────────────────────────────────────────────
   static TextTheme _buildTextTheme() {
     return TextTheme(
-      displayLarge: GoogleFonts.inter(
-        fontSize: 57,
+      displayLarge: geist(
+        fontSize: 60,
         fontWeight: FontWeight.w300,
         letterSpacing: -1.0,
         color: moonbeam,
       ),
-      displayMedium: GoogleFonts.inter(
+      displayMedium: geist(
         fontSize: 45,
         fontWeight: FontWeight.w300,
         letterSpacing: -0.5,
         color: moonbeam,
       ),
-      displaySmall: GoogleFonts.inter(
+      displaySmall: geist(
         fontSize: 36,
         fontWeight: FontWeight.w400,
         letterSpacing: -0.25,
         color: moonbeam,
       ),
-      headlineLarge: GoogleFonts.inter(
+      headlineLarge: geist(
         fontSize: 32,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
         color: moonbeam,
       ),
-      headlineMedium: GoogleFonts.inter(
+      headlineMedium: geist(
         fontSize: 26,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.3,
         color: moonbeam,
       ),
-      headlineSmall: GoogleFonts.inter(
+      headlineSmall: geist(
         fontSize: 22,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
         color: moonbeam,
       ),
-      titleLarge: GoogleFonts.inter(
+      titleLarge: geist(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
         color: moonbeam,
       ),
-      titleMedium: GoogleFonts.inter(
+      titleMedium: geist(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         letterSpacing: -0.1,
         color: moonbeam,
       ),
-      titleSmall: GoogleFonts.inter(
+      titleSmall: geist(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: -0.1,
         color: moonbeam,
       ),
-      bodyLarge: GoogleFonts.inter(
+      bodyLarge: geist(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: moonbeam,
       ),
-      bodyMedium: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: fog,
-      ),
-      bodySmall: GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: fog,
-      ),
-      labelLarge: GoogleFonts.inter(
+      bodyMedium: geist(fontSize: 14, fontWeight: FontWeight.w400, color: fog),
+      bodySmall: geist(fontSize: 12, fontWeight: FontWeight.w400, color: fog),
+      labelLarge: geist(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: -0.1,
         color: moonbeam,
       ),
-      labelMedium: GoogleFonts.inter(
+      labelMedium: geist(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.2,
         color: fog,
       ),
-      labelSmall: GoogleFonts.inter(
+      labelSmall: geist(
         fontSize: 11,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.3,
@@ -186,7 +208,7 @@ class AppTheme {
           statusBarColor: Colors.transparent,
         ),
         foregroundColor: moonbeam,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: geist(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: moonbeam,
@@ -212,38 +234,26 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: glow,
-          foregroundColor: Color(0xFFF5F5F5),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.2,
-          ),
+          foregroundColor: const Color(0xFFF5F5F5),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          shape: const StadiumBorder(),
+          textStyle: geist(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: moonbeam,
           side: const BorderSide(color: shimmer, width: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.1,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          shape: const StadiumBorder(),
+          textStyle: geist(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: glow,
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.1,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          textStyle: geist(fontSize: 15, fontWeight: FontWeight.w500),
+          shape: const StadiumBorder(),
         ),
       ),
       // ── Input ──
@@ -251,19 +261,19 @@ class AppTheme {
         filled: true,
         fillColor: tidePool,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: shimmer, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: shimmer, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: glow, width: 1.5),
         ),
-        hintStyle: GoogleFonts.inter(color: fog, fontSize: 14),
-        labelStyle: GoogleFonts.inter(color: fog, fontSize: 14),
+        hintStyle: geist(color: fog, fontSize: 14),
+        labelStyle: geist(color: fog, fontSize: 14),
         prefixIconColor: fog,
         suffixIconColor: fog,
         contentPadding: const EdgeInsets.symmetric(
@@ -283,15 +293,15 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: tidePool,
         side: const BorderSide(color: shimmer, width: 1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        labelStyle: GoogleFonts.inter(fontSize: 13, color: moonbeam),
+        shape: const StadiumBorder(),
+        labelStyle: geist(fontSize: 13, color: moonbeam),
         selectedColor: glow.withValues(alpha: 0.15),
       ),
       // ── Dialog ──
       dialogTheme: DialogThemeData(
         backgroundColor: current,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        titleTextStyle: GoogleFonts.inter(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titleTextStyle: geist(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: moonbeam,
@@ -302,7 +312,7 @@ class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: current,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
       ),
       // ── Slider ──
@@ -329,8 +339,8 @@ class AppTheme {
       // ── Snackbar ──
       snackBarTheme: SnackBarThemeData(
         backgroundColor: current,
-        contentTextStyle: GoogleFonts.inter(color: moonbeam, fontSize: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        contentTextStyle: geist(color: moonbeam, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -358,7 +368,7 @@ class AppTheme {
         centerTitle: false,
         backgroundColor: Colors.transparent,
         foregroundColor: const Color(0xFF111111),
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: geist(
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF111111),
@@ -368,7 +378,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
         ),
         color: Colors.white,
@@ -376,13 +386,9 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.2,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          shape: const StadiumBorder(),
+          textStyle: geist(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),
     );

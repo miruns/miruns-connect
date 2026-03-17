@@ -158,15 +158,15 @@ enum WorkoutInsightType {
   recovery,
   info;
 
-  String get emoji => switch (this) {
-    fatigue => '😓',
-    energy => '⚡',
-    stress => '😤',
-    paceAdvice => '🏃',
-    zoneAlert => '❤️',
-    encouragement => '💪',
-    recovery => '🧘',
-    info => 'ℹ️',
+  String get label => switch (this) {
+    fatigue => 'Fatigue',
+    energy => 'Energy',
+    stress => 'Stress',
+    paceAdvice => 'Pace',
+    zoneAlert => 'Zone',
+    encouragement => 'Go',
+    recovery => 'Recovery',
+    info => 'Info',
   };
 }
 
