@@ -648,6 +648,29 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                   maxBuffer: _maxBuffer,
                                 ),
                               ),
+                              Builder(
+                                builder: (_) {
+                                  final eeg = ref
+                                      .watch(latestEegSampleProvider)
+                                      .valueOrNull;
+                                  return _LiveSensorCard(
+                                    label: 'EEG SPECTRAL',
+                                    color: AppTheme.cyan,
+                                    icon: Icons.equalizer_rounded,
+                                    child: eeg != null
+                                        ? _MiniSpectralBars(eeg: eeg)
+                                        : const Center(
+                                            child: Text(
+                                              'Waiting for EEG…',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: AppTheme.fog,
+                                              ),
+                                            ),
+                                          ),
+                                  );
+                                },
+                              ),
                               _LiveSensorCard(
                                 label: 'ENVIRONMENT',
                                 color: AppTheme.amber,
@@ -661,7 +684,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                         // Page dots
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(4, (i) {
+                          children: List.generate(5, (i) {
                             final active = i == _sensorPage;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
@@ -2423,6 +2446,90 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) => true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini spectral bars — compact EEG band power display for sensor slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MiniSpectralBars extends StatelessWidget {
+  final WorkoutEegSample eeg;
+
+  const _MiniSpectralBars({required this.eeg});
+
+  static const _bands = [
+    ('δ', Color(0xFF7928CA)),
+    ('θ', Color(0xFF4A6CF7)),
+    ('α', Color(0xFF00E5FF)),
+    ('β', Color(0xFF46A758)),
+    ('γ', Color(0xFFF5A623)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final powers = [
+      eeg.deltaPct ?? 0,
+      eeg.thetaPct ?? 0,
+      eeg.alphaPct ?? 0,
+      eeg.betaPct ?? 0,
+      eeg.gammaPct ?? 0,
+    ];
+    final maxPower = powers.reduce(math.max).clamp(0.01, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 34, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < _bands.length; i++) ...[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${(powers[i] * 100).toStringAsFixed(0)}%',
+                    style: AppTheme.geist(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: _bands[i].$2.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    height: (powers[i] / maxPower * 40).clamp(3.0, 40.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          _bands[i].$2.withValues(alpha: 0.3),
+                          _bands[i].$2,
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _bands[i].$1,
+                    style: AppTheme.geist(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: _bands[i].$2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (i < _bands.length - 1) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

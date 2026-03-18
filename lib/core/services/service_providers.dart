@@ -1,7 +1,9 @@
 // ignore_for_file: directives_ordering
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/sport/models/workout_session.dart';
 import '../../features/sport/services/active_workout_notifier.dart';
+import '../../features/sport/services/eeg_metrics_service.dart';
 import '../../features/sport/services/voice_coach_service.dart';
 import '../../features/sport/services/workout_analytics_service.dart';
 import '../../features/sport/services/workout_service.dart';
@@ -133,6 +135,23 @@ final bleSourceServiceProvider = Provider<BleSourceService>((ref) {
   return svc;
 });
 
+/// Shared EEG spectral metrics — single FFT pipeline for the whole app.
+///
+/// Automatically processes `signalStream` into [WorkoutEegSample] values.
+/// Both the home-screen sensor slider and the active workout consume this
+/// so demo/real data flows through one path.
+final eegMetricsServiceProvider = Provider<EegMetricsService>((ref) {
+  final bleSource = ref.read(bleSourceServiceProvider);
+  final svc = EegMetricsService(bleSource.signalStream);
+  ref.onDispose(svc.dispose);
+  return svc;
+});
+
+/// Latest EEG spectral sample as a stream, for UI consumption.
+final latestEegSampleProvider = StreamProvider<WorkoutEegSample>((ref) {
+  return ref.watch(eegMetricsServiceProvider).metricsStream;
+});
+
 /// [NotificationService] ships its own internal singleton; the provider just
 /// surfaces it so it can be injected / overridden in tests.
 final notificationServiceProvider = Provider<NotificationService>(
@@ -245,7 +264,7 @@ final activeWorkoutProvider = ChangeNotifierProvider<ActiveWorkoutNotifier>((
     voiceCoach: ref.read(voiceCoachServiceProvider),
     workoutService: ref.read(workoutServiceProvider),
     analyticsService: ref.read(workoutAnalyticsServiceProvider),
-    bleSourceService: ref.read(bleSourceServiceProvider),
+    eegMetricsService: ref.read(eegMetricsServiceProvider),
   );
 });
 

@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../../../core/services/ble_heart_rate_service.dart';
-import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/gps_metrics_service.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
@@ -78,20 +77,20 @@ class ActiveWorkoutNotifier extends ChangeNotifier {
     required VoiceCoachService voiceCoach,
     required WorkoutService workoutService,
     required WorkoutAnalyticsService analyticsService,
-    required BleSourceService bleSourceService,
+    required EegMetricsService eegMetricsService,
   }) : _bleHrService = bleHrService,
        _gpsService = gpsService,
        _voiceCoach = voiceCoach,
        _workoutService = workoutService,
        _analyticsService = analyticsService,
-       _bleSourceService = bleSourceService;
+       _eegMetricsService = eegMetricsService;
 
   final BleHeartRateService _bleHrService;
   final GpsMetricsService _gpsService;
   final VoiceCoachService _voiceCoach;
   final WorkoutService _workoutService;
   final WorkoutAnalyticsService _analyticsService;
-  final BleSourceService _bleSourceService;
+  final EegMetricsService _eegMetricsService;
 
   ActiveWorkoutState? _state;
 
@@ -100,7 +99,6 @@ class ActiveWorkoutNotifier extends ChangeNotifier {
   StreamSubscription<GpsMetrics>? _gpsSub;
   StreamSubscription<WorkoutEegSample>? _eegSub;
   StreamSubscription<BleConnectionState>? _bleStateSub;
-  EegMetricsService? _eegMetrics;
   Timer? _ticker;
   Timer? _insightTimer;
   Timer? _metricAnnounceTimer;
@@ -241,10 +239,7 @@ class ActiveWorkoutNotifier extends ChangeNotifier {
   }
 
   void _startEegMonitoring() {
-    if (!_bleSourceService.isStreaming) return;
-
-    _eegMetrics = EegMetricsService(_bleSourceService.signalStream);
-    _eegSub = _eegMetrics!.metricsStream.listen((sample) {
+    _eegSub = _eegMetricsService.metricsStream.listen((sample) {
       if (_state == null) return;
       _state = _state!.copyWith(latestEeg: sample);
 
@@ -452,8 +447,6 @@ class ActiveWorkoutNotifier extends ChangeNotifier {
     _eegSub = null;
     _bleStateSub?.cancel();
     _bleStateSub = null;
-    _eegMetrics?.dispose();
-    _eegMetrics = null;
     _gpsService.stopTracking();
     _ticker?.cancel();
     _ticker = null;
