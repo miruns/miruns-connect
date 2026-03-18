@@ -56,7 +56,7 @@ class _VitalityWaveState extends State<VitalityWave>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         color: dark
             ? Colors.white.withValues(alpha: 0.03)
             : Colors.black.withValues(alpha: 0.02),

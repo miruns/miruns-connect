@@ -138,7 +138,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060B0F),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.glow.withValues(alpha: 0.15),
           width: 1.5,

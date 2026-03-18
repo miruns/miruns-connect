@@ -91,7 +91,7 @@ class SourceBrowserScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.deepSea.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.aurora.withValues(alpha: 0.2),
           width: 1,
@@ -105,7 +105,7 @@ class SourceBrowserScreen extends ConsumerWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppTheme.aurora.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(
               Icons.add_circle_outline_rounded,
@@ -160,7 +160,7 @@ class _SourceCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: AppTheme.shimmer.withValues(alpha: 0.3),
             width: 1,
@@ -174,7 +174,7 @@ class _SourceCard extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 color: AppTheme.glow.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Icon(
                 source.icon,

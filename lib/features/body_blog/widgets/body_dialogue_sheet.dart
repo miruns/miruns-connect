@@ -123,7 +123,7 @@ class _BodyDialogueSheetState extends ConsumerState<_BodyDialogueSheet> {
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       ),
       child: Column(
         children: [
@@ -341,10 +341,10 @@ class _SuggestionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(6),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Text(
@@ -407,8 +407,8 @@ class _MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: _isUser ? userBg : bodyBg,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
+                  topLeft: const Radius.circular(6),
+                  topRight: const Radius.circular(6),
                   bottomLeft: Radius.circular(_isUser ? 18 : 4),
                   bottomRight: Radius.circular(_isUser ? 4 : 18),
                 ),
@@ -490,10 +490,10 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             decoration: BoxDecoration(
               color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
                 bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(18),
+                bottomRight: Radius.circular(6),
               ),
             ),
             child: AnimatedBuilder(
@@ -567,7 +567,7 @@ class _InputBar extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: TextField(
                 controller: controller,

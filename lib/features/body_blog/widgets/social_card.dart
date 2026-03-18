@@ -292,7 +292,7 @@ class _SocialTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: _tagBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: _tagBorder, width: 0.5),
       ),
       child: Text(

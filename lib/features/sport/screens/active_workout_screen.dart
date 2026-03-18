@@ -399,7 +399,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(

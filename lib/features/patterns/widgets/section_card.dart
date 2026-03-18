@@ -127,7 +127,7 @@ class _SectionCardState extends State<SectionCard>
                     color: theme.colorScheme.primary.withValues(
                       alpha: dark ? 0.08 : 0.05,
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     ),

@@ -157,7 +157,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 : Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         );
@@ -172,7 +172,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         );
@@ -204,7 +204,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 : Colors.amber.shade700,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         );
@@ -218,7 +218,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         );
@@ -278,7 +278,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         );
@@ -371,7 +371,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   backgroundColor: Theme.of(context).colorScheme.error,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               );
@@ -400,7 +400,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         height: 140,
         decoration: BoxDecoration(
           color: dark ? AppTheme.tidePool : const Color(0xFFEEEEF2),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: theme.colorScheme.primary.withValues(alpha: 0.15),
             width: 1.5,
@@ -467,7 +467,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               backgroundColor: Colors.teal,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           );
@@ -481,7 +481,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     return Container(
       decoration: BoxDecoration(
         color: dark ? AppTheme.tidePool : const Color(0xFFEEEEF2),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: Colors.teal.withValues(alpha: 0.25),
           width: 1.5,
@@ -513,7 +513,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.teal.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -764,7 +764,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       height: 130,
       decoration: BoxDecoration(
         color: dark ? AppTheme.tidePool : const Color(0xFFEEEEF2),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.15),
           width: 1.5,
@@ -1012,7 +1012,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               : (dark
                     ? Colors.white.withValues(alpha: 0.05)
                     : Colors.black.withValues(alpha: 0.04)),
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: active
                 ? accentColor.withValues(alpha: 0.5)
@@ -1108,7 +1108,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             color: dark
                 ? Colors.white.withValues(alpha: 0.04)
                 : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: _noteExpanded
                   ? theme.colorScheme.primary.withValues(alpha: 0.4)
@@ -1253,14 +1253,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _showCaptureDetails(capture),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(6),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: dark
                   ? Colors.white.withValues(alpha: 0.04)
                   : Colors.black.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: (dark ? Colors.white : Colors.black).withValues(
                   alpha: dark ? 0.06 : 0.04,
@@ -1567,7 +1567,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
           ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       );
@@ -1591,7 +1591,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             decoration: BoxDecoration(
               color: dark ? AppTheme.current : Colors.white,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
+                top: Radius.circular(8),
               ),
             ),
             child: Column(
@@ -1634,7 +1634,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                           color: theme.colorScheme.primary.withValues(
                             alpha: 0.12,
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '${_recentCaptures!.length}',
@@ -1656,7 +1656,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                             color: Colors.amber.shade600.withValues(
                               alpha: 0.12,
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1763,7 +1763,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             decoration: BoxDecoration(
               color: dark ? AppTheme.current : Colors.white,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
+                top: Radius.circular(8),
               ),
             ),
             child: Column(
@@ -1869,7 +1869,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                   ),
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
@@ -2062,7 +2062,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             color: dark
                 ? Colors.white.withValues(alpha: 0.04)
                 : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2139,7 +2139,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             color: dark
                 ? Colors.white.withValues(alpha: 0.04)
                 : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Column(
             children: metrics.map((m) {
@@ -2311,7 +2311,7 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
     return Container(
       decoration: BoxDecoration(
         color: dark ? AppTheme.current : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -2557,7 +2557,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
       height: height,
       decoration: BoxDecoration(
         color: dark ? AppTheme.midnight : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       ),
       child: Column(
         children: [
@@ -2622,7 +2622,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(6),
               child: Stack(
                 children: [
                   MobileScanner(
@@ -2639,7 +2639,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                           color: Colors.teal.withValues(alpha: 0.7),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                   ),
@@ -2658,7 +2658,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                           color:
                               (_isLookingUp ? Colors.teal : Colors.red.shade700)
                                   .withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -2722,7 +2722,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: dark ? AppTheme.tidePool : const Color(0xFFEEEEF2),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: Colors.teal.withValues(alpha: 0.2),
                 width: 1.5,
@@ -2740,7 +2740,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                         margin: const EdgeInsets.only(right: 12),
                         decoration: BoxDecoration(
                           color: _nutriScoreColor(p.nutriScore!),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Center(
                           child: Text(
@@ -2823,7 +2823,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: Colors.teal,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Center(
                       child: Text(
@@ -2857,7 +2857,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                     color: (dark ? Colors.white : Colors.black).withValues(
                       alpha: 0.08,
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'Scan Again',
@@ -2912,7 +2912,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         '$emoji $label',

@@ -236,7 +236,7 @@ class _BciMonitoringViewState extends State<BciMonitoringView>
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060B0F),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: _readinessColor.withValues(alpha: 0.15),
           width: 1.5,
@@ -435,7 +435,7 @@ class _BciMonitoringViewState extends State<BciMonitoringView>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: q.qualityColor.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: q.qualityColor.withValues(alpha: 0.1),
           width: 0.5,

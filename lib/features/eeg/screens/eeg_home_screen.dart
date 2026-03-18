@@ -323,7 +323,7 @@ class _PillContainer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.22), width: 0.5),
       ),
       child: child,
@@ -460,7 +460,7 @@ class _ExpertPanel extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.aurora.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.aurora.withValues(alpha: 0.18),
           width: 0.5,
@@ -541,7 +541,7 @@ class _ExpertShortcut extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: AppTheme.shimmer, width: 0.5),
         ),
         child: Column(

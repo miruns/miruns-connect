@@ -56,7 +56,7 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
             gradient: LinearGradient(
               begin: Alignment(-1.0 + gradientShift * 0.5, -1.0),
               end: Alignment(1.0 - gradientShift * 0.5, 1.0),

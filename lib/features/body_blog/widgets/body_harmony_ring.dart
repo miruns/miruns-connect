@@ -114,7 +114,7 @@ class _BodyHarmonyRingState extends State<BodyHarmonyRing>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 24),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
             color: dark
                 ? Colors.white.withValues(alpha: 0.03)
                 : Colors.black.withValues(alpha: 0.02),

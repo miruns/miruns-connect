@@ -212,7 +212,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060B0F),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.aurora.withValues(alpha: 0.15),
           width: 1.5,
@@ -398,7 +398,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
                         )
                       : null,
                   color: isActive ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(4),
                   border: Border.all(
                     color: isActive
                         ? AppTheme.aurora.withValues(alpha: 0.3)
@@ -488,7 +488,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         child: CustomPaint(
           painter: _SpectrumPainter(
             psd: _smoothedPsd[_activeChannel] ?? spectrum.psd,
@@ -522,7 +522,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         child: CustomPaint(
           painter: _WaterfallPainter(
             history: history.toList(),

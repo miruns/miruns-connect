@@ -328,7 +328,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             decoration: BoxDecoration(
               color: AppTheme.crimson.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               _errorMessage!,
@@ -406,7 +406,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
           foregroundColor: AppTheme.glow,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       ),
@@ -428,7 +428,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           foregroundColor: AppTheme.aurora,
           side: BorderSide(color: AppTheme.aurora.withValues(alpha: 0.35)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       ),
@@ -475,7 +475,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 color: AppTheme.crimson.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -522,7 +522,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
       icon: Icon(_viewMode.icon, color: _viewMode.color, size: 20),
       tooltip: 'Switch view mode',
       color: AppTheme.deepSea,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       onSelected: (mode) => setState(() => _viewMode = mode),
       itemBuilder: (_) => SignalViewMode.values.map((mode) {
         final isActive = mode == _viewMode;
@@ -675,7 +675,7 @@ class _DeviceTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
         ),
         child: Row(

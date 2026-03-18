@@ -89,10 +89,10 @@ class AppTheme {
 
   // ─── Geist Radius ─────────────────────────────────────────────────────────
 
-  static const double radiusSm = 4;
-  static const double radiusMd = 6;
-  static const double radiusLg = 8;
-  static const double radiusXl = 12;
+  static const double radiusSm = 2;
+  static const double radiusMd = 4;
+  static const double radiusLg = 6;
+  static const double radiusXl = 8;
 
   // ─── Geist Typography ─────────────────────────────────────────────────────
 

@@ -812,7 +812,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: dark ? Colors.white10 : Colors.black12),
       ),
       child: Row(
@@ -873,7 +873,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     return Container(
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: dark ? Colors.white10 : Colors.black12),
       ),
       clipBehavior: Clip.antiAlias,
@@ -1261,7 +1261,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -1887,7 +1887,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           color: selected
               ? Colors.cyan.withValues(alpha: 0.2)
               : (dark ? Colors.white10 : Colors.black.withValues(alpha: 0.06)),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: selected
                 ? Colors.cyan.withValues(alpha: 0.6)
@@ -2195,7 +2195,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: dark ? Colors.white12 : Colors.black12,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         children: [
@@ -2226,7 +2226,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
     decoration: BoxDecoration(
       color: color.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(6),
       border: Border.all(color: color.withValues(alpha: 0.35)),
     ),
     child: Text(

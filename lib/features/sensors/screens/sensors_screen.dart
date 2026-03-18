@@ -509,7 +509,7 @@ class _SensorGroupCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -522,7 +522,7 @@ class _SensorGroupCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Icon(group.icon, color: accent, size: 20),
                 ),
@@ -561,7 +561,7 @@ class _SensorGroupCard extends StatelessWidget {
                     foregroundColor: AppTheme.amber,
                     side: const BorderSide(color: AppTheme.amber, width: 1),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -634,7 +634,7 @@ class _StateBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         _stateLabel(state),
@@ -697,7 +697,7 @@ class _FixAllPermissionsBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -713,7 +713,7 @@ class _FixAllPermissionsBanner extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: const Icon(Icons.shield_rounded, color: accent, size: 24),
           ),
@@ -749,7 +749,7 @@ class _FixAllPermissionsBanner extends StatelessWidget {
               foregroundColor: Colors.black87,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             child: Text(
@@ -859,7 +859,7 @@ class _SensorGuidanceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         color: dark ? const Color(0xFF1A1F2B) : const Color(0xFFF5F6FA),
         border: Border.all(color: (dark ? Colors.white10 : Colors.black12)),
       ),

@@ -30,7 +30,7 @@ class ThemeEnergyInsights extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),

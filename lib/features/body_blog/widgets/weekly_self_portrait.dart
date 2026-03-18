@@ -60,7 +60,7 @@ class _WeeklySelfPortraitState extends State<WeeklySelfPortrait>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF1A1A1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
         ),
@@ -508,7 +508,7 @@ class _WeekInsight extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         color: primary.withValues(alpha: dark ? 0.08 : 0.05),
         border: Border.all(
           color: primary.withValues(alpha: dark ? 0.15 : 0.10),

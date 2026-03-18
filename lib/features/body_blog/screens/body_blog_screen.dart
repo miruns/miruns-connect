@@ -314,7 +314,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: _refresh,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(6),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -328,7 +328,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
                                               context,
                                             ).colorScheme.primary)
                                       .withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color:
                                     (dark
@@ -732,7 +732,7 @@ class _BlogPage extends StatelessWidget {
                             color: primary.withValues(alpha: 0.22),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                       ),
@@ -1111,7 +1111,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(6),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1139,7 +1139,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(6),
         child: Stack(
           children: [
             // ── Atmospheric mood watermark ──
@@ -1307,7 +1307,7 @@ class _JournalSpotlightCard extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.05)
             : Colors.white.withValues(alpha: 0.76),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: (dark ? Colors.white : primary).withValues(
             alpha: dark ? 0.08 : 0.10,
@@ -1382,7 +1382,7 @@ class _JournalGlassSection extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.035)
             : Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: dark
               ? Colors.white.withValues(alpha: 0.08)
@@ -1443,7 +1443,7 @@ class _JournalQuoteCallout extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: dark ? 0.13 : 0.08),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: primary.withValues(alpha: 0.16)),
       ),
       child: Column(
@@ -1520,7 +1520,7 @@ class _JournalMetricCard extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.04)
             : primary.withValues(alpha: 0.045),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: dark
               ? Colors.white.withValues(alpha: 0.08)
@@ -1535,7 +1535,7 @@ class _JournalMetricCard extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: primary.withValues(alpha: dark ? 0.16 : 0.12),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(item.icon, size: 20, color: primary),
           ),
@@ -1592,7 +1592,7 @@ class _JournalContextChip extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.04)
             : Colors.black.withValues(alpha: 0.025),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: dark
               ? Colors.white.withValues(alpha: 0.08)
@@ -1663,7 +1663,7 @@ class _JournalPrimaryButton extends StatelessWidget {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(6),
           ),
         ),
       ),
@@ -1718,7 +1718,7 @@ class _SnapshotGlance extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.04)
             : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1787,7 +1787,7 @@ class _Tag extends StatelessWidget {
         color: dark
             ? Colors.white.withValues(alpha: 0.06)
             : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
@@ -2197,12 +2197,12 @@ class _TodayPill extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     return Material(
       color: primary,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(6),
       elevation: 4,
       shadowColor: primary.withValues(alpha: 0.4),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
@@ -2250,10 +2250,10 @@ class _ShareFab extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       child: Material(
         color: bg,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(6),
         child: InkWell(
           onTap: sharing ? null : onShare,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(6),
           splashColor: (dark ? Colors.white : Colors.black).withValues(
             alpha: 0.12,
           ),
@@ -2309,7 +2309,7 @@ class _AiBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: dark ? 0.18 : 0.10),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: primary.withValues(alpha: dark ? 0.35 : 0.25),
           width: 1,
@@ -2349,7 +2349,7 @@ class _RawDataBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
       child: Row(
@@ -2416,7 +2416,7 @@ class _PendingAiPanel extends StatelessWidget {
               color: (dark ? Colors.white : Colors.black).withValues(
                 alpha: 0.04,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(
                 color: (dark ? Colors.white : Colors.black).withValues(
                   alpha: 0.08,
@@ -2531,7 +2531,7 @@ class _PendingAiPanel extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: primary.withValues(alpha: dark ? 0.08 : 0.05),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(
                 color: primary.withValues(alpha: dark ? 0.20 : 0.15),
               ),
@@ -2585,7 +2585,7 @@ class _DataTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.08),
         ),
@@ -2826,7 +2826,7 @@ class _RefreshJourneyOverlayState extends State<_RefreshJourneyOverlay>
                             ),
                             decoration: BoxDecoration(
                               color: primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: primary.withValues(alpha: 0.15),
                               ),
@@ -3731,7 +3731,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
       isScrollControlled: true,
       backgroundColor: dark ? const Color(0xFF1A1A1A) : Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
@@ -3808,7 +3808,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                             color: isSelected
                                 ? primary.withValues(alpha: dark ? 0.25 : 0.12)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(4),
                             border: Border.all(
                               color: isSelected ? primary : Colors.transparent,
                               width: 1.5,
@@ -3863,13 +3863,13 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                         color: dark ? Colors.white30 : Colors.black38,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(
                           color: primary.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(
                           color: dark
                               ? Colors.white.withValues(alpha: 0.15)
@@ -3877,7 +3877,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: primary, width: 1.5),
                       ),
                       contentPadding: const EdgeInsets.all(14),
@@ -3903,7 +3903,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                         backgroundColor: primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                       child: Text(
@@ -4154,7 +4154,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                       color: primary.withValues(alpha: 0.22),
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                   ),
                                 ),
@@ -4206,7 +4206,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                     color: primary.withValues(alpha: 0.22),
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
                               ),
@@ -4322,7 +4322,7 @@ class _VersionHistorySheet extends StatelessWidget {
       builder: (_, scrollCtrl) => Container(
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
         ),
         child: Column(
           children: [
@@ -4480,7 +4480,7 @@ class _VersionTile extends StatelessWidget {
                   color: dark
                       ? Colors.white.withValues(alpha: 0.04)
                       : Colors.black.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   border: isLatest
                       ? Border.all(
                           color: primary.withValues(alpha: 0.18),
@@ -4583,7 +4583,7 @@ class _VersionTile extends StatelessWidget {
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: dark ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: SingleChildScrollView(
@@ -4700,7 +4700,7 @@ class _ToneSelectorBottomSheet extends StatelessWidget {
       builder: (_, scrollController) => Material(
         elevation: 16,
         color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
         child: Column(
           children: [
             // Drag handle
@@ -4862,11 +4862,11 @@ class _ToneOption extends StatelessWidget {
 
     return InkWell(
       onTap: () => Navigator.of(context).pop(tone),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: dark ? Colors.white10 : Colors.black12),
         ),
         child: Row(
@@ -4876,7 +4876,7 @@ class _ToneOption extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Icon(icon, color: primary, size: 20),
             ),

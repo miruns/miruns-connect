@@ -543,7 +543,7 @@ class _AnalysisBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
             color: const Color(0xFF4CAF50).withValues(alpha: 0.25),
           ),
@@ -574,7 +574,7 @@ class _AnalysisBanner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.18),
         ),
@@ -681,7 +681,7 @@ class _IntervalPicker extends StatelessWidget {
                   color: isSelected
                       ? accent.withValues(alpha: 0.12)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: isSelected
                         ? accent.withValues(alpha: 0.35)
@@ -744,7 +744,7 @@ class _EnergyBar extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -880,7 +880,7 @@ class _FrequencyChips extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: color.withValues(alpha: intensity * 0.18),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: color.withValues(alpha: intensity * 0.35),
             ),
@@ -965,7 +965,7 @@ class _SignalList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -1055,7 +1055,7 @@ class _MomentCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.08),
         ),

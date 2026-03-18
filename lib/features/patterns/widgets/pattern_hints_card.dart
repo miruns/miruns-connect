@@ -68,7 +68,7 @@ class PatternHintsCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: dark ? 0.12 : 0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(color: accent.withValues(alpha: 0.2)),
           ),
           child: Row(

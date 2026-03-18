@@ -845,7 +845,7 @@ class _AndroidTwoStepNote extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: dark ? 0.08 : 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: accent.withValues(alpha: dark ? 0.18 : 0.15)),
       ),
       child: Column(
@@ -1022,7 +1022,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: dark ? 0.07 : 0.05),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                     border: Border.all(color: accent.withValues(alpha: 0.15)),
                   ),
                   child: Row(
@@ -1317,7 +1317,7 @@ class _OsBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: accent.withValues(alpha: 0.25), width: 1),
           ),
           child: Row(
@@ -1678,7 +1678,7 @@ class _PillButton extends StatelessWidget {
           disabledBackgroundColor: color.withValues(alpha: 0.5),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(8),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 16,

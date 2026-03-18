@@ -88,7 +88,7 @@ class _PatternNarrativeCardState extends State<PatternNarrativeCard>
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +148,7 @@ class _PatternNarrativeCardState extends State<PatternNarrativeCard>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: dark ? 0.08 : 0.05),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: accent.withValues(alpha: 0.15)),
       ),
       child: Column(

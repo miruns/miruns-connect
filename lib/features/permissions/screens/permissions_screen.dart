@@ -122,7 +122,7 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: permission.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Icon(
                               permission.icon,

@@ -535,7 +535,7 @@ class _DeviceChoicePage extends StatelessWidget {
               height: 54,
               decoration: BoxDecoration(
                 color: AppTheme.tidePool,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: AppTheme.shimmer, width: 1),
               ),
               alignment: Alignment.center,
@@ -729,11 +729,11 @@ class _SignalCheckPage extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: AppTheme.deepSea,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: AppTheme.shimmer, width: 0.5),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
                 child: CustomPaint(
                   painter: _WavePainter(points: wavePoints),
                   size: Size.infinite,
@@ -890,7 +890,7 @@ class _DataChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
       ),
       child: Row(
@@ -1067,7 +1067,7 @@ class _DeviceRow extends StatelessWidget {
           color: isSelected
               ? AppTheme.glow.withValues(alpha: 0.08)
               : AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
             color: isSelected
                 ? AppTheme.glow.withValues(alpha: 0.5)
@@ -1239,7 +1239,7 @@ class _PrimaryButton extends StatelessWidget {
           height: 54,
           decoration: BoxDecoration(
             color: AppTheme.moonbeam,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(4),
           ),
           alignment: Alignment.center,
           child: Text(

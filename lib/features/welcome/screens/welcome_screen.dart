@@ -368,7 +368,7 @@ class _BrandOrb extends StatelessWidget {
           ),
           // Logo image
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
             child: Image.asset(
               'assets/images/miruns-icon-512.png',
               width: 64,

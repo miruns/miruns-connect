@@ -114,7 +114,7 @@ class _WorkoutHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -152,7 +152,7 @@ class _WorkoutHistoryCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.glow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Column(
                     children: [

@@ -151,7 +151,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: lineColor.withValues(alpha: 0.18 + _peakGlow * 0.25),
           width: 1.5,
@@ -229,7 +229,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(4),
                 child: CustomPaint(
                   painter: _WaveformPainter(
                     buffer: _buffer,
