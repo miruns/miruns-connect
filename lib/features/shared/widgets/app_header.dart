@@ -77,9 +77,9 @@ class AppHeader extends ConsumerWidget {
                   title,
                   style: GoogleFonts.inter(
                     fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w300,
                     color: titleColor,
-                    letterSpacing: -0.6,
+                    letterSpacing: -0.5,
                   ),
                 ),
                 if (subtitle != null) ...[

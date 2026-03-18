@@ -448,29 +448,14 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                     child: Row(
                       children: [
                         // Brand
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'miruns',
-                              style: AppTheme.geist(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.moonbeam,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'sport',
-                              style: AppTheme.geist(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.fog,
-                                letterSpacing: 2.0,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'miruns',
+                          style: AppTheme.geist(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w300,
+                            color: AppTheme.moonbeam,
+                            letterSpacing: -0.5,
+                          ),
                         ),
                         const Spacer(),
                         // History
