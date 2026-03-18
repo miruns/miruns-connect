@@ -650,9 +650,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                               ),
                               _LiveSensorCard(
                                 label: 'ENVIRONMENT',
-                                value: _ambientData != null
-                                    ? '${_ambientData!.temperature.currentC.round()}° · AQI ${_ambientData!.airQuality.usAqi}'
-                                    : '-- loading',
                                 color: AppTheme.amber,
                                 icon: Icons.cloud_outlined,
                                 child: _EnvSummaryWidget(data: _ambientData),
@@ -2157,14 +2154,14 @@ class _DeviceTile extends StatelessWidget {
 
 class _LiveSensorCard extends StatelessWidget {
   final String label;
-  final String value;
+  final String? value;
   final Color color;
   final IconData icon;
   final Widget child;
 
   const _LiveSensorCard({
     required this.label,
-    required this.value,
+    this.value,
     required this.color,
     required this.icon,
     required this.child,
@@ -2207,15 +2204,16 @@ class _LiveSensorCard extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  Text(
-                    value,
-                    style: AppTheme.geist(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.moonbeam,
-                      letterSpacing: -0.5,
+                  if (value != null)
+                    Text(
+                      value!,
+                      style: AppTheme.geist(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.moonbeam,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
