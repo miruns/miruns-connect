@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Horizontal-bar visualization of capture distribution across time-of-day.
 ///
@@ -45,7 +45,7 @@ class RhythmStrip extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -67,7 +67,7 @@ class RhythmStrip extends StatelessWidget {
                   width: 55,
                   child: Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       color: theme.colorScheme.onSurface
                           .withValues(alpha: 0.6),
@@ -106,7 +106,7 @@ class RhythmStrip extends StatelessWidget {
                   child: Text(
                     count > 0 ? '$pct%' : '–',
                     textAlign: TextAlign.end,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: count > 0

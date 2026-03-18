@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
 import '../widgets/sport_widgets.dart';
@@ -399,7 +399,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(

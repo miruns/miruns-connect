@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Browse all registered BLE signal sources and launch a live session.
 ///
@@ -27,7 +26,7 @@ class SourceBrowserScreen extends ConsumerWidget {
         elevation: 0,
         title: Text(
           'Signal Sources',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: AppTheme.moonbeam,
@@ -71,12 +70,12 @@ class SourceBrowserScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'No sources registered',
-            style: GoogleFonts.inter(fontSize: 16, color: AppTheme.fog),
+            style: AppTheme.geist(fontSize: 16, color: AppTheme.fog),
           ),
           const SizedBox(height: 8),
           Text(
             'Community sources will appear here.',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13,
               color: AppTheme.fog.withValues(alpha: 0.6),
             ),
@@ -91,7 +90,7 @@ class SourceBrowserScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.deepSea.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.aurora.withValues(alpha: 0.2),
           width: 1,
@@ -105,7 +104,7 @@ class SourceBrowserScreen extends ConsumerWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppTheme.aurora.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(
               Icons.add_circle_outline_rounded,
@@ -120,7 +119,7 @@ class SourceBrowserScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Add your own source',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.aurora,
@@ -130,7 +129,7 @@ class SourceBrowserScreen extends ConsumerWidget {
                 Text(
                   'Implement BleSourceProvider and register it in '
                   'source_registry_init.dart',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 11,
                     color: AppTheme.fog.withValues(alpha: 0.6),
                     height: 1.4,
@@ -160,7 +159,7 @@ class _SourceCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: AppTheme.shimmer.withValues(alpha: 0.3),
             width: 1,
@@ -174,7 +173,7 @@ class _SourceCard extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 color: AppTheme.glow.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Icon(
                 source.icon,
@@ -190,7 +189,7 @@ class _SourceCard extends StatelessWidget {
                 children: [
                   Text(
                     source.displayName,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.moonbeam,
@@ -201,7 +200,7 @@ class _SourceCard extends StatelessWidget {
                     source.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       color: AppTheme.fog,
                       height: 1.4,
@@ -261,7 +260,7 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.robotoMono(
+        style: AppTheme.geistMono(
           fontSize: 9,
           fontWeight: FontWeight.w600,
           color: color.withValues(alpha: 0.8),

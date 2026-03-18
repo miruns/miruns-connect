@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Surfaces AI-discovered pattern hints aggregated across captures.
 ///
@@ -68,7 +68,7 @@ class PatternHintsCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: dark ? 0.12 : 0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(color: accent.withValues(alpha: 0.2)),
           ),
           child: Row(
@@ -80,7 +80,7 @@ class PatternHintsCard extends StatelessWidget {
                 child: Text(
                   label,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: accent,
@@ -100,7 +100,7 @@ class PatternHintsCard extends StatelessWidget {
                   ),
                   child: Text(
                     '×${h.value}',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: accent,

@@ -10,7 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
@@ -448,29 +448,14 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                     child: Row(
                       children: [
                         // Brand
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'miruns',
-                              style: AppTheme.geist(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.moonbeam,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'sport',
-                              style: AppTheme.geist(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.fog,
-                                letterSpacing: 2.0,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'miruns',
+                          style: AppTheme.geist(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w300,
+                            color: AppTheme.moonbeam,
+                            letterSpacing: -0.5,
+                          ),
                         ),
                         const Spacer(),
                         // History
@@ -658,7 +643,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 color: isSelected
                                     ? AppTheme.cyan.withValues(alpha: 0.10)
                                     : AppTheme.tidePool.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppTheme.cyan.withValues(alpha: 0.6)
@@ -730,7 +715,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                     AppTheme.tidePool,
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppTheme.cyan.withValues(alpha: 0.12),
                                 ),
@@ -799,7 +784,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: AppTheme.tidePool,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: AppTheme.cyan.withValues(
                                       alpha: 0.15,
@@ -1010,7 +995,7 @@ class _FixedStartBar extends StatelessWidget {
             return Container(
               height: 60,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6),
                 gradient: LinearGradient(
                   colors: [
                     AppTheme.cyan,
@@ -1197,7 +1182,7 @@ class _SensorPillRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: dotColor.withValues(alpha: 0.2)),
         ),
         child: Row(
@@ -1274,7 +1259,7 @@ class _RecentWorkoutCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -1285,7 +1270,7 @@ class _RecentWorkoutCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppTheme.cyan.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(
               session.workoutType.icon,
@@ -1319,7 +1304,7 @@ class _RecentWorkoutCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppTheme.cyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '${session.analysis!.performanceScore}',
@@ -1445,7 +1430,7 @@ class _HeadsetScanSheetState extends State<_HeadsetScanSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.current,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
       ),
       padding: EdgeInsets.fromLTRB(
         20,
@@ -1708,7 +1693,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.current,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
       ),
       padding: EdgeInsets.fromLTRB(
         20,
@@ -1791,7 +1776,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.tidePool,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: AppTheme.shimmer),
                     ),
                     alignment: Alignment.center,
@@ -1816,7 +1801,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                       color: isScanning
                           ? AppTheme.tidePool
                           : AppTheme.cyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color: isScanning
                             ? AppTheme.shimmer
@@ -1898,7 +1883,7 @@ class _HrDeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -1958,7 +1943,7 @@ class _DeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -2025,7 +2010,7 @@ class _LiveSensorCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         clipBehavior: Clip.antiAlias,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Displays theme-pairs that frequently co-occur within the same capture.
 ///
@@ -29,7 +29,7 @@ class CoOccurrenceList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -95,7 +95,7 @@ class CoOccurrenceList extends StatelessWidget {
                   // Count badge
                   Text(
                     '×${pair.value}',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: 0.7),
@@ -119,7 +119,7 @@ class CoOccurrenceList extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 11,
           fontWeight: FontWeight.w500,
           color: accent,

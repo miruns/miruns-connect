@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
 import '../widgets/sport_widgets.dart';
@@ -138,7 +137,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                     const SizedBox(height: 8),
                     Text(
                       _submitted ? 'Analyzing...' : 'Great Work!',
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.moonbeam,
@@ -267,7 +266,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                               color: _moodEmoji == emoji
                                   ? AppTheme.glow.withValues(alpha: 0.2)
                                   : AppTheme.tidePool,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: _moodEmoji == emoji
                                     ? AppTheme.glow
@@ -303,19 +302,19 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                     filled: true,
                     fillColor: AppTheme.tidePool,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       borderSide: BorderSide(
                         color: AppTheme.shimmer.withValues(alpha: 0.3),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       borderSide: BorderSide(
                         color: AppTheme.shimmer.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       borderSide: const BorderSide(color: AppTheme.glow),
                     ),
                   ),
@@ -333,7 +332,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                     child: const Text(
@@ -380,7 +379,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                       children: [
                         Text(
                           '${_analysis!.performanceScore}',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 56,
                             fontWeight: FontWeight.w800,
                             color: AppTheme.glow,
@@ -514,7 +513,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                       child: const Text(
@@ -548,7 +547,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                       child: const Text(
@@ -592,7 +591,7 @@ class _AnalysisCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(

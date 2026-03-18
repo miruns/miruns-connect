@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
 
@@ -50,7 +49,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
         ),
         title: Text(
           'Workout History',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppTheme.moonbeam,
@@ -114,7 +113,7 @@ class _WorkoutHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -152,7 +151,7 @@ class _WorkoutHistoryCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.glow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Column(
                     children: [

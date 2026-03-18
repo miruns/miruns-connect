@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sensors & State — live dashboard of every data source the app relies on
@@ -396,7 +395,7 @@ class _SensorsScreenState extends ConsumerState<SensorsScreen> {
       appBar: AppBar(
         title: Text(
           'Sensors & State',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+          style: AppTheme.geist(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -509,7 +508,7 @@ class _SensorGroupCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -522,7 +521,7 @@ class _SensorGroupCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Icon(group.icon, color: accent, size: 20),
                 ),
@@ -530,7 +529,7 @@ class _SensorGroupCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     group.title,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -552,7 +551,7 @@ class _SensorGroupCard extends StatelessWidget {
                   icon: const Icon(Icons.build_rounded, size: 16),
                   label: Text(
                     'Fix permissions',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -561,7 +560,7 @@ class _SensorGroupCard extends StatelessWidget {
                     foregroundColor: AppTheme.amber,
                     side: const BorderSide(color: AppTheme.amber, width: 1),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -582,6 +581,7 @@ class _SensorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -598,20 +598,14 @@ class _SensorRow extends StatelessWidget {
           Expanded(
             child: Text(
               item.label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: dark ? Colors.white60 : Colors.black54,
-              ),
+              style: AppTheme.geist(fontSize: 13, color: c.textSecondary),
             ),
           ),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               item.value,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTheme.geist(fontSize: 13, fontWeight: FontWeight.w500),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               textAlign: TextAlign.end,
@@ -634,11 +628,11 @@ class _StateBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         _stateLabel(state),
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 11,
           fontWeight: FontWeight.w600,
           color: color,
@@ -691,13 +685,14 @@ class _FixAllPermissionsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     const accent = AppTheme.amber;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -713,7 +708,7 @@ class _FixAllPermissionsBanner extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: const Icon(Icons.shield_rounded, color: accent, size: 24),
           ),
@@ -724,19 +719,16 @@ class _FixAllPermissionsBanner extends StatelessWidget {
               children: [
                 Text(
                   'Some permissions are missing',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Grant access so your body story is complete',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: dark ? Colors.white54 : Colors.black45,
-                  ),
+                  style: AppTheme.geist(fontSize: 12, color: c.textMuted),
                 ),
               ],
             ),
@@ -749,15 +741,12 @@ class _FixAllPermissionsBanner extends StatelessWidget {
               foregroundColor: Colors.black87,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             child: Text(
               'Fix all',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTheme.geist(fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -790,6 +779,7 @@ class _SensorGuidanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final denied = groups
         .where((g) => g.overallState == _SensorState.denied)
         .map((g) => g.title)
@@ -859,27 +849,23 @@ class _SensorGuidanceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         color: dark ? const Color(0xFF1A1F2B) : const Color(0xFFF5F6FA),
-        border: Border.all(color: (dark ? Colors.white10 : Colors.black12)),
+        border: Border.all(color: c.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 16,
-                color: dark ? Colors.white38 : Colors.black38,
-              ),
+              Icon(Icons.info_outline_rounded, size: 16, color: c.textSubtle),
               const SizedBox(width: 8),
               Text(
                 'SENSOR GUIDANCE',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: dark ? Colors.white38 : Colors.black38,
+                  color: c.textSubtle,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -908,7 +894,7 @@ class _SensorGuidanceCard extends StatelessWidget {
                       children: [
                         Text(
                           tip.title,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: tip.color,
@@ -917,9 +903,9 @@ class _SensorGuidanceCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           tip.message,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 12,
-                            color: dark ? Colors.white54 : Colors.black45,
+                            color: c.textMuted,
                           ),
                         ),
                       ],

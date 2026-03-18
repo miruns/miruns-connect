@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../core/models/ai_models.dart';
 import '../../core/models/background_capture_config.dart';
 import '../../core/models/body_blog_entry.dart';
@@ -97,6 +97,9 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // Expanded state for each panel
   final Set<String> _expanded = {'permissions', 'db', 'health'};
+
+  // Theme — set at start of build(), used by all builder methods
+  late _DebugTheme _t;
 
   @override
   void initState() {
@@ -562,19 +565,17 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? const Color(0xFF0E0E0E) : const Color(0xFFF5F5F5);
-    final surface = dark ? const Color(0xFF1A1A1A) : Colors.white;
-    final dividerColor = dark ? Colors.white12 : Colors.black12;
+    _t = _DebugTheme(context.miruns, dark: dark);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: bg,
+        backgroundColor: _t.bg,
         body: SafeArea(
           child: Column(
             children: [
               // ── top bar
-              _buildTopBar(dark),
+              _buildTopBar(),
               // ── content
               Expanded(
                 child: _loading
@@ -587,7 +588,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                           children: [
                             // ── app info
-                            _buildAppInfoCard(dark, surface),
+                            _buildAppInfoCard(),
                             const SizedBox(height: 12),
                             // ── permissions
                             _buildSection(
@@ -595,12 +596,9 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Permissions',
                               icon: Icons.shield_outlined,
                               accent: Colors.orange,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _permissionsBadge(),
                               errorText: _permError,
-                              child: _buildPermissionsContent(dark),
+                              child: _buildPermissionsContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── database
@@ -609,14 +607,11 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Database',
                               icon: Icons.storage_outlined,
                               accent: Colors.blue,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _dbInfo == null
                                   ? null
                                   : '${_dbInfo!.entryCount}j · ${_dbInfo!.captureCount}c',
                               errorText: _dbError,
-                              child: _buildDbContent(dark),
+                              child: _buildDbContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── health
@@ -625,9 +620,6 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Health Snapshot',
                               icon: Icons.monitor_heart_outlined,
                               accent: Colors.red,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _healthAuthorized
                                   ? 'authorized'
                                   : 'no access',
@@ -635,7 +627,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                                   ? Colors.green
                                   : Colors.red,
                               errorText: _healthError,
-                              child: _buildHealthContent(dark),
+                              child: _buildHealthContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── ai service
@@ -644,9 +636,6 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'AI Service',
                               icon: Icons.smart_toy_outlined,
                               accent: Colors.indigo,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _aiHealthy == null
                                   ? 'checking'
                                   : (_aiHealthy! ? 'online' : 'offline'),
@@ -654,7 +643,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                                   ? Colors.grey
                                   : (_aiHealthy! ? Colors.green : Colors.red),
                               errorText: _aiError,
-                              child: _buildAiContent(dark),
+                              child: _buildAiContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── context window
@@ -663,12 +652,9 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'AI Context Window',
                               icon: Icons.psychology_outlined,
                               accent: Colors.purple,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: '${_contextEntries.length} days',
                               errorText: _contextError,
-                              child: _buildContextContent(dark),
+                              child: _buildContextContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── background captures
@@ -677,15 +663,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Background Captures',
                               icon: Icons.sync_outlined,
                               accent: Colors.cyan,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _bgConfig.enabled ? 'enabled' : 'disabled',
                               badgeColor: _bgConfig.enabled
                                   ? Colors.green
                                   : Colors.grey,
                               errorText: _bgCaptureError,
-                              child: _buildBgCaptureContent(dark),
+                              child: _buildBgCaptureContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── daily notifications
@@ -694,16 +677,13 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Daily Notifications',
                               icon: Icons.notifications_none_rounded,
                               accent: const Color(0xFFA68BC1),
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
                               badge: _dailyReminderEnabled
                                   ? 'enabled'
                                   : 'disabled',
                               badgeColor: _dailyReminderEnabled
                                   ? Colors.green
                                   : Colors.grey,
-                              child: _buildDailyNotifContent(dark),
+                              child: _buildDailyNotifContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── recent entries
@@ -712,10 +692,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Recent Entries',
                               icon: Icons.article_outlined,
                               accent: Colors.teal,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
-                              child: _buildEntriesContent(dark),
+                              child: _buildEntriesContent(),
                             ),
                             const SizedBox(height: 10),
                             // ── actions
@@ -724,14 +701,11 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                               title: 'Actions',
                               icon: Icons.bolt_outlined,
                               accent: Colors.amber,
-                              dark: dark,
-                              surface: surface,
-                              dividerColor: dividerColor,
-                              child: _buildActionsContent(dark),
+                              child: _buildActionsContent(),
                             ),
                             if (_actionMessage != null) ...[
                               const SizedBox(height: 12),
-                              _buildToast(dark),
+                              _buildToast(),
                             ],
                           ],
                         ),
@@ -746,23 +720,19 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── TOP BAR ───────────────────────
 
-  Widget _buildTopBar(bool dark) {
+  Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       child: Row(
         children: [
-          Icon(
-            Icons.bug_report,
-            size: 22,
-            color: dark ? Colors.white54 : Colors.black45,
-          ),
+          Icon(Icons.bug_report, size: 22, color: _t.iconMuted),
           const SizedBox(width: 8),
           Text(
             'Debug Panel',
-            style: GoogleFonts.spaceMono(
+            style: AppTheme.geistMono(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: dark ? Colors.white : Colors.black87,
+              color: _t.title,
               letterSpacing: 0.5,
             ),
           ),
@@ -777,20 +747,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
               ),
             ),
           IconButton(
-            icon: Icon(
-              Icons.refresh_rounded,
-              size: 20,
-              color: dark ? Colors.white38 : Colors.black38,
-            ),
+            icon: Icon(Icons.refresh_rounded, size: 20, color: _t.icon),
             tooltip: 'Reload all',
             onPressed: _loading ? null : _loadAll,
           ),
           IconButton(
-            icon: Icon(
-              Icons.close,
-              size: 20,
-              color: dark ? Colors.white38 : Colors.black38,
-            ),
+            icon: Icon(Icons.close, size: 20, color: _t.icon),
             tooltip: 'Close',
             onPressed: () => context.pop(),
           ),
@@ -801,36 +763,21 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── APP INFO ───────────────────────
 
-  Widget _buildAppInfoCard(bool dark, Color surface) {
+  Widget _buildAppInfoCard() {
     final now = DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd HH:mm:ss');
-    final monoStyle = GoogleFonts.spaceMono(
-      fontSize: 11,
-      color: dark ? Colors.white60 : Colors.black54,
-    );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: dark ? Colors.white10 : Colors.black12),
-      ),
+      decoration: _t.cardDecoration,
       child: Row(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Miruns',
-                style: GoogleFonts.spaceMono(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: dark ? Colors.white : Colors.black87,
-                ),
-              ),
+              Text('miruns', style: _t.monoBold),
               const SizedBox(height: 2),
-              Text('v1.0.14+15', style: monoStyle),
-              Text(fmt.format(now), style: monoStyle),
+              Text('v1.0.14+15', style: _t.mono),
+              Text(fmt.format(now), style: _t.mono),
             ],
           ),
           const Spacer(),
@@ -861,9 +808,6 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     required String title,
     required IconData icon,
     required Color accent,
-    required bool dark,
-    required Color surface,
-    required Color dividerColor,
     Widget? child,
     String? badge,
     Color? badgeColor,
@@ -871,11 +815,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
   }) {
     final isOpen = _expanded.contains(key);
     return Container(
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: dark ? Colors.white10 : Colors.black12),
-      ),
+      decoration: _t.cardDecoration,
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -887,29 +827,21 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 children: [
                   Icon(icon, size: 18, color: accent),
                   const SizedBox(width: 10),
-                  Text(
-                    title,
-                    style: GoogleFonts.spaceMono(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: dark ? Colors.white : Colors.black87,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
+                  Text(title, style: _t.monoSectionTitle),
                   const Spacer(),
                   if (badge != null) _chip(badge, badgeColor ?? accent),
                   const SizedBox(width: 8),
                   Icon(
                     isOpen ? Icons.expand_less : Icons.expand_more,
                     size: 18,
-                    color: dark ? Colors.white38 : Colors.black38,
+                    color: _t.icon,
                   ),
                 ],
               ),
             ),
           ),
           if (isOpen) ...[
-            Divider(height: 1, color: dividerColor),
+            Divider(height: 1, color: _t.divider),
             if (errorText != null)
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -924,7 +856,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                     Expanded(
                       child: Text(
                         errorText,
-                        style: GoogleFonts.spaceMono(
+                        style: AppTheme.geistMono(
                           fontSize: 10,
                           color: Colors.red,
                         ),
@@ -950,12 +882,10 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     return '$granted/$total granted';
   }
 
-  Widget _buildPermissionsContent(bool dark) {
+  Widget _buildPermissionsContent() {
     return Column(
       children: [
-        ..._permStatuses.entries.map(
-          (e) => _buildPermRow(e.key, e.value, dark),
-        ),
+        ..._permStatuses.entries.map((e) => _buildPermRow(e.key, e.value)),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
           child: Row(
@@ -984,7 +914,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     );
   }
 
-  Widget _buildPermRow(String id, _PermStatus perm, bool dark) {
+  Widget _buildPermRow(String id, _PermStatus perm) {
     final statusLabel = perm.statusLabel;
     final statusColor = perm.statusColor;
     return Padding(
@@ -1002,15 +932,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: _t.title,
                   ),
                 ),
                 Text(
                   perm.description,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: dark ? Colors.white38 : Colors.black38,
-                  ),
+                  style: TextStyle(fontSize: 11, color: _t.subtle),
                 ),
               ],
             ),
@@ -1034,17 +961,13 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── DATABASE ───────────────────────
 
-  Widget _buildDbContent(bool dark) {
+  Widget _buildDbContent() {
     if (_dbInfo == null) {
       return const Padding(
         padding: EdgeInsets.all(16),
         child: Text('No database info available'),
       );
     }
-    final mono = GoogleFonts.spaceMono(
-      fontSize: 11,
-      color: dark ? Colors.white60 : Colors.black54,
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1055,32 +978,27 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             spacing: 12,
             runSpacing: 8,
             children: [
-              _dbKv('Schema', 'v${_dbInfo!.schemaVersion}', dark),
-              _dbKv('Journal', '${_dbInfo!.entryCount}', dark),
-              _dbKv('Captures', '${_dbInfo!.captureCount}', dark),
-              _dbKv('Oldest', _dbInfo!.oldestDate ?? '—', dark),
-              _dbKv('Newest', _dbInfo!.newestDate ?? '—', dark),
+              _dbKv('Schema', 'v${_dbInfo!.schemaVersion}'),
+              _dbKv('Journal', '${_dbInfo!.entryCount}'),
+              _dbKv('Captures', '${_dbInfo!.captureCount}'),
+              _dbKv('Oldest', _dbInfo!.oldestDate ?? '—'),
+              _dbKv('Newest', _dbInfo!.newestDate ?? '—'),
             ],
           ),
         ),
         // DB path (monospace, selectable)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-          child: SelectableText(_dbInfo!.path, style: mono),
+          child: SelectableText(_dbInfo!.path, style: _t.mono),
         ),
         // Table header
         if (_dbRows.isNotEmpty) ...[
-          Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+          Divider(height: 1, color: _t.divider),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Text(
               'RAW ROWS  (latest ${_dbRows.length})',
-              style: GoogleFonts.spaceMono(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: dark ? Colors.white38 : Colors.black38,
-                letterSpacing: 0.5,
-              ),
+              style: _t.monoSectionLabel,
             ),
           ),
           // Scrollable table
@@ -1101,38 +1019,28 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: dark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.04),
+                    color: _t.faintBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     children: [
                       Text(
                         row['date'] as String? ?? '—',
-                        style: mono.copyWith(
+                        style: _t.mono.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: dark
-                              ? Colors.white70
-                              : Colors.black.withValues(alpha: 0.7),
+                          color: _t.body,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '${row['mood_emoji'] ?? ''} ${row['mood'] ?? ''}',
-                        style: mono,
+                        style: _t.mono,
                       ),
                       const Spacer(),
                       if (userMood != null)
                         Text(userMood, style: const TextStyle(fontSize: 13)),
                       if (note != null)
-                        Icon(
-                          Icons.edit_note,
-                          size: 13,
-                          color: dark
-                              ? Colors.white30
-                              : Colors.black.withValues(alpha: 0.3),
-                        ),
+                        Icon(Icons.edit_note, size: 13, color: _t.icon),
                     ],
                   ),
                 );
@@ -1142,39 +1050,25 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
         ] else
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-            child: Text('No rows in database.', style: mono),
+            child: Text('No rows in database.', style: _t.mono),
           ),
       ],
     );
   }
 
-  Widget _dbKv(String label, String value, bool dark) {
+  Widget _dbKv(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: GoogleFonts.spaceMono(
-            fontSize: 9,
-            color: dark ? Colors.white38 : Colors.black38,
-            letterSpacing: 0.6,
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.spaceMono(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: dark ? Colors.white : Colors.black87,
-          ),
-        ),
+        Text(label.toUpperCase(), style: _t.monoLabel),
+        Text(value, style: _t.monoBold),
       ],
     );
   }
 
   // ─────────────────────── HEALTH ───────────────────────
 
-  Widget _buildHealthContent(bool dark) {
+  Widget _buildHealthContent() {
     if (!_healthAuthorized) {
       return Padding(
         padding: const EdgeInsets.all(16),
@@ -1207,61 +1101,49 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             _steps.toString(),
             'Steps',
             Colors.green,
-            dark,
           ),
           _healthTile(
             Icons.local_fire_department_outlined,
             '${_calories.toStringAsFixed(0)} kcal',
             'Calories',
             Colors.orange,
-            dark,
           ),
           _healthTile(
             Icons.route_outlined,
             '${_distanceKm.toStringAsFixed(2)} km',
             'Distance',
             Colors.blue,
-            dark,
           ),
           _healthTile(
             Icons.bedtime_outlined,
             '${_sleepHours.toStringAsFixed(1)} h',
             'Sleep',
             Colors.indigo,
-            dark,
           ),
           _healthTile(
             Icons.favorite_outlined,
             _avgHr > 0 ? '$_avgHr bpm' : '—',
             'Avg Heart Rate',
             Colors.red,
-            dark,
           ),
           _healthTile(
             Icons.fitness_center_outlined,
             '$_workouts',
             'Workouts',
             Colors.teal,
-            dark,
           ),
         ],
       ),
     );
   }
 
-  Widget _healthTile(
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-    bool dark,
-  ) {
+  Widget _healthTile(IconData icon, String value, String label, Color color) {
     return Container(
       width: 150,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -1277,16 +1159,10 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: _t.title,
                   ),
                 ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: dark ? Colors.white38 : Colors.black38,
-                  ),
-                ),
+                Text(label, style: TextStyle(fontSize: 10, color: _t.subtle)),
               ],
             ),
           ),
@@ -1297,12 +1173,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── AI SERVICE ───────────────────────
 
-  Widget _buildAiContent(bool dark) {
-    final mono = GoogleFonts.spaceMono(
-      fontSize: 11,
-      color: dark ? Colors.white60 : Colors.black54,
-    );
-
+  Widget _buildAiContent() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: Column(
@@ -1321,27 +1192,15 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 _aiHealthy == true
                     ? 'AI service is online and responding'
                     : 'AI service is not available',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: dark
-                      ? Colors.white70
-                      : Colors.black.withValues(alpha: 0.7),
-                ),
+                style: TextStyle(fontSize: 12, color: _t.body),
               ),
             ],
           ),
           const SizedBox(height: 12),
           // Endpoint info
-          Text(
-            'ENDPOINT',
-            style: GoogleFonts.spaceMono(
-              fontSize: 9,
-              color: dark ? Colors.white38 : Colors.black38,
-              letterSpacing: 0.6,
-            ),
-          ),
+          Text('ENDPOINT', style: _t.monoLabel),
           const SizedBox(height: 2),
-          SelectableText('https://ai.governor-hq.com', style: mono),
+          SelectableText('https://ai.governor-hq.com', style: _t.mono),
           const SizedBox(height: 16),
           // Test button
           _actionButton(
@@ -1362,10 +1221,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 const SizedBox(width: 8),
                 Text(
                   'Waiting for AI response...',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: dark ? Colors.white38 : Colors.black38,
-                  ),
+                  style: TextStyle(fontSize: 11, color: _t.subtle),
                 ),
               ],
             ),
@@ -1375,7 +1231,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: dark
+                color: _t.isDark
                     ? Colors.indigo.withValues(alpha: 0.1)
                     : Colors.indigo.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -1394,7 +1250,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                       const SizedBox(width: 6),
                       Text(
                         'AI Response',
-                        style: GoogleFonts.spaceMono(
+                        style: AppTheme.geistMono(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           color: Colors.indigo,
@@ -1405,11 +1261,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                   const SizedBox(height: 8),
                   SelectableText(
                     _aiTestResponse!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.5,
-                      color: dark ? Colors.white70 : Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 12, height: 1.5, color: _t.body),
                   ),
                 ],
               ),
@@ -1422,7 +1274,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── CONTEXT WINDOW ───────────────────────
 
-  Widget _buildContextContent(bool dark) {
+  Widget _buildContextContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1434,10 +1286,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
               Text(
                 'Last ${_contextEntries.length} da${_contextEntries.length == 1 ? 'y' : 'ys'} · '
                 '${_contextText.split('\n').length} lines',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: dark ? Colors.white38 : Colors.black38,
-                ),
+                style: TextStyle(fontSize: 11, color: _t.subtle),
               ),
               const Spacer(),
               _tinyButton(
@@ -1454,7 +1303,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
           constraints: const BoxConstraints(maxHeight: 220),
           decoration: BoxDecoration(
-            color: dark ? Colors.black54 : const Color(0xFFF0F0F0),
+            color: _t.isDark ? Colors.black54 : const Color(0xFFF0F0F0),
             borderRadius: BorderRadius.circular(8),
           ),
           child: SingleChildScrollView(
@@ -1463,13 +1312,10 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
               _contextText.isEmpty
                   ? 'No context yet. Run the app for at least one day.'
                   : _contextText,
-              style: GoogleFonts.spaceMono(
+              style: AppTheme.geistMono(
                 fontSize: 10.5,
-                height: 1.6,
-                color: dark
-                    ? Colors.white70
-                    : Colors.black.withValues(alpha: 0.7),
-              ),
+                color: _t.body,
+              ).copyWith(height: 1.6),
             ),
           ),
         ),
@@ -1479,7 +1325,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── RECENT ENTRIES ───────────────────────
 
-  Widget _buildEntriesContent(bool dark) {
+  Widget _buildEntriesContent() {
     if (_recentEntries.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -1501,12 +1347,10 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isToday
-                ? (dark
+                ? (_t.isDark
                       ? Colors.teal.withValues(alpha: 0.1)
                       : Colors.teal.shade50)
-                : (dark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.04)),
+                : _t.faintBg,
             borderRadius: BorderRadius.circular(8),
             border: isToday
                 ? Border.all(color: Colors.teal.withValues(alpha: 0.35))
@@ -1519,12 +1363,10 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 children: [
                   Text(
                     fmt.format(e.date),
-                    style: GoogleFonts.spaceMono(
+                    style: AppTheme.geistMono(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isToday
-                          ? Colors.teal
-                          : (dark ? Colors.white54 : Colors.black45),
+                      color: isToday ? Colors.teal : _t.iconMuted,
                     ),
                   ),
                   if (isToday) ...[
@@ -1536,10 +1378,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                   const SizedBox(width: 4),
                   Text(
                     e.mood,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: dark ? Colors.white38 : Colors.black38,
-                    ),
+                    style: TextStyle(fontSize: 11, color: _t.subtle),
                   ),
                 ],
               ),
@@ -1549,7 +1388,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: dark ? Colors.white : Colors.black87,
+                  color: _t.title,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1585,7 +1424,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                       'user mood',
                       style: TextStyle(
                         fontSize: 11,
-                        color: dark ? Colors.white30 : Colors.black26,
+                        color: _t.isDark ? Colors.white30 : Colors.black26,
                       ),
                     ),
                   ],
@@ -1598,9 +1437,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                     Icon(
                       Icons.sticky_note_2_outlined,
                       size: 11,
-                      color: dark
-                          ? Colors.white30
-                          : Colors.black.withValues(alpha: 0.3),
+                      color: _t.icon,
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -1609,7 +1446,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
-                          color: dark ? Colors.white38 : Colors.black38,
+                          color: _t.subtle,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1629,11 +1466,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── BACKGROUND CAPTURES ───────────────────────
 
-  Widget _buildBgCaptureContent(bool dark) {
-    final mono = GoogleFonts.spaceMono(
-      fontSize: 11,
-      color: dark ? Colors.white60 : Colors.black54,
-    );
+  Widget _buildBgCaptureContent() {
     final intervalMin = _bgConfig.interval.inMinutes;
     final lastCapture = _bgStats['last_capture'] ?? 'never';
     final successes = _bgStats['successes'] ?? '0';
@@ -1649,12 +1482,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             spacing: 12,
             runSpacing: 8,
             children: [
-              _dbKv('Status', _bgConfig.enabled ? 'ON' : 'OFF', dark),
-              _dbKv('Interval', '${intervalMin}m', dark),
-              _dbKv('Total', '$_totalCaptures', dark),
-              _dbKv('Background', '$_bgCaptures', dark),
-              _dbKv('Successes', successes, dark),
-              _dbKv('Failures', failures, dark),
+              _dbKv('Status', _bgConfig.enabled ? 'ON' : 'OFF'),
+              _dbKv('Interval', '${intervalMin}m'),
+              _dbKv('Total', '$_totalCaptures'),
+              _dbKv('Background', '$_bgCaptures'),
+              _dbKv('Successes', successes),
+              _dbKv('Failures', failures),
             ],
           ),
         ),
@@ -1662,66 +1495,46 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
         // ── Last capture time
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-          child: Text('Last bg capture: $lastCapture', style: mono),
+          child: Text('Last bg capture: $lastCapture', style: _t.mono),
         ),
 
-        Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+        Divider(height: 1, color: _t.divider),
 
         // ── Data source toggles
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Text(
-            'DATA SOURCES',
-            style: GoogleFonts.spaceMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: dark ? Colors.white38 : Colors.black38,
-              letterSpacing: 0.5,
-            ),
-          ),
+          child: Text('DATA SOURCES', style: _t.monoSectionLabel),
         ),
         _bgToggleRow(
           'Health',
           Icons.monitor_heart_outlined,
           _bgConfig.includeHealth,
           () => _toggleBgDataSource('health'),
-          dark,
         ),
         _bgToggleRow(
           'Environment',
           Icons.cloud_outlined,
           _bgConfig.includeEnvironment,
           () => _toggleBgDataSource('environment'),
-          dark,
         ),
         _bgToggleRow(
           'Location',
           Icons.location_on_outlined,
           _bgConfig.includeLocation,
           () => _toggleBgDataSource('location'),
-          dark,
         ),
         _bgToggleRow(
           'Calendar',
           Icons.calendar_today_outlined,
           _bgConfig.includeCalendar,
           () => _toggleBgDataSource('calendar'),
-          dark,
         ),
-        Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+        Divider(height: 1, color: _t.divider),
 
         // ── Interval selector
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Text(
-            'CAPTURE INTERVAL',
-            style: GoogleFonts.spaceMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: dark ? Colors.white38 : Colors.black38,
-              letterSpacing: 0.5,
-            ),
-          ),
+          child: Text('CAPTURE INTERVAL', style: _t.monoSectionLabel),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
@@ -1730,23 +1543,19 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             runSpacing: 6,
             children: [
               for (final min in [15, 30, 60, 120, 240])
-                _intervalChip(min, intervalMin == min, dark),
+                _intervalChip(min, intervalMin == min),
             ],
           ),
         ),
 
-        Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+        Divider(height: 1, color: _t.divider),
 
         // ── Quiet hours
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
           child: Row(
             children: [
-              Icon(
-                Icons.bedtime_outlined,
-                size: 14,
-                color: dark ? Colors.white38 : Colors.black38,
-              ),
+              Icon(Icons.bedtime_outlined, size: 14, color: _t.subtle),
               const SizedBox(width: 6),
               Text(
                 'Quiet hours: '
@@ -1755,7 +1564,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 ' → '
                 '${_bgConfig.quietHoursEndHour.toString().padLeft(2, '0')}:'
                 '${_bgConfig.quietHoursEndMinute.toString().padLeft(2, '0')}',
-                style: mono,
+                style: _t.mono,
               ),
               const SizedBox(width: 8),
               _chip(
@@ -1766,7 +1575,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           ),
         ),
 
-        Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+        Divider(height: 1, color: _t.divider),
 
         // ── Recent captures list
         if (_recentCaptures.isNotEmpty) ...[
@@ -1774,16 +1583,11 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Text(
               'RECENT CAPTURES (${_recentCaptures.length})',
-              style: GoogleFonts.spaceMono(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: dark ? Colors.white38 : Colors.black38,
-                letterSpacing: 0.5,
-              ),
+              style: _t.monoSectionLabel,
             ),
           ),
-          ..._recentCaptures.map((c) => _buildCaptureRow(c, dark)),
-          Divider(height: 1, color: dark ? Colors.white12 : Colors.black12),
+          ..._recentCaptures.map((c) => _buildCaptureRow(c)),
+          Divider(height: 1, color: _t.divider),
         ],
 
         // ── Actions
@@ -1840,7 +1644,6 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     IconData icon,
     bool value,
     VoidCallback onTap,
-    bool dark,
   ) {
     return InkWell(
       onTap: onTap,
@@ -1848,28 +1651,14 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 15,
-              color: value
-                  ? Colors.cyan
-                  : (dark ? Colors.white24 : Colors.black26),
-            ),
+            Icon(icon, size: 15, color: value ? Colors.cyan : _t.icon),
             const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: dark ? Colors.white70 : Colors.black87,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 13, color: _t.body)),
             const Spacer(),
             Icon(
               value ? Icons.check_circle : Icons.circle_outlined,
               size: 18,
-              color: value
-                  ? Colors.cyan
-                  : (dark ? Colors.white24 : Colors.black26),
+              color: value ? Colors.cyan : _t.icon,
             ),
           ],
         ),
@@ -1877,38 +1666,32 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     );
   }
 
-  Widget _intervalChip(int minutes, bool selected, bool dark) {
+  Widget _intervalChip(int minutes, bool selected) {
     final label = minutes < 60 ? '${minutes}m' : '${minutes ~/ 60}h';
     return GestureDetector(
       onTap: () => _updateBgInterval(Duration(minutes: minutes)),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: selected
-              ? Colors.cyan.withValues(alpha: 0.2)
-              : (dark ? Colors.white10 : Colors.black.withValues(alpha: 0.06)),
-          borderRadius: BorderRadius.circular(16),
+          color: selected ? Colors.cyan.withValues(alpha: 0.2) : _t.faintBg,
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: selected
-                ? Colors.cyan.withValues(alpha: 0.6)
-                : (dark ? Colors.white12 : Colors.black12),
+            color: selected ? Colors.cyan.withValues(alpha: 0.6) : _t.divider,
           ),
         ),
         child: Text(
           label,
-          style: GoogleFonts.spaceMono(
+          style: AppTheme.geistMono(
             fontSize: 11,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            color: selected
-                ? Colors.cyan
-                : (dark ? Colors.white54 : Colors.black54),
+            color: selected ? Colors.cyan : _t.iconMuted,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCaptureRow(CaptureEntry capture, bool dark) {
+  Widget _buildCaptureRow(CaptureEntry capture) {
     final fmt = DateFormat('MMM d HH:mm:ss');
     final isManual = capture.source == CaptureSource.manual;
     final sourceLabel = isManual ? 'MANUAL' : 'BG';
@@ -1941,27 +1724,21 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
               children: [
                 Text(
                   fmt.format(capture.timestamp),
-                  style: GoogleFonts.spaceMono(
-                    fontSize: 11,
-                    color: dark ? Colors.white70 : Colors.black87,
-                  ),
+                  style: _t.mono.copyWith(color: _t.body),
                 ),
                 Row(
                   children: [
                     Text(
                       parts.join(' · '),
-                      style: GoogleFonts.spaceMono(
-                        fontSize: 9,
-                        color: dark ? Colors.white38 : Colors.black38,
-                      ),
+                      style: AppTheme.geistMono(fontSize: 9, color: _t.subtle),
                     ),
                     if (durationMs != null) ...[
                       const SizedBox(width: 6),
                       Text(
                         '${durationMs}ms',
-                        style: GoogleFonts.spaceMono(
+                        style: AppTheme.geistMono(
                           fontSize: 9,
-                          color: dark ? Colors.white24 : Colors.black26,
+                          color: _t.isDark ? Colors.white24 : Colors.black26,
                         ),
                       ),
                     ],
@@ -1978,7 +1755,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── DAILY NOTIFICATIONS ───────────────────────
 
-  Widget _buildDailyNotifContent(bool dark) {
+  Widget _buildDailyNotifContent() {
     final timeStr =
         '${_dailyReminderTime.hour.toString().padLeft(2, '0')}:'
         '${_dailyReminderTime.minute.toString().padLeft(2, '0')}';
@@ -2004,12 +1781,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                 _dailyReminderEnabled
                     ? 'Daily body blog push is active'
                     : 'Daily notification is off',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: dark
-                      ? Colors.white70
-                      : Colors.black.withValues(alpha: 0.7),
-                ),
+                style: TextStyle(fontSize: 12, color: _t.body),
               ),
             ],
           ),
@@ -2018,14 +1790,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           // Time display & picker
           Row(
             children: [
-              Text(
-                'SCHEDULED TIME',
-                style: GoogleFonts.spaceMono(
-                  fontSize: 9,
-                  color: dark ? Colors.white38 : Colors.black38,
-                  letterSpacing: 0.6,
-                ),
-              ),
+              Text('SCHEDULED TIME', style: _t.monoLabel),
               const SizedBox(width: 10),
               GestureDetector(
                 onTap: _pickDailyReminderTime,
@@ -2046,7 +1811,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                       const SizedBox(width: 6),
                       Text(
                         timeStr,
-                        style: GoogleFonts.spaceMono(
+                        style: AppTheme.geistMono(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: accent,
@@ -2064,9 +1829,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: dark
-                  ? accent.withValues(alpha: 0.08)
-                  : accent.withValues(alpha: 0.06),
+              color: accent.withValues(alpha: _t.isDark ? 0.08 : 0.06),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: accent.withValues(alpha: 0.2)),
             ),
@@ -2079,7 +1842,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                     const SizedBox(width: 6),
                     Text(
                       'Sample message',
-                      style: GoogleFonts.spaceMono(
+                      style: AppTheme.geistMono(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: accent,
@@ -2094,16 +1857,13 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: _t.title,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   NotificationService.morningMessages.first.body,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: dark ? Colors.white54 : Colors.black45,
-                  ),
+                  style: TextStyle(fontSize: 11, color: _t.muted),
                 ),
               ],
             ),
@@ -2142,7 +1902,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── ACTIONS ───────────────────────
 
-  Widget _buildActionsContent(bool dark) {
+  Widget _buildActionsContent() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: Column(
@@ -2190,12 +1950,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   // ─────────────────────── ACTION TOAST ───────────────────────
 
-  Widget _buildToast(bool dark) {
+  Widget _buildToast() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: dark ? Colors.white12 : Colors.black12,
-        borderRadius: BorderRadius.circular(10),
+        color: _t.isDark ? Colors.white12 : Colors.black12,
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         children: [
@@ -2209,11 +1969,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           ),
           GestureDetector(
             onTap: () => setState(() => _actionMessage = null),
-            child: Icon(
-              Icons.close,
-              size: 14,
-              color: dark ? Colors.white38 : Colors.black38,
-            ),
+            child: Icon(Icons.close, size: 14, color: _t.icon),
           ),
         ],
       ),
@@ -2226,12 +1982,12 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
     decoration: BoxDecoration(
       color: color.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(6),
       border: Border.all(color: color.withValues(alpha: 0.35)),
     ),
     child: Text(
       label,
-      style: GoogleFonts.spaceMono(
+      style: AppTheme.geistMono(
         fontSize: 9,
         fontWeight: FontWeight.w700,
         color: color,
@@ -2248,7 +2004,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
     ),
     child: Text(
       label.toUpperCase(),
-      style: GoogleFonts.spaceMono(
+      style: AppTheme.geistMono(
         fontSize: 9,
         fontWeight: FontWeight.w700,
         color: color,
@@ -2279,7 +2035,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
           ],
           Text(
             label,
-            style: GoogleFonts.spaceMono(
+            style: AppTheme.geistMono(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: color,
@@ -2334,6 +2090,73 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
 
   Widget _miniStat(String emoji, String value) =>
       Text('$emoji $value', style: const TextStyle(fontSize: 11));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Debug theme – resolves all dark/light colours & text styles in one place
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DebugTheme {
+  _DebugTheme(MirunsColors c, {required bool dark})
+    : isDark = dark,
+      bg = dark ? const Color(0xFF0E0E0E) : const Color(0xFFF5F5F5),
+      surface = dark ? const Color(0xFF1A1A1A) : Colors.white,
+      divider = c.divider,
+      subtle = c.textSubtle,
+      muted = c.textMuted,
+      body = c.textBody,
+      title = c.textStrong,
+      faintBg = c.tintFaint,
+      icon = c.textSubtle,
+      iconMuted = c.textMuted,
+      borderThin = c.borderSubtle,
+      mono = AppTheme.geistMono(fontSize: 11, color: c.textSecondary),
+      monoLabel = AppTheme.geistMono(
+        fontSize: 9,
+        color: c.textSubtle,
+        letterSpacing: 0.6,
+      ),
+      monoSectionLabel = AppTheme.geistMono(
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        color: c.textSubtle,
+        letterSpacing: 0.5,
+      ),
+      monoSectionTitle = AppTheme.geistMono(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: c.textStrong,
+        letterSpacing: 0.3,
+      ),
+      monoBold = AppTheme.geistMono(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: c.textStrong,
+      );
+
+  final bool isDark;
+  final Color bg;
+  final Color surface;
+  final Color divider;
+  final Color subtle;
+  final Color muted;
+  final Color body;
+  final Color title;
+  final Color faintBg;
+  final Color icon;
+  final Color iconMuted;
+  final Color borderThin;
+  final TextStyle mono;
+  final TextStyle monoLabel;
+  final TextStyle monoSectionLabel;
+  final TextStyle monoSectionTitle;
+  final TextStyle monoBold;
+
+  BoxDecoration get cardDecoration => BoxDecoration(
+    color: surface,
+    borderRadius: BorderRadius.circular(4),
+    border: Border.all(color: borderThin),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

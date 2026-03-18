@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 import '../services/workout_service.dart';
 
@@ -114,7 +113,7 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
         ),
         title: Text(
           'Sport Profile',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppTheme.moonbeam,
@@ -251,7 +250,7 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
                                   color: selected
                                       ? AppTheme.glow.withValues(alpha: 0.15)
                                       : AppTheme.tidePool,
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
                                     color: selected
                                         ? AppTheme.glow
@@ -325,7 +324,7 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
 
   Widget _sectionTitle(String title) => Text(
     title,
-    style: GoogleFonts.inter(
+    style: AppTheme.geist(
       fontSize: 14,
       fontWeight: FontWeight.w700,
       color: AppTheme.moonbeam,
@@ -348,7 +347,7 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
           color: selected
               ? AppTheme.glow.withValues(alpha: 0.1)
               : AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
             color: selected
                 ? AppTheme.glow
@@ -432,19 +431,19 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
               vertical: 10,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(4),
               borderSide: BorderSide(
                 color: AppTheme.shimmer.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(4),
               borderSide: BorderSide(
                 color: AppTheme.shimmer.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(4),
               borderSide: const BorderSide(color: AppTheme.glow),
             ),
           ),
@@ -464,7 +463,7 @@ class _SportProfileScreenState extends ConsumerState<SportProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Row(

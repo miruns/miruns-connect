@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Compact persistent banner shown at the top of every screen while a
 /// workout is active — like a music player mini-bar.
@@ -34,7 +34,7 @@ class ActiveWorkoutBanner extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: state.isPaused
                 ? AppTheme.shimmer

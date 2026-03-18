@@ -4,7 +4,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../services/ble_source_provider.dart';
 import '../theme/app_theme.dart';
@@ -177,7 +176,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060B0F),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: _currentState.color.withValues(alpha: 0.15),
           width: 1.5,
@@ -227,7 +226,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
               children: [
                 Text(
                   'NEURAL DECODING',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFFFF9800).withValues(alpha: 0.9),
@@ -236,7 +235,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
                 ),
                 Text(
                   'DEMO — simulated classifier',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 8,
                     color: AppTheme.fog.withValues(alpha: 0.5),
                     letterSpacing: 0.5,
@@ -257,7 +256,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
             ),
             child: Text(
               '${(_confidence * 100).toStringAsFixed(0)}%',
-              style: GoogleFonts.robotoMono(
+              style: AppTheme.geistMono(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: _currentState.color,
@@ -315,7 +314,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
                       child: Text(
                         _currentState.label,
                         key: ValueKey(_currentState.label),
-                        style: GoogleFonts.robotoMono(
+                        style: AppTheme.geistMono(
                           fontSize: size * 0.09,
                           fontWeight: FontWeight.w700,
                           color: _currentState.color,
@@ -326,7 +325,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
                     const SizedBox(height: 2),
                     Text(
                       '${(_confidence * 100).toStringAsFixed(1)}% confidence',
-                      style: GoogleFonts.robotoMono(
+                      style: AppTheme.geistMono(
                         fontSize: size * 0.055,
                         color: AppTheme.fog.withValues(alpha: 0.6),
                       ),
@@ -369,7 +368,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
                         const SizedBox(width: 4),
                         Text(
                           state.label,
-                          style: GoogleFonts.robotoMono(
+                          style: AppTheme.geistMono(
                             fontSize: 8,
                             fontWeight: isWinner
                                 ? FontWeight.w700
@@ -438,7 +437,7 @@ class _BciDecodingViewState extends State<BciDecodingView>
                     child: Text(
                       '${(prob * 100).toStringAsFixed(0)}%',
                       textAlign: TextAlign.right,
-                      style: GoogleFonts.robotoMono(
+                      style: AppTheme.geistMono(
                         fontSize: 9,
                         fontWeight: isWinner
                             ? FontWeight.w700
@@ -485,14 +484,14 @@ class _BciDecodingViewState extends State<BciDecodingView>
         children: [
           Text(
             'Classify every ~0.5 s · $_sampleCount samples',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 8,
               color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
           Text(
             '${_timeline.length} classifications',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 8,
               color: const Color(0xFFFF9800).withValues(alpha: 0.3),
             ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import 'nav_menu_button.dart';
 
@@ -35,11 +35,10 @@ class AppHeader extends ConsumerWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeModeProvider);
 
-    final dimColor = dark ? Colors.white38 : Colors.black26;
-    final titleColor = dark ? Colors.white : Colors.black87;
-    final subColor = dark
-        ? Colors.white.withValues(alpha: 0.38)
-        : Colors.black.withValues(alpha: 0.42);
+    final cs = Theme.of(context).colorScheme;
+    final dimColor = dark ? AppTheme.fog : const Color(0xFF999999);
+    final titleColor = cs.onSurface;
+    final subColor = dark ? AppTheme.mist : const Color(0xFF999999);
 
     void toggleTheme() {
       final next = switch (themeMode) {
@@ -75,23 +74,17 @@ class AppHeader extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: titleColor,
-                    letterSpacing: -0.6,
                   ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: subColor,
-                      letterSpacing: 0.4,
-                      fontFamily: 'Inter',
-                    ),
+                    style: AppTheme.geist(fontSize: 12, color: subColor),
                   ),
                 ],
               ],

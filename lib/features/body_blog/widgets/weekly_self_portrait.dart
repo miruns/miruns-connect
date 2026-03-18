@@ -2,9 +2,9 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/capture_entry.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -49,6 +49,7 @@ class _WeeklySelfPortraitState extends State<WeeklySelfPortrait>
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     // Build day summaries for the last 7 days
@@ -60,30 +61,28 @@ class _WeeklySelfPortraitState extends State<WeeklySelfPortrait>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF1A1A1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-        ),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: c.tintFaint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'YOUR WEEK',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.8,
-              color: dark ? Colors.white30 : Colors.black26,
+              color: c.textFaint,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'How your body moved through the last 7 days',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: dark ? Colors.white54 : Colors.black45,
+              color: c.textMuted,
             ),
           ),
           const SizedBox(height: 20),
@@ -418,6 +417,7 @@ class _DayLabelRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(7, (i) {
@@ -432,12 +432,10 @@ class _DayLabelRow extends StatelessWidget {
             // Day letter
             Text(
               dayLabel,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 10,
                 fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                color: isToday
-                    ? primary
-                    : (dark ? Colors.white30 : Colors.black26),
+                color: isToday ? primary : c.textFaint,
               ),
             ),
             const SizedBox(height: 3),
@@ -452,7 +450,7 @@ class _DayLabelRow extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: day != null
                       ? primary.withValues(alpha: 0.3)
-                      : (dark ? Colors.white12 : Colors.black12),
+                      : c.divider,
                 ),
               ),
             const SizedBox(height: 2),
@@ -498,6 +496,7 @@ class _WeekInsight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final valid = days.whereType<_DayData>().toList();
     if (valid.length < 2) return const SizedBox.shrink();
 
@@ -508,7 +507,7 @@ class _WeekInsight extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         color: primary.withValues(alpha: dark ? 0.08 : 0.05),
         border: Border.all(
           color: primary.withValues(alpha: dark ? 0.15 : 0.10),
@@ -522,11 +521,11 @@ class _WeekInsight extends StatelessWidget {
           Expanded(
             child: Text(
               insight.$2,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
                 height: 1.5,
-                color: dark ? Colors.white60 : Colors.black54,
+                color: c.textSecondary,
               ),
             ),
           ),

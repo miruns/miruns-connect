@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Animated real-time ECG-style waveform widget driven by a BPM stream.
 ///
@@ -151,7 +151,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: lineColor.withValues(alpha: 0.18 + _peakGlow * 0.25),
           width: 1.5,
@@ -192,7 +192,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
                 const SizedBox(width: 8),
                 Text(
                   widget.deviceName ?? 'BLE Heart Rate',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 11,
                     color: lineColor.withValues(alpha: 0.7),
                     letterSpacing: 0.8,
@@ -202,7 +202,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
                 // BPM badge
                 Text(
                   _currentBpm > 0 ? '$_currentBpm BPM' : '-- BPM',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: lineColor,
@@ -229,7 +229,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(4),
                 child: CustomPaint(
                   painter: _WaveformPainter(
                     buffer: _buffer,
@@ -257,7 +257,7 @@ class _LiveHrWaveformState extends State<LiveHrWaveform>
                       : i == 6
                       ? '0s'
                       : '',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 9,
                     color: Colors.white.withValues(alpha: 0.2),
                   ),

@@ -94,9 +94,9 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                 ),
               ),
               Text(
-                'Miruns',
+                'miruns',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w200,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -122,7 +122,7 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: permission.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Icon(
                               permission.icon,

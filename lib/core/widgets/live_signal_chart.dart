@@ -3,7 +3,6 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../services/ble_source_provider.dart';
 import '../theme/app_theme.dart';
@@ -138,7 +137,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060B0F),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: AppTheme.glow.withValues(alpha: 0.15),
           width: 1.5,
@@ -153,7 +152,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
                 ? Center(
                     child: Text(
                       'Enable at least one channel',
-                      style: GoogleFonts.robotoMono(
+                      style: AppTheme.geistMono(
                         fontSize: 12,
                         color: AppTheme.fog,
                       ),
@@ -209,7 +208,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
               children: [
                 Text(
                   widget.deviceName ?? 'BLE Source',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 11,
                     color: AppTheme.glow.withValues(alpha: 0.7),
                     letterSpacing: 0.8,
@@ -218,7 +217,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
                 if (widget.sourceName != null)
                   Text(
                     widget.sourceName!,
-                    style: GoogleFonts.robotoMono(
+                    style: AppTheme.geistMono(
                       fontSize: 9,
                       color: AppTheme.fog.withValues(alpha: 0.5),
                       letterSpacing: 0.5,
@@ -229,7 +228,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
           ),
           Text(
             '$_sampleCount smp',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppTheme.glow,
@@ -297,7 +296,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
               child: Center(
                 child: Text(
                   descriptors[i].label,
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 10,
                     fontWeight: isSolo ? FontWeight.w700 : FontWeight.w500,
                     color: enabled
@@ -356,7 +355,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
               top: 4,
               child: Text(
                 desc.label,
-                style: GoogleFonts.robotoMono(
+                style: AppTheme.geistMono(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   color: color.withValues(alpha: 0.7),
@@ -368,7 +367,7 @@ class _LiveSignalChartState extends State<LiveSignalChart>
               top: 4,
               child: Text(
                 '${data.isNotEmpty ? data.last.toStringAsFixed(1) : "--"} ${desc.unit}',
-                style: GoogleFonts.robotoMono(
+                style: AppTheme.geistMono(
                   fontSize: 9,
                   color: color.withValues(alpha: 0.6),
                 ),
@@ -390,14 +389,14 @@ class _LiveSignalChartState extends State<LiveSignalChart>
         children: [
           Text(
             'Tap ch to toggle · Long-press to solo',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 8,
               color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
           Text(
             '${widget.bufferSize} smp window',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 8,
               color: Colors.white.withValues(alpha: 0.15),
             ),

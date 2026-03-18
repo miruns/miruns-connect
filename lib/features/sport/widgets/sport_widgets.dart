@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
 
 /// Circular HR zone indicator with animated fill and glow effect.
@@ -63,7 +63,7 @@ class HrZoneRing extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: zoneColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   'Z${zone.zone} ${zone.name}',
@@ -154,7 +154,7 @@ class MetricTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -228,7 +228,7 @@ class BrainStateIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -349,7 +349,7 @@ class InsightCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.current,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: (accentColor ?? AppTheme.glow).withValues(alpha: 0.3),
         ),
@@ -360,7 +360,7 @@ class InsightCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: (accentColor ?? AppTheme.cyan).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               label,
@@ -412,7 +412,7 @@ class WorkoutTypeSelector extends StatelessWidget {
               color: isSelected
                   ? AppTheme.cyan.withValues(alpha: 0.10)
                   : AppTheme.tidePool,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isSelected
                     ? AppTheme.cyan
@@ -485,7 +485,7 @@ class FeedbackSlider extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '$value / 10',

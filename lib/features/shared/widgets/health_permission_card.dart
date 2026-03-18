@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/service_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,15 +80,16 @@ class _HealthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -123,10 +124,10 @@ class _HealthCard extends StatelessWidget {
 
                       Text(
                         'Connect Health Data',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: dark ? Colors.white : Colors.black87,
+                          color: c.textStrong,
                         ),
                       ),
 
@@ -139,7 +140,7 @@ class _HealthCard extends StatelessWidget {
                             : '1 · Tap "Open Health Connect" below\n'
                                   '2 · Find Miruns in the app list\n'
                                   '3 · Allow access to steps, heart rate & sleep',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 12,
                           height: 1.5,
                           fontWeight: FontWeight.w300,
@@ -161,7 +162,7 @@ class _HealthCard extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: _accent,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -176,7 +177,7 @@ class _HealthCard extends StatelessWidget {
                                     _isIOS
                                         ? 'Open Settings'
                                         : 'Open Health Connect',
-                                    style: GoogleFonts.inter(
+                                    style: AppTheme.geist(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
@@ -200,7 +201,7 @@ class _HealthCard extends StatelessWidget {
                     child: Icon(
                       Icons.close_rounded,
                       size: 18,
-                      color: dark ? Colors.white38 : Colors.black26,
+                      color: c.textSubtle,
                     ),
                   ),
                 ),
@@ -379,7 +380,7 @@ class _PlatformChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           name,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.4,

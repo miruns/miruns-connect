@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/body_blog_entry.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -46,6 +46,7 @@ class _VitalityWaveState extends State<VitalityWave>
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final s = widget.snapshot;
 
@@ -56,7 +57,7 @@ class _VitalityWaveState extends State<VitalityWave>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
         color: dark
             ? Colors.white.withValues(alpha: 0.03)
             : Colors.black.withValues(alpha: 0.02),
@@ -66,17 +67,17 @@ class _VitalityWaveState extends State<VitalityWave>
           const SizedBox(height: 20),
           Text(
             'VITALITY',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.8,
-              color: dark ? Colors.white24 : Colors.black26,
+              color: c.border,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             _vitalityLabel(vitality),
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: waveColors.$1.withValues(alpha: 0.8),
@@ -357,6 +358,7 @@ class _VitalChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -364,18 +366,18 @@ class _VitalChip extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           metric.label,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: dark ? Colors.white70 : Colors.black54,
+            color: c.textSecondary,
           ),
         ),
         Text(
           metric.category,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 10,
             fontWeight: FontWeight.w400,
-            color: dark ? Colors.white30 : Colors.black26,
+            color: c.textFaint,
           ),
         ),
       ],

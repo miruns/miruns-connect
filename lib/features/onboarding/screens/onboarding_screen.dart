@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/service_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -378,7 +378,7 @@ class _StepBar extends StatelessWidget {
             children: [
               Text(
                 'Step $step of $total',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[500],
@@ -389,7 +389,7 @@ class _StepBar extends StatelessWidget {
                 onTap: onSkip,
                 child: Text(
                   'Skip',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: accent.withValues(alpha: 0.65),
@@ -433,7 +433,7 @@ class _WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Padding(
@@ -454,22 +454,22 @@ class _WelcomePage extends StatelessWidget {
 
           // ── branding ──
           Text(
-            'Miruns',
-            style: GoogleFonts.inter(
-              fontSize: 44,
-              fontWeight: FontWeight.w700,
-              color: dark ? Colors.white : Colors.black87,
-              letterSpacing: -0.5,
+            'miruns',
+            style: AppTheme.geist(
+              fontSize: 48,
+              fontWeight: FontWeight.w200,
+              color: c.textStrong,
+              letterSpacing: -1.0,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Your mindful body companion',
-            style: GoogleFonts.inter(
+            'Neuroscience meets sport.',
+            style: AppTheme.geist(
               fontSize: 15,
               fontWeight: FontWeight.w300,
               color: Colors.grey[500],
-              letterSpacing: 0.8,
+              letterSpacing: 0.5,
             ),
           ),
 
@@ -487,11 +487,11 @@ class _WelcomePage extends StatelessWidget {
             'Understand your environment.\n'
             'Live with intention.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 15,
               height: 1.85,
               fontWeight: FontWeight.w300,
-              color: dark ? Colors.white60 : Colors.black45,
+              color: c.textMuted,
             ),
           ),
 
@@ -509,7 +509,7 @@ class _WelcomePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 7),
               child: Text(
                 'Skip',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[500],
@@ -558,7 +558,7 @@ class _PermissionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Column(
       children: [
@@ -584,11 +584,11 @@ class _PermissionStep extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
 
@@ -597,7 +597,7 @@ class _PermissionStep extends StatelessWidget {
                 // subtitle label
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2.0,
@@ -611,11 +611,11 @@ class _PermissionStep extends StatelessWidget {
                 Text(
                   body,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     height: 1.75,
                     fontWeight: FontWeight.w300,
-                    color: dark ? Colors.white60 : Colors.black54,
+                    color: c.textSecondary,
                   ),
                 ),
 
@@ -648,7 +648,7 @@ class _PermissionStep extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'Not now',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[500],
@@ -699,7 +699,7 @@ class _HealthPermissionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     // ── Android phase 2 ──────────────────────────────────────────────────────
     // The OS "Physical activity" dialog was shown, but Health Connect still
@@ -731,11 +731,11 @@ class _HealthPermissionStep extends StatelessWidget {
                 Text(
                   'Body\nIntelligence',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
 
@@ -762,11 +762,11 @@ class _HealthPermissionStep extends StatelessWidget {
                             'This paints a holistic picture of your daily vitality '
                             'so you can make informed choices.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     height: 1.75,
                     fontWeight: FontWeight.w300,
-                    color: dark ? Colors.white60 : Colors.black54,
+                    color: c.textSecondary,
                   ),
                 ),
 
@@ -809,7 +809,7 @@ class _HealthPermissionStep extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'Not now',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[500],
@@ -845,7 +845,7 @@ class _AndroidTwoStepNote extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: dark ? 0.08 : 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: accent.withValues(alpha: dark ? 0.18 : 0.15)),
       ),
       child: Column(
@@ -857,7 +857,7 @@ class _AndroidTwoStepNote extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'HOW IT WORKS ON ANDROID',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
@@ -897,7 +897,7 @@ class _AndroidStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,7 +912,7 @@ class _AndroidStep extends StatelessWidget {
           child: Center(
             child: Text(
               number,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: accent,
@@ -924,11 +924,11 @@ class _AndroidStep extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 12,
               height: 1.5,
               fontWeight: FontWeight.w400,
-              color: dark ? Colors.white60 : Colors.black54,
+              color: c.textSecondary,
             ),
           ),
         ),
@@ -957,6 +957,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Column(
       children: [
@@ -974,11 +975,11 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                 Text(
                   'One more\nstep',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
 
@@ -986,7 +987,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
 
                 Text(
                   'HEALTH CONNECT',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2.0,
@@ -1022,7 +1023,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: dark ? 0.07 : 0.05),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(4),
                     border: Border.all(color: accent.withValues(alpha: 0.15)),
                   ),
                   child: Row(
@@ -1038,7 +1039,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                         child: Text(
                           'Tap the button below → Health Connect will open → '
                           'find Miruns in the app list → allow access.',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 12,
                             height: 1.55,
                             fontWeight: FontWeight.w300,
@@ -1074,7 +1075,7 @@ class _AndroidHealthConnectPhase2 extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'Skip for now',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[500],
@@ -1109,6 +1110,7 @@ class _Phase2Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final dimColor = dark ? Colors.white38 : Colors.black26;
 
     return Row(
@@ -1132,7 +1134,7 @@ class _Phase2Row extends StatelessWidget {
                   )
                 : Text(
                     number,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: accent,
@@ -1147,24 +1149,22 @@ class _Phase2Row extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: done
-                      ? dimColor
-                      : (dark ? Colors.white : Colors.black87),
+                  color: done ? dimColor : c.textStrong,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 sublabel,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   height: 1.4,
                   fontWeight: FontWeight.w300,
                   color: done
                       ? const Color(0xFF6BAE6B).withValues(alpha: 0.8)
-                      : (dark ? Colors.white54 : Colors.black45),
+                      : c.textMuted,
                 ),
               ),
             ],
@@ -1305,7 +1305,7 @@ class _OsBadge extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 2.0,
@@ -1317,7 +1317,7 @@ class _OsBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: accent.withValues(alpha: 0.25), width: 1),
           ),
           child: Row(
@@ -1331,7 +1331,7 @@ class _OsBadge extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 platformName,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: accent,
@@ -1366,7 +1366,7 @@ class _NotificationStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Column(
       children: [
@@ -1393,11 +1393,11 @@ class _NotificationStep extends StatelessWidget {
                 Text(
                   'Daily\nBody Post',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
 
@@ -1405,7 +1405,7 @@ class _NotificationStep extends StatelessWidget {
 
                 Text(
                   'GENTLE DAILY REMINDERS',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2.0,
@@ -1421,11 +1421,11 @@ class _NotificationStep extends StatelessWidget {
                   '☀️  Morning at 8:30 AM — start your day informed\n'
                   '🌙  Evening at 8:00 PM — review your full day',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     height: 1.75,
                     fontWeight: FontWeight.w300,
-                    color: dark ? Colors.white60 : Colors.black54,
+                    color: c.textSecondary,
                   ),
                 ),
 
@@ -1462,7 +1462,7 @@ class _NotificationStep extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'Not now',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[500],
@@ -1491,7 +1491,7 @@ class _CompletePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     const successGreen = Color(0xFF6B8E6B);
 
@@ -1516,10 +1516,10 @@ class _CompletePage extends StatelessWidget {
 
           Text(
             'You\'re ready',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 38,
               fontWeight: FontWeight.w700,
-              color: dark ? Colors.white : Colors.black87,
+              color: c.textStrong,
             ),
           ),
 
@@ -1536,11 +1536,11 @@ class _CompletePage extends StatelessWidget {
             'tune into your body and environment.\n'
             'Start your mindful journey.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 15,
               height: 1.75,
               fontWeight: FontWeight.w300,
-              color: dark ? Colors.white60 : Colors.black45,
+              color: c.textMuted,
             ),
           ),
 
@@ -1549,7 +1549,7 @@ class _CompletePage extends StatelessWidget {
           Text(
             'You can adjust permissions anytime in Settings.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: Colors.grey[500],
@@ -1559,7 +1559,7 @@ class _CompletePage extends StatelessWidget {
           const Spacer(flex: 3),
 
           _PillButton(
-            label: 'Enter Miruns',
+            label: 'Enter miruns',
             color: primary,
             onPressed: onEnter,
           ),
@@ -1677,10 +1677,8 @@ class _PillButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: color.withValues(alpha: 0.5),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          textStyle: GoogleFonts.inter(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: AppTheme.geist(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
@@ -1710,7 +1708,7 @@ class _PrivacyNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -1736,11 +1734,11 @@ class _PrivacyNote extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 12.5,
                 height: 1.6,
                 fontWeight: FontWeight.w400,
-                color: dark ? Colors.white54 : Colors.black45,
+                color: c.textMuted,
               ),
             ),
           ),
