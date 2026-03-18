@@ -7,10 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/ambient_scan_service.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
@@ -63,6 +64,10 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 
   // Health service state
   _SensorStatus _healthStatus = _SensorStatus.unknown;
+
+  // Environment sensor state
+  _SensorStatus _envStatus = _SensorStatus.unknown;
+  AmbientScanData? _ambientData;
 
   // Pre-workout insight: CTA-driven (not auto)
   bool _insightAvailable = false;
@@ -186,6 +191,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     // Check sensor statuses
     _checkGpsStatus();
     _checkHealthStatus();
+    _checkEnvStatus();
 
     // Mark insight available if enough data (but don't auto-load)
     if (workouts.where((w) => w.feedback != null).length >= 3) {
@@ -294,6 +300,45 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     } catch (_) {
       if (mounted) setState(() => _healthStatus = _SensorStatus.unavailable);
     }
+  }
+
+  Future<void> _checkEnvStatus() async {
+    if (mounted) setState(() => _envStatus = _SensorStatus.unknown);
+    try {
+      final ambientService = ref.read(ambientScanServiceProvider);
+      // Try GPS-based scan first, fall back to GeoIP
+      AmbientScanData? data;
+      final permission = await Geolocator.checkPermission();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled &&
+          permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
+        final pos = await Geolocator.getLastKnownPosition();
+        if (pos != null) {
+          data = await ambientService.scanByCoordinates(
+            pos.latitude,
+            pos.longitude,
+          );
+        }
+      }
+      data ??= await ambientService.scanByGeoIp();
+      if (!mounted) return;
+      if (data != null) {
+        setState(() {
+          _ambientData = data;
+          _envStatus = _SensorStatus.ready;
+        });
+      } else {
+        setState(() => _envStatus = _SensorStatus.unavailable);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _envStatus = _SensorStatus.unavailable);
+    }
+  }
+
+  void _openEnvironment() {
+    HapticFeedback.selectionClick();
+    context.push('/environment');
   }
 
   Future<void> _enableGps() async {
@@ -530,6 +575,13 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                       onGpsTap: _enableGps,
                       healthStatus: _healthStatus,
                       onHealthTap: _enableHealth,
+                      envStatus: _envStatus,
+                      envSummary: _ambientData != null
+                          ? '${_ambientData!.temperature.currentC.round()}°'
+                          : null,
+                      onEnvTap: _envStatus == _SensorStatus.unavailable
+                          ? _checkEnvStatus
+                          : _openEnvironment,
                     ),
                   ),
                 ),
@@ -588,6 +640,15 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                   maxBuffer: _maxBuffer,
                                 ),
                               ),
+                              _LiveSensorCard(
+                                label: 'ENVIRONMENT',
+                                value: _ambientData != null
+                                    ? '${_ambientData!.temperature.currentC.round()}° · AQI ${_ambientData!.airQuality.usAqi}'
+                                    : '-- loading',
+                                color: AppTheme.amber,
+                                icon: Icons.cloud_outlined,
+                                child: _EnvSummaryWidget(data: _ambientData),
+                              ),
                             ],
                           ),
                         ),
@@ -595,7 +656,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                         // Page dots
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(3, (i) {
+                          children: List.generate(4, (i) {
                             final active = i == _sensorPage;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
@@ -1055,6 +1116,9 @@ class _SensorPillRow extends StatelessWidget {
   final VoidCallback onGpsTap;
   final _SensorStatus healthStatus;
   final VoidCallback onHealthTap;
+  final _SensorStatus envStatus;
+  final String? envSummary;
+  final VoidCallback onEnvTap;
 
   const _SensorPillRow({
     required this.eegState,
@@ -1067,6 +1131,9 @@ class _SensorPillRow extends StatelessWidget {
     required this.onGpsTap,
     required this.healthStatus,
     required this.onHealthTap,
+    required this.envStatus,
+    this.envSummary,
+    required this.onEnvTap,
   });
 
   @override
@@ -1101,6 +1168,13 @@ class _SensorPillRow extends StatelessWidget {
             label: 'Health',
             state: _healthPillState(),
             onTap: onHealthTap,
+          ),
+          const SizedBox(width: 8),
+          _buildPill(
+            icon: Icons.cloud_outlined,
+            label: envSummary ?? 'Env',
+            state: _envPillState(),
+            onTap: onEnvTap,
           ),
         ],
       ),
@@ -1149,6 +1223,20 @@ class _SensorPillRow extends StatelessWidget {
       case _SensorStatus.noPermission:
         return _PillState.warning;
       case _SensorStatus.off:
+      case _SensorStatus.unavailable:
+        return _PillState.error;
+      case _SensorStatus.unknown:
+        return _PillState.busy;
+    }
+  }
+
+  _PillState _envPillState() {
+    switch (envStatus) {
+      case _SensorStatus.ready:
+        return _PillState.ready;
+      case _SensorStatus.noPermission:
+      case _SensorStatus.off:
+        return _PillState.warning;
       case _SensorStatus.unavailable:
         return _PillState.error;
       case _SensorStatus.unknown:
@@ -2361,4 +2449,95 @@ class _MultiChannelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_MultiChannelPainter old) => true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Environment summary widget — compact conditions display for sensor slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EnvSummaryWidget extends StatelessWidget {
+  final AmbientScanData? data;
+
+  const _EnvSummaryWidget({this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    if (data == null) {
+      return Center(
+        child: Text(
+          'Fetching conditions…',
+          style: AppTheme.geist(fontSize: 11, color: AppTheme.fog),
+        ),
+      );
+    }
+
+    final d = data!;
+    final items = <_EnvItem>[
+      _EnvItem(
+        Icons.thermostat_rounded,
+        '${d.temperature.currentC.round()}°C',
+        'Feels ${d.temperature.feelsLikeC.round()}°',
+      ),
+      _EnvItem(
+        Icons.air_rounded,
+        '${d.wind.speedKmh.round()} km/h',
+        d.wind.directionLabel,
+      ),
+      _EnvItem(
+        Icons.water_drop_outlined,
+        '${d.humidity.relativePercent}%',
+        'Humidity',
+      ),
+      _EnvItem(
+        _aqiIcon(d.airQuality.usAqi),
+        'AQI ${d.airQuality.usAqi}',
+        d.airQuality.level,
+      ),
+      _EnvItem(
+        Icons.wb_sunny_outlined,
+        'UV ${d.uvIndex.current.round()}',
+        d.uvIndex.level,
+      ),
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: items
+          .map(
+            (item) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(item.icon, size: 14, color: AppTheme.amber),
+                const SizedBox(height: 3),
+                Text(
+                  item.value,
+                  style: AppTheme.geist(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.moonbeam,
+                  ),
+                ),
+                Text(
+                  item.detail,
+                  style: AppTheme.geist(fontSize: 9, color: AppTheme.fog),
+                ),
+              ],
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  IconData _aqiIcon(int aqi) {
+    if (aqi <= 50) return Icons.eco_rounded;
+    if (aqi <= 100) return Icons.cloud_outlined;
+    return Icons.masks_rounded;
+  }
+}
+
+class _EnvItem {
+  final IconData icon;
+  final String value;
+  final String detail;
+  const _EnvItem(this.icon, this.value, this.detail);
 }
