@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/services/service_providers.dart';
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/service_providers.dart';
+import '../../../core/widgets/research_export_sheet.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
 
@@ -216,6 +217,39 @@ class _WorkoutHistoryCard extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ],
+
+          // Research export button
+          if (session.eegSamples.isNotEmpty ||
+              session.hrSamples.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    ResearchExportSheet.showForWorkout(context, session),
+                icon: const Icon(
+                  Icons.science_rounded,
+                  size: 16,
+                  color: AppTheme.cyan,
+                ),
+                label: Text(
+                  'Research Export',
+                  style: AppTheme.geist(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.cyan,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppTheme.cyan.withValues(alpha: 0.3)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
             ),
           ],
 

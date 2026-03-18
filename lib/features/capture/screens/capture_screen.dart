@@ -15,6 +15,7 @@ import '../../../core/models/nutrition_log.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/widgets/live_hr_waveform.dart';
+import '../../../core/widgets/research_export_sheet.dart';
 
 /// Capture tab — camera-inspired data capture.
 /// Shutter button always visible at the bottom.
@@ -1882,6 +1883,45 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                           'AI Insights',
                           capture.aiInsights!,
                           Icons.psychology_rounded,
+                        ),
+                      ],
+                      // Research export — visible when exportable data exists
+                      if (capture.signalSession != null ||
+                          capture.bleHrSession != null) ...[
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              ResearchExportSheet.showForCapture(
+                                context,
+                                capture,
+                              );
+                            },
+                            icon: Icon(
+                              Icons.science_rounded,
+                              size: 18,
+                              color: AppTheme.cyan,
+                            ),
+                            label: Text(
+                              'Research Export',
+                              style: AppTheme.geist(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.cyan,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: AppTheme.cyan.withValues(alpha: 0.3),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
                         ),
                       ],
                     ],
