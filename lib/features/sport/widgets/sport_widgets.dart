@@ -256,11 +256,11 @@ class EegBandsIndicator extends StatelessWidget {
     final maxPower = powers.reduce(math.max).clamp(0.01, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,47 +268,37 @@ class EegBandsIndicator extends StatelessWidget {
           // Header
           Row(
             children: [
-              const Icon(Icons.waves_rounded, size: 16, color: AppTheme.cyan),
-              const SizedBox(width: 6),
+              const Icon(Icons.waves_rounded, size: 14, color: AppTheme.cyan),
+              const SizedBox(width: 5),
               const Text(
                 'EEG Spectral',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.cyan,
                 ),
               ),
               const Spacer(),
               if (eeg.dominantHz != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cyan.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '${eeg.dominantHz!.toStringAsFixed(0)} Hz',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.cyan,
-                    ),
+                Text(
+                  '${eeg.dominantHz!.toStringAsFixed(0)} Hz',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.cyan,
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // Band power bars
           for (var i = 0; i < _bands.length; i++) ...[
             _EegBandRow(band: _bands[i], value: powers[i], maxValue: maxPower),
-            if (i < _bands.length - 1) const SizedBox(height: 5),
+            if (i < _bands.length - 1) const SizedBox(height: 4),
           ],
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // Derived indices row
           Row(
@@ -319,14 +309,14 @@ class EegBandsIndicator extends StatelessWidget {
                 color: AppTheme.glow,
                 tooltip: 'β / (θ + α) — higher β dominance = more engaged',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               _DerivedChip(
                 label: 'Calm',
                 value: eeg.relaxation,
                 color: AppTheme.seaGreen,
                 tooltip: 'α / (β + total) — higher α = relaxed awareness',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               _DerivedChip(
                 label: 'Fatigue',
                 value: eeg.mentalFatigue,
@@ -379,12 +369,12 @@ class _EegBandRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 18,
+            width: 16,
             child: Text(
               band.symbol,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
                 color: band.color,
               ),
             ),
@@ -394,26 +384,26 @@ class _EegBandRow extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  height: 8,
+                  height: 6,
                   decoration: BoxDecoration(
-                    color: band.color.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(4),
+                    color: band.color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
                 FractionallySizedBox(
                   widthFactor: fill,
                   child: Container(
-                    height: 8,
+                    height: 6,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [band.color.withValues(alpha: 0.5), band.color],
+                        colors: [band.color.withValues(alpha: 0.4), band.color],
                       ),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(3),
                       boxShadow: fill > 0.3
                           ? [
                               BoxShadow(
-                                color: band.color.withValues(alpha: 0.3),
-                                blurRadius: 6,
+                                color: band.color.withValues(alpha: 0.25),
+                                blurRadius: 4,
                               ),
                             ]
                           : null,
@@ -423,15 +413,15 @@ class _EegBandRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           SizedBox(
-            width: 32,
+            width: 30,
             child: Text(
               '$pct%',
               textAlign: TextAlign.end,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
                 color: band.color,
               ),
             ),
@@ -462,28 +452,30 @@ class _DerivedChip extends StatelessWidget {
         message: tooltip,
         preferBelow: false,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
+            color: color.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
           ),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 10,
-                  color: color.withValues(alpha: 0.7),
+                  color: color.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(width: 4),
               Text(
                 '${(value * 100).round()}%',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                   color: color,
                 ),
               ),

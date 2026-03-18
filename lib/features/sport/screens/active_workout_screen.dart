@@ -22,7 +22,7 @@ import '../widgets/sport_widgets.dart';
 //   · Elapsed timer (large, always visible) with phase sub-timer
 //   · HR zone ring (center hero with glow)
 //   · Phase progress strip (warmup → active → cooldown)
-//   · Live metrics grid (pace, distance, calories, speed, altitude)
+//   · Live metrics grid (pace, distance, speed, altitude)
 //   · EEG spectral bands (δ θ α β γ with derived indices)
 //   · AI coaching insights
 //   · Phase controls (warmup → active → cooldown → finish)
@@ -145,8 +145,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         ? state.elapsed.inMinutes / state.gpsMetrics.totalDistanceKm
         : null;
 
-    final calories = _estimateCalories(state);
-
     return PopScope(
       canPop: true,
       child: Scaffold(
@@ -168,7 +166,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                   child: Column(
                     children: [
                       // ── Metrics strip ──────────────────────────────
-                      _buildMetricsGrid(state, pace, calories),
+                      _buildMetricsGrid(state, pace),
 
                       // ── EEG Spectral ───────────────────────────────
                       if (state.latestEeg != null) ...[
@@ -333,11 +331,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   // ── Hero row: timer left, HR ring right ───────────────────────────────
-  Widget _buildHeroRow(
-    ActiveWorkoutState state,
-    HrZone zone,
-    Color zoneColor,
-  ) {
+  Widget _buildHeroRow(ActiveWorkoutState state, HrZone zone, Color zoneColor) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
       child: Row(
@@ -408,52 +402,43 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   // ── Metrics grid (3-column, compact) ─────────────────────────────────────
-  Widget _buildMetricsGrid(
-    ActiveWorkoutState state,
-    double? pace,
-    int? calories,
-  ) {
+  Widget _buildMetricsGrid(ActiveWorkoutState state, double? pace) {
     final tiles = <_MiniMetric>[];
 
     if (state.gpsMetrics.totalDistanceKm > 0) {
-      tiles.add(_MiniMetric(
-        label: 'Distance',
-        value: state.gpsMetrics.totalDistanceKm.toStringAsFixed(2),
-        unit: 'km',
-      ));
+      tiles.add(
+        _MiniMetric(
+          label: 'Distance',
+          value: state.gpsMetrics.totalDistanceKm.toStringAsFixed(2),
+          unit: 'km',
+        ),
+      );
     }
 
     if (pace != null && pace < 30) {
-      tiles.add(_MiniMetric(
-        label: 'Pace',
-        value: _formatPace(pace),
-        unit: '/km',
-      ));
+      tiles.add(
+        _MiniMetric(label: 'Pace', value: _formatPace(pace), unit: '/km'),
+      );
     }
 
     if (state.gpsMetrics.currentSpeedKmh > 0) {
-      tiles.add(_MiniMetric(
-        label: 'Speed',
-        value: state.gpsMetrics.currentSpeedKmh.toStringAsFixed(1),
-        unit: 'km/h',
-      ));
-    }
-
-    if (calories != null && calories > 0) {
-      tiles.add(_MiniMetric(
-        label: 'Calories',
-        value: '$calories',
-        unit: 'kcal',
-        accentColor: AppTheme.amber,
-      ));
+      tiles.add(
+        _MiniMetric(
+          label: 'Speed',
+          value: state.gpsMetrics.currentSpeedKmh.toStringAsFixed(1),
+          unit: 'km/h',
+        ),
+      );
     }
 
     if (state.gpsMetrics.altitudeM > 0) {
-      tiles.add(_MiniMetric(
-        label: 'Altitude',
-        value: state.gpsMetrics.altitudeM.toStringAsFixed(0),
-        unit: 'm',
-      ));
+      tiles.add(
+        _MiniMetric(
+          label: 'Altitude',
+          value: state.gpsMetrics.altitudeM.toStringAsFixed(0),
+          unit: 'm',
+        ),
+      );
     }
 
     if (tiles.isEmpty) return const SizedBox.shrink();
@@ -469,42 +454,27 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
   Widget _buildConnectHrPrompt() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppTheme.crimson.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.favorite_border_rounded,
-              size: 28,
-              color: AppTheme.crimson.withValues(alpha: 0.5),
-            ),
+          Icon(
+            Icons.favorite_border_rounded,
+            size: 20,
+            color: AppTheme.fog.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'No heart rate monitor',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.fog,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Pair a Bluetooth HR sensor for zone tracking',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppTheme.fog.withValues(alpha: 0.5),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Pair a Bluetooth HR sensor for zone tracking',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.fog.withValues(alpha: 0.6),
+              ),
             ),
           ),
         ],
@@ -522,7 +492,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.deepSea,
         border: Border(
@@ -536,10 +506,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
             child: GestureDetector(
               onTap: _togglePause,
               child: Container(
-                height: 52,
+                height: 46,
                 decoration: BoxDecoration(
                   color: AppTheme.shimmer.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -548,15 +518,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                       state.isPaused
                           ? Icons.play_arrow_rounded
                           : Icons.pause_rounded,
-                      size: 24,
+                      size: 22,
                       color: AppTheme.moonbeam,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       state.isPaused ? 'Resume' : 'Pause',
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                         color: AppTheme.moonbeam,
                       ),
                     ),
@@ -565,18 +535,19 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               ),
             ),
           ),
-          // Next Phase
           if (state.session.phase != WorkoutPhase.finished) ...[
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
                 onTap: _advancePhase,
                 child: Container(
-                  height: 52,
+                  height: 46,
                   decoration: BoxDecoration(
-                    color: zoneColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: zoneColor.withValues(alpha: 0.4)),
+                    color: zoneColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: zoneColor.withValues(alpha: 0.35),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -585,15 +556,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                         state.session.phase == WorkoutPhase.cooldown
                             ? Icons.flag_rounded
                             : Icons.skip_next_rounded,
-                        size: 22,
+                        size: 20,
                         color: zoneColor,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         nextLabel,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                           color: zoneColor,
                         ),
                       ),
@@ -606,24 +577,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
         ],
       ),
     );
-  }
-
-  // ── Calorie estimate ─────────────────────────────────────────────────────
-  static int? _estimateCalories(ActiveWorkoutState state) {
-    final minutes = state.elapsed.inSeconds / 60.0;
-    if (minutes < 0.5) return null;
-
-    if (state.currentHr > 0) {
-      // Keytel et al. (2005) simplified formula
-      final hr = state.currentHr.toDouble();
-      final weight = state.profile.weightKg ?? 70.0;
-      final cal =
-          ((-55.0969 + 0.6309 * hr + 0.1988 * weight) / 4.184) * minutes;
-      return cal.round().clamp(0, 9999);
-    }
-
-    // Fallback: rough MET-based estimate without HR
-    return null;
   }
 
   static String _formatDuration(Duration d) {
@@ -640,43 +593,68 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 }
 
-class _ControlButton extends StatelessWidget {
-  final IconData icon;
+class _MiniMetric extends StatelessWidget {
   final String label;
-  final Color color;
-  final VoidCallback onTap;
+  final String value;
+  final String? unit;
+  final Color? accentColor;
 
-  const _ControlButton({
-    required this.icon,
+  const _MiniMetric({
     required this.label,
-    required this.color,
-    required this.onTap,
+    required this.value,
+    this.unit,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    final accent = accentColor ?? AppTheme.moonbeam;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.tidePool,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.2)),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 28, color: color),
-          ),
-          const SizedBox(height: 4),
           Text(
-            label,
+            label.toUpperCase(),
             style: TextStyle(
-              fontSize: 11,
-              color: color,
+              fontSize: 9,
               fontWeight: FontWeight.w500,
+              color: AppTheme.fog.withValues(alpha: 0.7),
+              letterSpacing: 0.5,
             ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: accent,
+                ),
+              ),
+              if (unit != null) ...[
+                const SizedBox(width: 2),
+                Text(
+                  unit!,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppTheme.fog.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
