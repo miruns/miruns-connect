@@ -76,6 +76,7 @@ dependencies:
 
   # Voice coaching
   flutter_tts: ^4.2.0
+  just_audio: ^0.9.43
 
 dev_dependencies:
   flutter_test:

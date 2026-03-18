@@ -30,6 +30,7 @@ import 'notification_service.dart';
 import 'nutrition_service.dart';
 import 'permission_service.dart';
 import 'sources/source_registry_init.dart';
+import 'tts_service.dart';
 
 export '../models/ai_provider_config.dart'
     show AiProviderConfig, AiProviderType;
@@ -219,8 +220,14 @@ final workoutAnalyticsServiceProvider = Provider<WorkoutAnalyticsService>((
   return WorkoutAnalyticsService(ai: ref.read(aiServiceProvider));
 });
 
+final ttsServiceProvider = Provider<TtsService>((ref) {
+  final svc = TtsService();
+  ref.onDispose(svc.dispose);
+  return svc;
+});
+
 final voiceCoachServiceProvider = Provider<VoiceCoachService>((ref) {
-  final svc = VoiceCoachService();
+  final svc = VoiceCoachService(tts: ref.read(ttsServiceProvider));
   ref.onDispose(svc.dispose);
   return svc;
 });

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../../core/services/tts_service.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
 
@@ -12,10 +12,12 @@ import '../models/workout_session.dart';
 /// Uses platform TTS (no network needed) so it works offline and
 /// with any Bluetooth headphones.
 class VoiceCoachService {
-  FlutterTts? _tts;
+  final TtsService _tts;
   bool _initialized = false;
   bool _enabled = true;
   bool _speaking = false;
+
+  VoiceCoachService({required TtsService tts}) : _tts = tts;
 
   /// Queue to avoid overlapping speech.
   final List<String> _queue = [];
@@ -34,24 +36,11 @@ class VoiceCoachService {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    _tts = FlutterTts();
-
-    await _tts!.setLanguage('en-US');
-    await _tts!.setSpeechRate(0.5);
-    await _tts!.setVolume(0.9);
-    await _tts!.setPitch(1.0);
-
-    // Route audio to music stream so it plays through earphones.
-    await _tts!.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
-      IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-      IosTextToSpeechAudioCategoryOptions.duckOthers,
-    ]);
-
-    _tts!.setCompletionHandler(() {
+    await _tts.initialize();
+    _tts.onComplete = () {
       _speaking = false;
       _processQueue();
-    });
-
+    };
     _initialized = true;
   }
 
@@ -135,15 +124,13 @@ class VoiceCoachService {
   Future<void> stop() async {
     _queue.clear();
     _cooldown?.cancel();
-    if (_tts != null) {
-      await _tts!.stop();
-    }
+    await _tts.stop();
     _speaking = false;
   }
 
   void dispose() {
     stop();
-    _tts?.stop();
+    _tts.dispose();
     _cooldown?.cancel();
   }
 
@@ -160,7 +147,7 @@ class VoiceCoachService {
     _speaking = true;
     final text = _queue.removeAt(0);
     try {
-      await _tts!.speak(text);
+      await _tts.speak(text);
     } catch (e) {
       debugPrint('[VoiceCoach] TTS error: $e');
       _speaking = false;
