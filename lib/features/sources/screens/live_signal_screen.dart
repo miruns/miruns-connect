@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bci_decoding_view.dart';
 import '../../../core/widgets/bci_monitoring_view.dart';
 import '../../../core/widgets/live_signal_chart.dart';
@@ -65,12 +64,6 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   // Active visualisation mode.
   SignalViewMode _viewMode = SignalViewMode.timeDomain;
 
-  // Demo mode — synthetic signal without real hardware.
-  bool _isDemoMode = false;
-  Timer? _demoTimer;
-  final _demoSignalController = StreamController<SignalSample>.broadcast();
-  int _demoTick = 0;
-
   @override
   void initState() {
     super.initState();
@@ -95,8 +88,6 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _stateSub?.cancel();
     _devicesSub?.cancel();
     _recordSub?.cancel();
-    _stopDemo();
-    _demoSignalController.close();
     // Don't dispose the service — it's owned by the provider.
     super.dispose();
   }
@@ -150,46 +141,19 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   // ── Demo mode ───────────────────────────────────────────────────────
 
   void _startDemo() {
-    _demoTick = 0;
-    final rng = Random();
-    final chCount = _provider!.channelCount;
-    final hz = _provider!.sampleRateHz;
-
-    // Emit synthetic samples at ~60 Hz (fast enough for smooth chart).
-    _demoTimer = Timer.periodic(Duration(milliseconds: (1000 / 60).round()), (
-      _,
-    ) {
-      _demoTick++;
-      final t = _demoTick / hz;
-      final channels = List<double>.generate(chCount, (ch) {
-        // Blend of frequencies — each channel gets a slightly different mix.
-        final base = 10.0 * sin(2 * pi * (3 + ch * 0.7) * t);
-        final alpha = 8.0 * sin(2 * pi * (10 + ch) * t) * (ch.isEven ? 1 : 0.6);
-        final noise = (rng.nextDouble() - 0.5) * 4;
-        return double.parse((base + alpha + noise).toStringAsFixed(2));
-      });
-      if (!_demoSignalController.isClosed) {
-        _demoSignalController.add(
-          SignalSample(time: DateTime.now(), channels: channels),
-        );
-      }
-    });
-    setState(() {
-      _isDemoMode = true;
-      _state = BleSourceState.streaming;
-    });
+    if (_provider == null) return;
+    _service.startDemo(
+      channelCount: _provider!.channelCount,
+      sampleRateHz: _provider!.sampleRateHz,
+    );
+    // State listener will pick up the streaming state.
   }
 
   void _stopDemo() {
-    _demoTimer?.cancel();
-    _demoTimer = null;
-    if (_isDemoMode && mounted) {
-      setState(() {
-        _isDemoMode = false;
-        _state = BleSourceState.idle;
-      });
-    }
+    _service.stopDemo();
   }
+
+  bool get _isDemoMode => _service.isDemoMode;
 
   // ── Build ─────────────────────────────────────────────────────────────
 
@@ -348,10 +312,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'No devices found',
-                    style: AppTheme.geist(
-                      fontSize: 16,
-                      color: AppTheme.fog,
-                    ),
+                    style: AppTheme.geist(fontSize: 16, color: AppTheme.fog),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -404,9 +365,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
           foregroundColor: AppTheme.glow,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
     );
@@ -426,9 +385,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.aurora,
           side: BorderSide(color: AppTheme.aurora.withValues(alpha: 0.35)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
     );
@@ -575,9 +532,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   // ── Active view builder ───────────────────────────────────────────────
 
   Widget _buildActiveView() {
-    final stream = _isDemoMode
-        ? _demoSignalController.stream
-        : _service.signalStream;
+    final stream = _service.signalStream;
     final descriptors = _provider!.channelDescriptors;
     final deviceName = _isDemoMode
         ? 'Demo'

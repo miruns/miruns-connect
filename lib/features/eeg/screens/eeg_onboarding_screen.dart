@@ -6,9 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/services/ble_source_provider.dart';
-import '../../../core/services/service_providers.dart';
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/demo_mode_service.dart';
+import '../../../core/services/service_providers.dart';
 import '../widgets/m_signal_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,8 +144,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
   void _onNoDevice() async {
     setState(() => _isDemoMode = true);
     HapticFeedback.lightImpact();
-    final db = ref.read(localDbServiceProvider);
-    await db.setSetting('eeg_demo_mode', 'true');
+    await ref.read(demoModeProvider.notifier).enable();
     await _bleService.stopScan();
     // Skip pair + signal check, jump to ready
     _pageCtrl.animateToPage(
@@ -173,7 +173,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
     final db = ref.read(localDbServiceProvider);
     await db.setSetting('eeg_paired_device_id', device.device.remoteId.str);
     await db.setSetting('eeg_paired_device_name', device.name);
-    await db.setSetting('eeg_demo_mode', 'false');
+    await ref.read(demoModeProvider.notifier).disable();
     await _bleService.stopScan();
     _goNext();
   }
@@ -181,8 +181,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
   void _useDemoMode() async {
     setState(() => _isDemoMode = true);
     HapticFeedback.lightImpact();
-    final db = ref.read(localDbServiceProvider);
-    await db.setSetting('eeg_demo_mode', 'true');
+    await ref.read(demoModeProvider.notifier).enable();
     await _bleService.stopScan();
     _goNext();
   }

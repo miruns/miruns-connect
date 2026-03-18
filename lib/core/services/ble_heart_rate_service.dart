@@ -215,6 +215,10 @@ class BleHeartRateService {
   StreamSubscription<List<int>>? _hrNotifySubscription;
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
 
+  // Demo mode — synthetic HR generation at the service level.
+  Timer? _demoTimer;
+  bool _isDemoMode = false;
+
   final _devicesController = StreamController<List<BleHrDevice>>.broadcast();
   final _hrController = StreamController<BleHrReading>.broadcast();
   final _stateController = StreamController<BleConnectionState>.broadcast();
@@ -233,6 +237,7 @@ class BleHeartRateService {
   BleConnectionState get state => _state;
   BluetoothDevice? get connectedDevice => _connectedDevice;
   bool get isStreaming => _state == BleConnectionState.streaming;
+  bool get isDemoMode => _isDemoMode;
 
   void _setState(BleConnectionState s) {
     _state = s;
@@ -341,6 +346,10 @@ class BleHeartRateService {
 
   /// Disconnect and reset state.
   Future<void> disconnect() async {
+    if (_isDemoMode) {
+      stopDemo();
+      return;
+    }
     await _hrNotifySubscription?.cancel();
     _hrNotifySubscription = null;
     await _connectionSubscription?.cancel();
@@ -402,7 +411,48 @@ class BleHeartRateService {
     return null;
   }
 
+  // ── Demo mode ───────────────────────────────────────────────────────
+
+  /// Start synthetic HR generation at the service level.
+  ///
+  /// Emits realistic heart rate readings (60–90 bpm range with natural
+  /// variability) and RR intervals on [hrStream], identical to real BLE
+  /// hardware. All downstream consumers (workout, sport home) see data.
+  void startDemo() {
+    if (_isDemoMode) return;
+    _isDemoMode = true;
+    final rng = math.Random();
+    var baseBpm = 72.0;
+    var phase = 0.0;
+
+    // Emit at ~1 Hz — HR monitors typically report once per heartbeat.
+    _demoTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      // Gentle sinusoidal drift + noise (simulates real cardiac variability).
+      phase += 0.15;
+      baseBpm = 72 + 8 * math.sin(phase) + (rng.nextDouble() - 0.5) * 4;
+      final bpm = baseBpm.round().clamp(50, 180);
+
+      // Synthetic RR interval from BPM + natural jitter (HRV).
+      final meanRr = 60000.0 / bpm;
+      final rr = meanRr + (rng.nextDouble() - 0.5) * 40;
+
+      if (!_hrController.isClosed) {
+        _hrController.add(BleHrReading(bpm: bpm, rrMs: [rr]));
+      }
+    });
+    _setState(BleConnectionState.streaming);
+  }
+
+  /// Stop synthetic HR generation.
+  void stopDemo() {
+    _demoTimer?.cancel();
+    _demoTimer = null;
+    _isDemoMode = false;
+    _setState(BleConnectionState.idle);
+  }
+
   void dispose() {
+    stopDemo();
     disconnect();
     _devicesController.close();
     _hrController.close();

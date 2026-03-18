@@ -5,9 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/services/ble_source_provider.dart';
-import '../../../core/services/service_providers.dart';
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/demo_mode_service.dart';
+import '../../../core/services/service_providers.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../widgets/m_signal_logo.dart';
 
@@ -31,7 +32,6 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
     with SingleTickerProviderStateMixin {
   // Loaded from DB on init
   String? _pairedDeviceName;
-  bool _isDemoMode = false;
 
   // Expert mode toggle (local — no persistence needed between sessions)
   bool _expertMode = false;
@@ -74,11 +74,9 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
   Future<void> _loadPrefs() async {
     final db = ref.read(localDbServiceProvider);
     final name = await db.getSetting('eeg_paired_device_name');
-    final demo = await db.getSetting('eeg_demo_mode');
     if (mounted) {
       setState(() {
         _pairedDeviceName = name;
-        _isDemoMode = demo == 'true';
       });
     }
   }
@@ -132,7 +130,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                   // Device status pill
                   _StatusPill(
                     deviceName: _pairedDeviceName,
-                    isDemoMode: _isDemoMode,
+                    isDemoMode: ref.watch(demoModeProvider),
                     isConnected: _isConnected,
                   ),
                   const SizedBox(width: 10),

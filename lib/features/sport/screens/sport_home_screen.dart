@@ -11,6 +11,7 @@ import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/ambient_scan_service.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/demo_mode_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
@@ -51,7 +52,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   StreamSubscription<List<BleSourceDevice>>? _devicesScanSub;
   String? _pairedDeviceName;
   String? _pairedDeviceId;
-  bool _isDemoMode = false;
   Timer? _reconnectTimer;
   bool _autoConnecting = false;
 
@@ -168,7 +168,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     final db = ref.read(localDbServiceProvider);
     final name = await db.getSetting('eeg_paired_device_name');
     final id = await db.getSetting('eeg_paired_device_id');
-    final demo = await db.getSetting('eeg_demo_mode');
 
     final profile = await _workoutService.loadProfile();
     final workouts = await _workoutService.loadWorkouts(limit: 5);
@@ -176,7 +175,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       setState(() {
         _pairedDeviceName = name;
         _pairedDeviceId = id;
-        _isDemoMode = demo == 'true';
         _profile = profile;
         _recentWorkouts = workouts;
         _selectedType = profile.preferredWorkouts.isNotEmpty
@@ -204,7 +202,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     // Skip if already connected, in demo mode, or no paired device.
     final bleService = ref.read(bleSourceServiceProvider);
     if (bleService.isStreaming) return;
-    if (_isDemoMode) return;
+    if (ref.read(demoModeProvider)) return;
     if (_pairedDeviceId == null && _pairedDeviceName == null) return;
 
     final registry = ref.read(bleSourceRegistryProvider);
@@ -253,7 +251,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 
   /// Schedule a background re-scan after a delay (like Garmin retry loop).
   void _scheduleReconnect() {
-    if (_isDemoMode) return;
+    if (ref.read(demoModeProvider)) return;
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 8), () {
       if (mounted && _bleState == BleSourceState.idle) {
@@ -397,7 +395,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     }
 
     // Demo mode → skip headset, go to workout.
-    if (_isDemoMode) {
+    if (ref.read(demoModeProvider)) {
       context.push('/sport/active', extra: _selectedType);
       return;
     }
@@ -502,6 +500,14 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                             letterSpacing: -0.5,
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        _DemoTogglePill(
+                          isActive: ref.watch(demoModeProvider),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ref.read(demoModeProvider.notifier).toggle();
+                          },
+                        ),
                         const Spacer(),
                         // History
                         GestureDetector(
@@ -565,8 +571,10 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                     ?.platformName ??
                                 _pairedDeviceName)
                           : _pairedDeviceName,
-                      isDemoMode: _isDemoMode,
-                      onEegTap: _bleState == BleSourceState.idle && !_isDemoMode
+                      isDemoMode: ref.watch(demoModeProvider),
+                      onEegTap:
+                          _bleState == BleSourceState.idle &&
+                              !ref.watch(demoModeProvider)
                           ? _tryAutoConnect
                           : _openHeadsetScanner,
                       hrState: _hrState,
@@ -1013,6 +1021,64 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum _SensorStatus { unknown, ready, noPermission, off, unavailable }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Demo toggle pill — Stripe-style test mode indicator
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DemoTogglePill extends StatelessWidget {
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _DemoTogglePill({required this.isActive, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppTheme.amber.withValues(alpha: 0.15)
+              : AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+          border: Border.all(
+            color: isActive
+                ? AppTheme.amber.withValues(alpha: 0.6)
+                : AppTheme.shimmer.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive ? AppTheme.amber : AppTheme.mist,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'TEST',
+              style: AppTheme.geistMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isActive ? AppTheme.amber : AppTheme.mist,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fixed bottom Start bar — always visible, glassmorphism effect
