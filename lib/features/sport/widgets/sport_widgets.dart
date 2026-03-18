@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/sport_profile.dart';
+import '../models/workout_session.dart';
 
 /// Circular HR zone indicator with animated fill and glow effect.
 class HrZoneRing extends StatelessWidget {
@@ -207,124 +208,289 @@ class MetricTile extends StatelessWidget {
   }
 }
 
-/// Brain state indicator showing EEG metrics as compact bars.
-class BrainStateIndicator extends StatelessWidget {
-  final double attention;
-  final double relaxation;
-  final double mentalFatigue;
-  final double cognitiveLoad;
+/// Real-time EEG frequency band power display with derived indices.
+///
+/// Shows the 5 standard EEG bands (δ θ α β γ) as power bars with
+/// percentages computed via FFT spectral analysis, plus compact derived
+/// indices (Focus, Calm) with tooltip explanations.
+class EegBandsIndicator extends StatelessWidget {
+  final WorkoutEegSample eeg;
 
-  const BrainStateIndicator({
-    super.key,
-    required this.attention,
-    required this.relaxation,
-    required this.mentalFatigue,
-    required this.cognitiveLoad,
-  });
+  const EegBandsIndicator({super.key, required this.eeg});
+
+  static const _bands = [
+    _BandInfo(
+      'δ',
+      'Delta',
+      '0.5–4 Hz',
+      'Deep rest, recovery',
+      Color(0xFF7928CA),
+    ),
+    _BandInfo(
+      'θ',
+      'Theta',
+      '4–8 Hz',
+      'Meditation, creativity',
+      Color(0xFF4A6CF7),
+    ),
+    _BandInfo('α', 'Alpha', '8–13 Hz', 'Relaxed awareness', Color(0xFF00E5FF)),
+    _BandInfo(
+      'β',
+      'Beta',
+      '13–30 Hz',
+      'Active focus, engagement',
+      Color(0xFF46A758),
+    ),
+    _BandInfo('γ', 'Gamma', '30+ Hz', 'Peak processing', Color(0xFFF5A623)),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final powers = [
+      eeg.deltaPct ?? 0,
+      eeg.thetaPct ?? 0,
+      eeg.alphaPct ?? 0,
+      eeg.betaPct ?? 0,
+      eeg.gammaPct ?? 0,
+    ];
+    final maxPower = powers.reduce(math.max).clamp(0.01, 1.0);
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          // Header
+          Row(
             children: [
-              Icon(Icons.psychology, size: 16, color: AppTheme.aurora),
-              SizedBox(width: 6),
-              Text(
-                'Brain State',
+              const Icon(Icons.waves_rounded, size: 16, color: AppTheme.cyan),
+              const SizedBox(width: 6),
+              const Text(
+                'EEG Spectral',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.aurora,
+                  color: AppTheme.cyan,
                 ),
               ),
+              const Spacer(),
+              if (eeg.dominantHz != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cyan.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${eeg.dominantHz!.toStringAsFixed(0)} Hz',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.cyan,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 10),
-          _BarRow(label: 'Focus', value: attention, color: AppTheme.glow),
-          const SizedBox(height: 6),
-          _BarRow(label: 'Calm', value: relaxation, color: AppTheme.seaGreen),
-          const SizedBox(height: 6),
-          _BarRow(
-            label: 'Fatigue',
-            value: mentalFatigue,
-            color: AppTheme.amber,
+
+          // Band power bars
+          for (var i = 0; i < _bands.length; i++) ...[
+            _EegBandRow(band: _bands[i], value: powers[i], maxValue: maxPower),
+            if (i < _bands.length - 1) const SizedBox(height: 5),
+          ],
+
+          const SizedBox(height: 10),
+
+          // Derived indices row
+          Row(
+            children: [
+              _DerivedChip(
+                label: 'Focus',
+                value: eeg.attention,
+                color: AppTheme.glow,
+                tooltip: 'β / (θ + α) — higher β dominance = more engaged',
+              ),
+              const SizedBox(width: 8),
+              _DerivedChip(
+                label: 'Calm',
+                value: eeg.relaxation,
+                color: AppTheme.seaGreen,
+                tooltip: 'α / (β + total) — higher α = relaxed awareness',
+              ),
+              const SizedBox(width: 8),
+              _DerivedChip(
+                label: 'Fatigue',
+                value: eeg.mentalFatigue,
+                color: AppTheme.amber,
+                tooltip: '(θ + δ) / (α + β) — slow-wave rise = depletion',
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          _BarRow(label: 'Load', value: cognitiveLoad, color: AppTheme.crimson),
         ],
       ),
     );
   }
 }
 
-class _BarRow extends StatelessWidget {
-  final String label;
-  final double value;
+class _BandInfo {
+  final String symbol;
+  final String name;
+  final String range;
+  final String description;
   final Color color;
 
-  const _BarRow({
-    required this.label,
+  const _BandInfo(
+    this.symbol,
+    this.name,
+    this.range,
+    this.description,
+    this.color,
+  );
+}
+
+class _EegBandRow extends StatelessWidget {
+  final _BandInfo band;
+  final double value;
+  final double maxValue;
+
+  const _EegBandRow({
+    required this.band,
     required this.value,
-    required this.color,
+    required this.maxValue,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 48,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: AppTheme.fog),
+    final pct = (value * 100).round();
+    final fill = maxValue > 0 ? (value / maxValue).clamp(0.0, 1.0) : 0.0;
+
+    return Tooltip(
+      message: '${band.name} (${band.range}): ${band.description}',
+      preferBelow: false,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 18,
+            child: Text(
+              band.symbol,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: band.color,
+              ),
+            ),
           ),
-        ),
-        Expanded(
-          child: Stack(
+          const SizedBox(width: 4),
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: band.color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                FractionallySizedBox(
+                  widthFactor: fill,
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [band.color.withValues(alpha: 0.5), band.color],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: fill > 0.3
+                          ? [
+                              BoxShadow(
+                                color: band.color.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 32,
+            child: Text(
+              '$pct%',
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: band.color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DerivedChip extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+  final String tooltip;
+
+  const _DerivedChip({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Tooltip(
+        message: tooltip,
+        preferBelow: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
             children: [
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(3),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: color.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              FractionallySizedBox(
-                widthFactor: value.clamp(0.0, 1.0),
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                '${(value * 100).round()}%',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: color,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 32,
-          child: Text(
-            '${(value * 100).round()}%',
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
