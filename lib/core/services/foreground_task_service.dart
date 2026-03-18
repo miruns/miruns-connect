@@ -13,7 +13,7 @@ import 'notification_service.dart';
 /// 1. **Reliable background execution** — Android cannot kill a foreground
 ///    service the way it kills plain background WorkManager tasks.
 /// 2. **Persistent taskbar presence** — the user always sees Miruns in
-///    their notification shade, keeping them "connected to their body".
+///    their notification shade, keeping activity tracking active.
 class ForegroundTaskService {
   ForegroundTaskService({LocalDbService? dbService})
     : _dbService = dbService ?? LocalDbService();
@@ -27,8 +27,8 @@ class ForegroundTaskService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: NotificationService.persistentChannelId,
-        channelName: 'Body Monitoring',
-        channelDescription: 'Keeps Miruns connected to your body',
+        channelName: 'Activity Monitoring',
+        channelDescription: 'Keeps Miruns tracking your activity',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         enableVibration: false,
@@ -65,7 +65,10 @@ class ForegroundTaskService {
     await FlutterForegroundTask.startService(
       serviceId: 256,
       notificationTitle: '🫀 Miruns',
-      notificationText: 'Connected to your body',
+      notificationText: 'Tracking your activity',
+      notificationIcon: const NotificationIcon(
+        metaDataName: 'com.miruns.NOTIFICATION_ICON',
+      ),
       callback: _foregroundTaskCallback,
     );
 
@@ -104,7 +107,7 @@ class ForegroundTaskService {
       );
       final successes = await _dbService.getSetting('bg_capture_success_count');
 
-      final parts = <String>['Connected to your body'];
+      final parts = <String>['Tracking your activity'];
 
       if (lastCapture != null && lastCapture.isNotEmpty) {
         final dt = DateTime.tryParse(lastCapture);
@@ -127,7 +130,7 @@ class ForegroundTaskService {
 
       return parts.join(' · ');
     } catch (_) {
-      return 'Connected to your body';
+      return 'Tracking your activity';
     }
   }
 }
@@ -171,7 +174,7 @@ class _MirunsTaskHandler extends TaskHandler {
       final db = _db ?? LocalDbService();
       final lastCapture = await db.getSetting('last_background_capture');
 
-      String text = 'Monitoring your body';
+      String text = 'Monitoring your activity';
 
       if (lastCapture != null && lastCapture.isNotEmpty) {
         final dt = DateTime.tryParse(lastCapture);

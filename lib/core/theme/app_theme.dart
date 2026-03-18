@@ -56,28 +56,31 @@ class AppTheme {
   /// Primary text — near white (Geist foreground).
   static const Color moonbeam = Color(0xFFEDEDED);
 
-  /// Muted text — secondary content (Geist gray-700).
+  /// Secondary text — readable secondary (Geist gray-900).
   static const Color fog = Color(0xFF888888);
 
-  /// Subtle text — tertiary/placeholder (Geist gray-600).
+  /// Tertiary text — placeholder / hint (Geist gray-700).
   static const Color mist = Color(0xFF666666);
+
+  /// Faint text — disabled (Geist gray-500).
+  static const Color haze = Color(0xFF555555);
 
   // ─── Semantic ─────────────────────────────────────────────────────────────
 
-  static const Color seaGreen = Color(0xFF50E3C2);
+  static const Color seaGreen = Color(0xFF46A758);
   static const Color amber = Color(0xFFF5A623);
-  static const Color crimson = Color(0xFFEE0000);
+  static const Color crimson = Color(0xFFE5484D);
 
   // ─── Light-mode Gray Scale ────────────────────────────────────────────────
 
   static const Color _lightBg = Color(0xFFFAFAFA);
   static const Color _lightSurface = Colors.white;
   static const Color _lightCard = Colors.white;
-  static const Color _lightBorder = Color(0xFFEAEAEA);
-  static const Color _lightBorderSubtle = Color(0xFFF0F0F0);
+  static const Color _lightBorder = Color(0xFFE5E5E5);
+  static const Color _lightBorderSubtle = Color(0xFFEEEEEE);
   static const Color _lightForeground = Color(0xFF171717);
   static const Color _lightSecondary = Color(0xFF666666);
-  static const Color _lightTertiary = Color(0xFF999999);
+  static const Color _lightTertiary = Color(0xFF8F8F8F);
 
   // ─── Aliases (backward-compat for existing widgets) ───────────────────────
 
@@ -93,10 +96,11 @@ class AppTheme {
 
   // ─── Geist Radius ─────────────────────────────────────────────────────────
 
-  static const double radiusSm = 2;
-  static const double radiusMd = 4;
-  static const double radiusLg = 6;
-  static const double radiusXl = 8;
+  static const double radiusSm = 4;
+  static const double radiusMd = 8;
+  static const double radiusLg = 12;
+  static const double radiusXl = 16;
+  static const double radiusFull = 9999;
 
   // ─── Geist Typography ─────────────────────────────────────────────────────
 
@@ -142,78 +146,78 @@ class AppTheme {
       // Display — hero text
       displayLarge: geist(
         fontSize: 48,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.1,
+        height: 1.08,
       ),
       displayMedium: geist(
         fontSize: 40,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.15,
+        height: 1.1,
       ),
       displaySmall: geist(
         fontSize: 32,
         fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.2,
+        height: 1.15,
       ),
       // Headline — section headers
       headlineLarge: geist(
         fontSize: 28,
         fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.25,
+        height: 1.2,
       ),
       headlineMedium: geist(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.3,
+        height: 1.25,
       ),
       headlineSmall: geist(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.35,
+        height: 1.3,
       ),
       // Title — card/section titles
       titleLarge: geist(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: primary,
-        height: 1.4,
+        height: 1.35,
       ),
       titleMedium: geist(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: primary,
-        height: 1.45,
+        height: 1.4,
       ),
       titleSmall: geist(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: primary,
-        height: 1.45,
+        height: 1.4,
       ),
       // Body — readable content
       bodyLarge: geist(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: primary,
-        height: 1.6,
+        height: 1.55,
       ),
       bodyMedium: geist(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: secondary,
-        height: 1.6,
+        height: 1.55,
       ),
       bodySmall: geist(
         fontSize: 13,
         fontWeight: FontWeight.w400,
         color: secondary,
-        height: 1.55,
+        height: 1.5,
       ),
       // Label — buttons, captions, metadata
       labelLarge: geist(
@@ -402,8 +406,8 @@ class AppTheme {
         prefixIconColor: fog,
         suffixIconColor: fog,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
+          horizontal: 14,
+          vertical: 12,
         ),
       ),
 
@@ -455,8 +459,11 @@ class AppTheme {
         elevation: 0,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(radiusXl)),
+          side: BorderSide(color: shimmer, width: 1),
         ),
         surfaceTintColor: Colors.transparent,
+        dragHandleColor: gray400,
+        dragHandleSize: const Size(36, 4),
       ),
 
       // ── Slider ──
@@ -552,7 +559,8 @@ class AppTheme {
       // ── PopupMenu ──
       popupMenuTheme: PopupMenuThemeData(
         color: current,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
           side: const BorderSide(color: shimmer, width: 1),
@@ -828,8 +836,8 @@ class AppTheme {
         prefixIconColor: _lightSecondary,
         suffixIconColor: _lightSecondary,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
+          horizontal: 14,
+          vertical: 12,
         ),
       ),
 
@@ -881,8 +889,11 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(radiusXl)),
+          side: BorderSide(color: _lightBorder, width: 1),
         ),
         surfaceTintColor: Colors.transparent,
+        dragHandleColor: Color(0xFFCFCFCF),
+        dragHandleSize: Size(36, 4),
       ),
 
       // ── Slider ──
@@ -989,7 +1000,8 @@ class AppTheme {
       // ── PopupMenu ──
       popupMenuTheme: PopupMenuThemeData(
         color: _lightSurface,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: const Color(0x1A000000),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
           side: const BorderSide(color: _lightBorder, width: 1),

@@ -11,6 +11,7 @@ import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/services/ambient_scan_service.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/demo_mode_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
@@ -51,7 +52,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   StreamSubscription<List<BleSourceDevice>>? _devicesScanSub;
   String? _pairedDeviceName;
   String? _pairedDeviceId;
-  bool _isDemoMode = false;
   Timer? _reconnectTimer;
   bool _autoConnecting = false;
 
@@ -168,7 +168,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     final db = ref.read(localDbServiceProvider);
     final name = await db.getSetting('eeg_paired_device_name');
     final id = await db.getSetting('eeg_paired_device_id');
-    final demo = await db.getSetting('eeg_demo_mode');
 
     final profile = await _workoutService.loadProfile();
     final workouts = await _workoutService.loadWorkouts(limit: 5);
@@ -176,7 +175,6 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
       setState(() {
         _pairedDeviceName = name;
         _pairedDeviceId = id;
-        _isDemoMode = demo == 'true';
         _profile = profile;
         _recentWorkouts = workouts;
         _selectedType = profile.preferredWorkouts.isNotEmpty
@@ -204,7 +202,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     // Skip if already connected, in demo mode, or no paired device.
     final bleService = ref.read(bleSourceServiceProvider);
     if (bleService.isStreaming) return;
-    if (_isDemoMode) return;
+    if (ref.read(demoModeProvider)) return;
     if (_pairedDeviceId == null && _pairedDeviceName == null) return;
 
     final registry = ref.read(bleSourceRegistryProvider);
@@ -253,7 +251,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 
   /// Schedule a background re-scan after a delay (like Garmin retry loop).
   void _scheduleReconnect() {
-    if (_isDemoMode) return;
+    if (ref.read(demoModeProvider)) return;
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 8), () {
       if (mounted && _bleState == BleSourceState.idle) {
@@ -397,7 +395,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
     }
 
     // Demo mode → skip headset, go to workout.
-    if (_isDemoMode) {
+    if (ref.read(demoModeProvider)) {
       context.push('/sport/active', extra: _selectedType);
       return;
     }
@@ -502,6 +500,14 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                             letterSpacing: -0.5,
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        _DemoTogglePill(
+                          isActive: ref.watch(demoModeProvider),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ref.read(demoModeProvider.notifier).toggle();
+                          },
+                        ),
                         const Spacer(),
                         // History
                         GestureDetector(
@@ -565,8 +571,10 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                     ?.platformName ??
                                 _pairedDeviceName)
                           : _pairedDeviceName,
-                      isDemoMode: _isDemoMode,
-                      onEegTap: _bleState == BleSourceState.idle && !_isDemoMode
+                      isDemoMode: ref.watch(demoModeProvider),
+                      onEegTap:
+                          _bleState == BleSourceState.idle &&
+                              !ref.watch(demoModeProvider)
                           ? _tryAutoConnect
                           : _openHeadsetScanner,
                       hrState: _hrState,
@@ -640,11 +648,31 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                   maxBuffer: _maxBuffer,
                                 ),
                               ),
+                              Builder(
+                                builder: (_) {
+                                  final eeg = ref
+                                      .watch(latestEegSampleProvider)
+                                      .valueOrNull;
+                                  return _LiveSensorCard(
+                                    label: 'EEG SPECTRAL',
+                                    color: AppTheme.cyan,
+                                    icon: Icons.equalizer_rounded,
+                                    child: eeg != null
+                                        ? _MiniSpectralBars(eeg: eeg)
+                                        : const Center(
+                                            child: Text(
+                                              'Waiting for EEG…',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: AppTheme.fog,
+                                              ),
+                                            ),
+                                          ),
+                                  );
+                                },
+                              ),
                               _LiveSensorCard(
                                 label: 'ENVIRONMENT',
-                                value: _ambientData != null
-                                    ? '${_ambientData!.temperature.currentC.round()}° · AQI ${_ambientData!.airQuality.usAqi}'
-                                    : '-- loading',
                                 color: AppTheme.amber,
                                 icon: Icons.cloud_outlined,
                                 child: _EnvSummaryWidget(data: _ambientData),
@@ -656,7 +684,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                         // Page dots
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(4, (i) {
+                          children: List.generate(5, (i) {
                             final active = i == _sensorPage;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
@@ -704,7 +732,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 color: isSelected
                                     ? AppTheme.cyan.withValues(alpha: 0.10)
                                     : AppTheme.tidePool.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppTheme.cyan.withValues(alpha: 0.6)
@@ -776,7 +804,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                     AppTheme.tidePool,
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: AppTheme.cyan.withValues(alpha: 0.12),
                                 ),
@@ -845,7 +873,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: AppTheme.tidePool,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: AppTheme.cyan.withValues(
                                       alpha: 0.15,
@@ -1015,6 +1043,64 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
 enum _SensorStatus { unknown, ready, noPermission, off, unavailable }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Demo toggle pill — Stripe-style test mode indicator
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DemoTogglePill extends StatelessWidget {
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _DemoTogglePill({required this.isActive, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppTheme.amber.withValues(alpha: 0.15)
+              : AppTheme.tidePool,
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+          border: Border.all(
+            color: isActive
+                ? AppTheme.amber.withValues(alpha: 0.6)
+                : AppTheme.shimmer.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive ? AppTheme.amber : AppTheme.mist,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'TEST',
+              style: AppTheme.geistMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isActive ? AppTheme.amber : AppTheme.mist,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Fixed bottom Start bar — always visible, glassmorphism effect
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1040,58 +1126,71 @@ class _FixedStartBar extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             AppTheme.void_.withValues(alpha: 0),
-            AppTheme.void_.withValues(alpha: 0.85),
+            AppTheme.void_.withValues(alpha: 0.92),
             AppTheme.void_,
           ],
-          stops: const [0.0, 0.4, 1.0],
+          stops: const [0.0, 0.35, 1.0],
         ),
       ),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, bottomPadding + 20),
+      padding: EdgeInsets.fromLTRB(24, 32, 24, bottomPadding + 20),
       child: GestureDetector(
         onTap: onStart,
         child: AnimatedBuilder(
           animation: pulseAnim,
           builder: (context, _) {
-            final glow = pulseAnim.value * 0.1;
+            final pulse = pulseAnim.value;
             return Container(
-              height: 60,
+              height: 56,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.cyan,
-                    AppTheme.cyan.withValues(alpha: 0.85),
-                  ],
+                borderRadius: BorderRadius.circular(14),
+                color: AppTheme.moonbeam,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1,
                 ),
                 boxShadow: [
+                  // Tight inner glow
                   BoxShadow(
-                    color: AppTheme.cyan.withValues(alpha: 0.25 + glow),
-                    blurRadius: 32,
+                    color: Colors.white.withValues(alpha: 0.06 + pulse * 0.04),
+                    blurRadius: 1,
+                    spreadRadius: 0,
+                  ),
+                  // Medium halo
+                  BoxShadow(
+                    color: AppTheme.moonbeam.withValues(
+                      alpha: 0.15 + pulse * 0.05,
+                    ),
+                    blurRadius: 24,
                     spreadRadius: 0,
                     offset: const Offset(0, 4),
                   ),
+                  // Wide ambient glow
                   BoxShadow(
-                    color: AppTheme.cyan.withValues(alpha: 0.08 + glow * 0.5),
-                    blurRadius: 64,
-                    spreadRadius: 8,
+                    color: AppTheme.moonbeam.withValues(
+                      alpha: 0.06 + pulse * 0.03,
+                    ),
+                    blurRadius: 48,
+                    spreadRadius: 4,
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(selectedType.icon, size: 22, color: AppTheme.void_),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Start ${selectedType.label}',
-                    style: AppTheme.geist(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.void_,
-                      letterSpacing: -0.3,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(selectedType.icon, size: 20, color: AppTheme.void_),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Start ${selectedType.label}',
+                      style: AppTheme.geist(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.void_,
+                        letterSpacing: -0.2,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -1270,7 +1369,7 @@ class _SensorPillRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: dotColor.withValues(alpha: 0.2)),
         ),
         child: Row(
@@ -1347,7 +1446,7 @@ class _RecentWorkoutCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -1358,7 +1457,7 @@ class _RecentWorkoutCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppTheme.cyan.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               session.workoutType.icon,
@@ -1392,7 +1491,7 @@ class _RecentWorkoutCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppTheme.cyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '${session.analysis!.performanceScore}',
@@ -1864,7 +1963,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.tidePool,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppTheme.shimmer),
                     ),
                     alignment: Alignment.center,
@@ -1889,7 +1988,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                       color: isScanning
                           ? AppTheme.tidePool
                           : AppTheme.cyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isScanning
                             ? AppTheme.shimmer
@@ -1971,7 +2070,7 @@ class _HrDeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -2031,7 +2130,7 @@ class _DeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -2078,14 +2177,14 @@ class _DeviceTile extends StatelessWidget {
 
 class _LiveSensorCard extends StatelessWidget {
   final String label;
-  final String value;
+  final String? value;
   final Color color;
   final IconData icon;
   final Widget child;
 
   const _LiveSensorCard({
     required this.label,
-    required this.value,
+    this.value,
     required this.color,
     required this.icon,
     required this.child,
@@ -2098,7 +2197,7 @@ class _LiveSensorCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         clipBehavior: Clip.antiAlias,
@@ -2128,15 +2227,16 @@ class _LiveSensorCard extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  Text(
-                    value,
-                    style: AppTheme.geist(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.moonbeam,
-                      letterSpacing: -0.5,
+                  if (value != null)
+                    Text(
+                      value!,
+                      style: AppTheme.geist(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.moonbeam,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2346,6 +2446,90 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) => true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini spectral bars — compact EEG band power display for sensor slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MiniSpectralBars extends StatelessWidget {
+  final WorkoutEegSample eeg;
+
+  const _MiniSpectralBars({required this.eeg});
+
+  static const _bands = [
+    ('δ', Color(0xFF7928CA)),
+    ('θ', Color(0xFF4A6CF7)),
+    ('α', Color(0xFF00E5FF)),
+    ('β', Color(0xFF46A758)),
+    ('γ', Color(0xFFF5A623)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final powers = [
+      eeg.deltaPct ?? 0,
+      eeg.thetaPct ?? 0,
+      eeg.alphaPct ?? 0,
+      eeg.betaPct ?? 0,
+      eeg.gammaPct ?? 0,
+    ];
+    final maxPower = powers.reduce(math.max).clamp(0.01, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 34, 16, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < _bands.length; i++) ...[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${(powers[i] * 100).toStringAsFixed(0)}%',
+                    style: AppTheme.geist(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: _bands[i].$2.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    height: (powers[i] / maxPower * 40).clamp(3.0, 40.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          _bands[i].$2.withValues(alpha: 0.3),
+                          _bands[i].$2,
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _bands[i].$1,
+                    style: AppTheme.geist(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: _bands[i].$2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (i < _bands.length - 1) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/services/service_providers.dart';
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/service_providers.dart';
 
 /// Screen that lets users configure which AI provider powers Miruns.
 ///
@@ -86,7 +86,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
           ),
           backgroundColor: AppTheme.seaGreen,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
       Navigator.of(context).pop();
@@ -309,15 +309,15 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
       fillColor: AppTheme.deepSea,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: AppTheme.shimmer.withValues(alpha: 0.40)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: AppTheme.shimmer.withValues(alpha: 0.40)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppTheme.glow),
       ),
       suffixIcon: suffixIcon,
@@ -341,7 +341,7 @@ class _ActiveBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: AppTheme.glow.withValues(alpha: 0.25),
           width: 0.5,
@@ -354,7 +354,7 @@ class _ActiveBanner extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: AppTheme.glow.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.auto_awesome_rounded,
@@ -496,14 +496,14 @@ class _ProviderTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Material(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: borderColor, width: 0.5),
             ),
             child: Row(
@@ -591,17 +591,17 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: filled ? color.withValues(alpha: 0.18) : Colors.transparent,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: () {
           HapticFeedback.selectionClick();
           onTap?.call();
         },
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: color.withValues(alpha: filled ? 0.40 : 0.30),
               width: 0.5,
@@ -638,7 +638,7 @@ class _InfoBox extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.deepSea,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: AppTheme.shimmer.withValues(alpha: 0.25),
           width: 0.5,

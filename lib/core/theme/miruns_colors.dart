@@ -79,15 +79,15 @@ class MirunsColors extends ThemeExtension<MirunsColors> {
   // ─── Instances ────────────────────────────────────────────────────────────
 
   static const dark = MirunsColors(
-    textStrong: Colors.white, // 100 %
-    textBody: Colors.white70, //  70 %
-    textSecondary: Color(0x99FFFFFF), //  60 %
-    textMuted: Color(0x8AFFFFFF), //  54 %
-    textSubtle: Color(0x61FFFFFF), //  38 %
-    textFaint: Color(0x4DFFFFFF), //  30 %
-    divider: Colors.white12, //  12 %
-    border: Colors.white24, //  24 %
-    borderSubtle: Colors.white10, //  10 %
+    textStrong: Color(0xFFEDEDED), // Geist foreground
+    textBody: Color(0xFFA1A1A1), // Geist gray-900
+    textSecondary: Color(0xFF888888), // Geist gray-700
+    textMuted: Color(0xFF666666), // Geist gray-600
+    textSubtle: Color(0xFF555555), // Geist gray-500
+    textFaint: Color(0xFF444444), // Geist gray-400
+    divider: Color(0xFF1F1F1F), // Geist gray-150
+    border: Color(0xFF2E2E2E), // Geist gray-250
+    borderSubtle: Color(0xFF222222), // Geist gray-200
     tintFaint: Color(0x0FFFFFFF), //   6 %
     tintSubtle: Color(0x1AFFFFFF), //  10 %
     tintMedium: Color(0x26FFFFFF), //  15 %
@@ -97,17 +97,17 @@ class MirunsColors extends ThemeExtension<MirunsColors> {
   );
 
   static const light = MirunsColors(
-    textStrong: Color(0xDD000000), // 87 %
-    textBody: Color(0xDD000000), // 87 %
-    textSecondary: Color(0x8A000000), // 54 %
-    textMuted: Color(0x73000000), // 45 %
-    textSubtle: Color(0x61000000), // 38 %
-    textFaint: Color(0x42000000), // 26 %
-    divider: Colors.black12, // 12 %
-    border: Colors.black26, // 26 %
-    borderSubtle: Colors.black12, // 12 %
+    textStrong: Color(0xFF171717), // Geist foreground
+    textBody: Color(0xFF3B3B3B), // Geist gray-900
+    textSecondary: Color(0xFF666666), // Geist gray-700
+    textMuted: Color(0xFF8F8F8F), // Geist gray-600
+    textSubtle: Color(0xFFA1A1A1), // Geist gray-500
+    textFaint: Color(0xFFCFCFCF), // Geist gray-400
+    divider: Color(0xFFEEEEEE), // Geist gray-200
+    border: Color(0xFFE5E5E5), // Geist gray-300
+    borderSubtle: Color(0xFFEEEEEE), // Geist gray-200
     tintFaint: Color(0x0F000000), //  6 %
-    tintSubtle: Color(0x1A000000), // 10 %
+    tintSubtle: Color(0x14000000), //  8 %
     tintMedium: Color(0x26000000), // 15 %
     tintStrong: Color(0x4D000000), // 30 %
     contrast: Colors.black,

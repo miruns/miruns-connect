@@ -18,9 +18,9 @@ void main() {
       expect(AppTheme.primaryColor, const Color(0xFF0070F3));
       // Accent = starlight cyan
       expect(AppTheme.accentColor, const Color(0xFF79FFE1));
-      expect(AppTheme.successColor, const Color(0xFF00B37E));
-      expect(AppTheme.warningColor, const Color(0xFFF59E0B));
-      expect(AppTheme.errorColor, const Color(0xFFFF4444));
+      expect(AppTheme.successColor, const Color(0xFF46A758));
+      expect(AppTheme.warningColor, const Color(0xFFF5A623));
+      expect(AppTheme.errorColor, const Color(0xFFE5484D));
     });
 
     test('background and surface colors are defined', () {

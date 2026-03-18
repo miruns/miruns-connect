@@ -1779,7 +1779,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
               const SizedBox(width: 8),
               Text(
                 _dailyReminderEnabled
-                    ? 'Daily body blog push is active'
+                    ? 'Daily activity recap push is active'
                     : 'Daily notification is off',
                 style: TextStyle(fontSize: 12, color: _t.body),
               ),

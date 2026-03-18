@@ -58,12 +58,28 @@ class WorkoutEegSample {
   /// Mental fatigue indicator (0.0 – 1.0, higher = more fatigued).
   final double mentalFatigue;
 
+  /// EEG band power percentages (fraction of total power, 0.0–1.0).
+  final double? deltaPct;
+  final double? thetaPct;
+  final double? alphaPct;
+  final double? betaPct;
+  final double? gammaPct;
+
+  /// Dominant EEG frequency in Hz.
+  final double? dominantHz;
+
   const WorkoutEegSample({
     required this.timestamp,
     required this.attention,
     required this.relaxation,
     required this.cognitiveLoad,
     required this.mentalFatigue,
+    this.deltaPct,
+    this.thetaPct,
+    this.alphaPct,
+    this.betaPct,
+    this.gammaPct,
+    this.dominantHz,
   });
 
   Map<String, dynamic> toJson() => {
@@ -72,6 +88,12 @@ class WorkoutEegSample {
     'rel': relaxation,
     'cog': cognitiveLoad,
     'fat': mentalFatigue,
+    if (deltaPct != null) 'dPct': deltaPct,
+    if (thetaPct != null) 'tPct': thetaPct,
+    if (alphaPct != null) 'aPct': alphaPct,
+    if (betaPct != null) 'bPct': betaPct,
+    if (gammaPct != null) 'gPct': gammaPct,
+    if (dominantHz != null) 'domHz': dominantHz,
   };
 
   factory WorkoutEegSample.fromJson(Map<String, dynamic> j) => WorkoutEegSample(
@@ -80,6 +102,12 @@ class WorkoutEegSample {
     relaxation: (j['rel'] as num).toDouble(),
     cognitiveLoad: (j['cog'] as num).toDouble(),
     mentalFatigue: (j['fat'] as num).toDouble(),
+    deltaPct: (j['dPct'] as num?)?.toDouble(),
+    thetaPct: (j['tPct'] as num?)?.toDouble(),
+    alphaPct: (j['aPct'] as num?)?.toDouble(),
+    betaPct: (j['bPct'] as num?)?.toDouble(),
+    gammaPct: (j['gPct'] as num?)?.toDouble(),
+    dominantHz: (j['domHz'] as num?)?.toDouble(),
   );
 }
 

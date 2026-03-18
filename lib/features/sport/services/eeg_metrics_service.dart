@@ -81,6 +81,7 @@ class EegMetricsService {
     final theta = bp[FrequencyBand.theta] ?? 0;
     final alpha = bp[FrequencyBand.alpha] ?? 0;
     final beta = bp[FrequencyBand.beta] ?? 0;
+    final gamma = bp[FrequencyBand.gamma] ?? 0;
 
     double attention = 0;
     if ((theta + alpha) > 0) {
@@ -116,6 +117,12 @@ class EegMetricsService {
           relaxation: relaxation,
           cognitiveLoad: cognitiveLoad,
           mentalFatigue: mentalFatigue,
+          deltaPct: total > 0 ? delta / total : 0,
+          thetaPct: total > 0 ? theta / total : 0,
+          alphaPct: total > 0 ? alpha / total : 0,
+          betaPct: total > 0 ? beta / total : 0,
+          gammaPct: total > 0 ? gamma / total : 0,
+          dominantHz: result.dominantFrequency,
         ),
       );
     }

@@ -13,6 +13,9 @@ typedef NotifContent = ({String title, String body});
 /// emoji-rich notifications with real biometric data and a clear
 /// call-to-action every time.
 ///
+/// All messaging uses sport & fitness language (activity, training,
+/// recovery, performance).
+///
 /// Designed to work both inside the main isolate (via Riverpod) and in
 /// the WorkManager background isolate (direct instantiation).
 class NotificationContentService {
@@ -193,36 +196,34 @@ class NotificationContentService {
         (
           title: '🏆 ${_fmtSteps(steps)} steps — you crushed it!',
           body:
-              'Your body is THRIVING. Read what it has to say about this epic day →',
+              'Incredible day of movement. See your full activity breakdown →',
         ),
         (
           title: '🔥 ${_fmtSteps(steps)} steps and counting!',
-          body:
-              'Your legs wrote a novel today. Open your body blog to read every chapter →',
+          body: 'Your legs put in serious work today. See the full stats →',
         ),
         (
           title: '🚀 ${_fmtSteps(steps)} steps! Who even are you?!',
           body:
-              'Seriously impressive. Your body is buzzing — see the full breakdown →',
+              'Seriously impressive. Check out your complete activity report →',
         ),
       ];
     } else if (steps >= 5000) {
       return [
         (
           title: '🚶 ${_fmtSteps(steps)} steps so far — nice rhythm!',
-          body: 'Your body noticed the movement. See today\'s story →',
+          body: 'Good movement today. See your activity summary →',
         ),
         (
           title: '👟 ${_fmtSteps(steps)} steps in the bank',
-          body: 'Your body has thoughts about today\'s pace. Check them out →',
+          body: 'Solid pace today. Check your progress →',
         ),
       ];
     } else {
       return [
         (
           title: '🌱 ${_fmtSteps(steps)} steps today',
-          body:
-              'Every step counts. Your body is tracking it all — see the full picture →',
+          body: 'Every step counts. See your full activity picture →',
         ),
       ];
     }
@@ -233,33 +234,30 @@ class NotificationContentService {
     if (hours >= 8) {
       return [
         (
-          title: '😴 ${h}h of sleep — your body is grateful',
-          body: 'Well-rested bodies tell the best stories. Read yours →',
+          title: '😴 ${h}h of sleep — great recovery',
+          body: 'Well-rested and ready to perform. See your sleep stats →',
         ),
         (
           title: '🌙 Solid $h hours of rest last night',
-          body:
-              'Your body recharged nicely. See how it\'s reflecting that today →',
+          body: 'Quality recovery. See how it impacts today\'s readiness →',
         ),
       ];
     } else if (hours >= 6) {
       return [
         (
           title: '🛏️ ${h}h sleep — decent night',
-          body: 'Not bad! Your body has some observations. Take a look →',
+          body: 'Not bad! See your recovery insights →',
         ),
       ];
     } else if (hours > 0) {
       return [
         (
-          title: '⚡ Only ${h}h of sleep — your body noticed',
-          body:
-              'Short night. Your body wrote about how it\'s coping. Worth a read →',
+          title: '⚡ Only ${h}h of sleep — recovery affected',
+          body: 'Short night. Check your readiness and recovery tips →',
         ),
         (
-          title: '☕ ${h}h sleep. Coffee alone won\'t fix this.',
-          body:
-              'Your body has recovery tips baked into today\'s story. Check in →',
+          title: '☕ ${h}h sleep. Take it easy today.',
+          body: 'Low recovery — see how it affects your training readiness →',
         ),
       ];
     }
@@ -270,13 +268,12 @@ class NotificationContentService {
     return [
       (
         title: '❤️ Heart rate: $hr bpm',
-        body:
-            'Your heart has its own rhythm today. See the full story in your body blog →',
+        body: 'See your heart rate trends and training zones →',
       ),
       (
-        title: '💓 $hr bpm — your heart is talking',
+        title: '💓 $hr bpm — check your cardio data',
         body:
-            'Pulse, pace, patterns. Your body captured it all. Read today\'s entry →',
+            'Pulse, pace, patterns — all captured. See your heart rate insights →',
       ),
     ];
   }
@@ -289,12 +286,12 @@ class NotificationContentService {
       (
         title: '🌡️ $t°C in $city$weatherBit',
         body:
-            'Your environment shapes your body\'s story. Today\'s chapter is ready →',
+            'Outdoor conditions affect performance. See how today\'s weather factors in →',
       ),
       (
-        title: '📍 $city · $t°C — your body feels it',
+        title: '📍 $city · $t°C — training conditions',
         body:
-            'Temperature, air, UV — see how outdoor conditions show up in your biometrics →',
+            'Temperature, air, UV — see how outdoor conditions impact your activity →',
       ),
     ];
   }
@@ -304,9 +301,9 @@ class NotificationContentService {
     if (aqi > 150) {
       return [
         (
-          title: '🟠 AQI $aqi$where — your body flagged this',
+          title: '🟠 AQI $aqi$where — poor air quality',
           body:
-              'Air quality isn\'t great. Your body blog explains what it means for you →',
+              'Air quality is low. Consider adjusting your outdoor training →',
         ),
       ];
     }
@@ -314,7 +311,7 @@ class NotificationContentService {
       (
         title: '🌫️ AQI $aqi$where today',
         body:
-            'Your body is factoring air quality into today\'s narrative. Take a look →',
+            'Air quality factors into your training conditions. Take a look →',
       ),
     ];
   }
@@ -328,14 +325,14 @@ class NotificationContentService {
             '${entry.summary.length > 80 ? '${entry.summary.substring(0, 77)}…' : entry.summary} — Tap to read →',
       ),
       (
-        title: '$mood Your body\'s journal is ready',
+        title: '$mood Your daily journal is ready',
         body:
-            '"${entry.headline}" — feeling ${entry.mood}. Open to read today\'s narrative →',
+            '"${entry.headline}" — feeling ${entry.mood}. Open to read today\'s recap →',
       ),
       (
-        title: '$mood Fresh body blog just dropped',
+        title: '$mood Fresh daily recap just dropped',
         body:
-            'Today\'s mood: ${entry.mood}. Your body has a lot to say — dive in →',
+            'Today\'s mood: ${entry.mood}. See your full activity & wellness summary →',
       ),
     ];
   }
@@ -346,23 +343,23 @@ class NotificationContentService {
         (
           title: '🏅 $days-day streak — legendary!',
           body:
-              'A whole month of body awareness. Your consistency is inspiring →',
+              'A whole month of consistent tracking. Your dedication is paying off →',
         ),
         (
-          title: '👑 $days days. You\'re a machine.',
-          body: 'Your body has never been more understood. Keep it going →',
+          title: '👑 $days days. You\'re unstoppable.',
+          body: 'Consistency builds results. Keep the momentum going →',
         ),
       ];
     } else if (days >= 7) {
       return [
         (
           title: '🔥 $days days in a row!',
-          body:
-              'Your body loves the consistency. Keep the streak alive — read today\'s story →',
+          body: 'Consistency is key to progress. Keep the streak alive →',
         ),
         (
           title: '💪 $days-day streak going strong',
-          body: 'You\'re building a real body diary. Don\'t break the chain →',
+          body:
+              'You\'re building a solid training log. Don\'t break the chain →',
         ),
       ];
     }
@@ -370,7 +367,7 @@ class NotificationContentService {
       (
         title: '✨ $days-day streak!',
         body:
-            'Your body is becoming a regular author. Keep it going — today\'s post is up →',
+            'You\'re building a habit. Keep it going — today\'s activity is logged →',
       ),
     ];
   }
@@ -379,12 +376,11 @@ class NotificationContentService {
     return [
       (
         title: '📊 $count captures logged today',
-        body:
-            'Your body has rich data to work with. See the insights it uncovered →',
+        body: 'Rich data means better insights. See what Miruns uncovered →',
       ),
       (
         title: '🎯 $count snapshots — data-rich day!',
-        body: 'More captures = richer story. Your body blog is packed today →',
+        body: 'More captures = deeper insights. See your detailed report →',
       ),
     ];
   }
@@ -393,13 +389,12 @@ class NotificationContentService {
     return [
       (
         title: '💪 $workouts workout${workouts > 1 ? 's' : ''} logged today!',
-        body: 'Your body registered the effort. See how it tells the story →',
+        body: 'Great effort. See your training summary and stats →',
       ),
       (
         title:
             '🏋️ You showed up today — $workouts session${workouts > 1 ? 's' : ''}!',
-        body:
-            'Sweat, heart rate, recovery — your body blog has the full recap →',
+        body: 'Effort, heart rate, recovery — see the full workout recap →',
       ),
     ];
   }
@@ -409,8 +404,7 @@ class NotificationContentService {
     return [
       (
         title: '🔥 $cal kcal burned so far',
-        body:
-            'Your body is keeping score. See the full energy story in today\'s blog →',
+        body: 'See your energy expenditure and calorie breakdown →',
       ),
     ];
   }
@@ -427,114 +421,108 @@ class NotificationContentService {
   /// Nudge messages for days with no data yet.
   static const nudgeMessages = <NotifContent>[
     (
-      title: '📱 Your body is waiting to be heard',
+      title: '📱 No activity logged yet today',
       body:
-          'No captures yet today. 10 seconds for a quick snapshot — your future self will thank you →',
+          'A quick capture takes 10 seconds — get your daily tracking started →',
     ),
     (
-      title: '🫣 Radio silence from your body',
+      title: '🫣 No data captured yet today',
       body:
-          'It has things to say! Tap for a quick capture and let your body tell its story →',
+          'Tap to log a quick capture and start building today\'s activity picture →',
     ),
     (
-      title: '👋 Hey — your body has been quiet today',
-      body: 'One quick capture = one data-rich story tonight. Start now →',
+      title: '👋 Hey — nothing tracked yet today',
+      body: 'One quick capture now = full insights tonight. Start now →',
     ),
     (
-      title: '🤫 Your body blog has a blank page today',
+      title: '🤫 Today\'s activity log is empty',
       body: 'Fill it with a capture. Just one tap, real data, zero effort →',
     ),
     (
-      title: '⏰ Don\'t leave your body on read',
+      title: '⏰ Don\'t miss today\'s data',
       body:
-          'It\'s been collecting signals all day. Capture them before they fade →',
+          'Your sensors have been collecting all day. Capture them before they fade →',
     ),
     (
-      title: '🫠 Your body blog is feeling empty',
-      body:
-          'Give it something to work with! One capture now = real insights later →',
+      title: '🫠 No captures yet — let\'s fix that',
+      body: 'One capture now = real fitness insights later →',
     ),
     (
-      title: '📝 Blank page energy today',
-      body: 'Your body wants to write but needs data first. Quick capture? →',
+      title: '📝 Empty log today',
+      body: 'A quick capture is all it takes to start tracking →',
     ),
     (
-      title: '🧬 Your body has stories to tell',
-      body: 'But it needs a capture first. One tap — that\'s all it takes →',
+      title: '🧬 Your data is waiting to be captured',
+      body: 'One tap — that\'s all it takes to log today\'s activity →',
     ),
   ];
 
   /// Engaging fallback messages when data can't be read.
   static const engagingFallbacks = <NotifContent>[
     (
-      title: '🧬 Your body wrote something today',
-      body: 'Steps, sleep, heart rate — it\'s all there. Open your body blog →',
+      title: '🧬 Your daily recap is ready',
+      body: 'Steps, sleep, heart rate — it\'s all there. Open Miruns →',
     ),
     (
-      title: '📖 New chapter in your body\'s diary',
+      title: '📖 New entry in your activity journal',
       body: 'Every day tells a different story. Today\'s is waiting for you →',
     ),
     (
-      title: '🔬 Your daily body report is in',
-      body: 'Real data, real insights, written by your own body. Read it now →',
+      title: '🔬 Your daily activity report is in',
+      body: 'Real data, real insights from your day. Check it now →',
     ),
     (
-      title: '💡 Your body dropped some knowledge',
+      title: '💡 New insights from today\'s activity',
       body:
-          'Patterns you didn\'t notice, signals you missed. It\'s all in today\'s blog →',
+          'Patterns you didn\'t notice, trends worth seeing. It\'s all in today\'s recap →',
     ),
     (
-      title: '🎯 Body check-in time!',
+      title: '🎯 Daily check-in time!',
       body:
-          'Your body has been tracking everything. See the summary — you might be surprised →',
+          'Miruns has been tracking everything. See the summary — you might be surprised →',
     ),
     (
-      title: '⚡ Fresh insights from your body',
+      title: '⚡ Fresh fitness insights available',
       body:
-          'Heart, steps, sleep, mood — compiled into today\'s story. Don\'t miss it →',
+          'Heart, steps, sleep, recovery — compiled into today\'s report. Don\'t miss it →',
     ),
     (
-      title: '🌟 Your body\'s daily dispatch',
+      title: '🌟 Your daily fitness dispatch',
       body:
-          'No fluff, just your real biometrics turned into a story. Tap to read →',
+          'No fluff, just your real biometrics in one clear summary. Tap to read →',
     ),
     (
-      title: '🧠 Your body is smarter than you think',
-      body: 'It noticed things today. Check out what it observed →',
+      title: '🧠 Miruns found interesting patterns',
+      body: 'It spotted trends today. Check out the insights →',
     ),
     (
-      title: '🫀 Pulse. Steps. Sleep. Story.',
+      title: '🫀 Pulse. Steps. Sleep. Performance.',
+      body: 'Today\'s activity data is compiled. See your latest report →',
+    ),
+    (
+      title: '📊 Data in, insights out',
+      body: 'Miruns turned today\'s activity into actionable insights →',
+    ),
+    (
+      title: '🌊 Today\'s activity overview',
+      body: 'Energy, recovery, movement — your full daily picture →',
+    ),
+    (
+      title: '🔋 How\'s your recovery today?',
       body:
-          'Your body turned today\'s numbers into narrative. Read the latest →',
+          'Sleep, steps, and stress all factor in. See your readiness score →',
     ),
     (
-      title: '📊 Data in, story out',
-      body:
-          'Your body collected the signals. Miruns turned them into insight →',
+      title: '💬 Your daily recap is waiting',
+      body: 'Real data. Real insights. Open it →',
     ),
     (
-      title: '🌊 Ride today\'s body wave',
-      body:
-          'Energy, recovery, movement — your body captured the full picture →',
+      title: '🏅 Here\'s what Miruns captured today',
+      body: 'Steps, heart rate, training — all in today\'s activity summary →',
     ),
     (
-      title: '🔋 How\'s your body battery today?',
-      body:
-          'Sleep, steps, and stress all factor in. Your body blog has the answer →',
-    ),
-    (
-      title: '💬 Your body left you a voice note',
-      body: 'Well, a text note. With data. And insights. Open it →',
-    ),
-    (
-      title: '🎤 Your body has the mic today',
-      body:
-          'It\'s not holding back. Steps, rhythm, environment — all in today\'s narrative →',
-    ),
-    (
-      title: '🪞 Mirror check: the inside edition',
-      body:
-          'Forget the outside — your body blog shows what\'s really happening →',
+      title: '🪞 Day in review: the full breakdown',
+      body: 'See your complete activity and recovery data →',
     ),
   ];
 }

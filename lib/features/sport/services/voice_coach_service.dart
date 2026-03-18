@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../../core/services/tts_service.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';
 
@@ -12,14 +13,19 @@ import '../models/workout_session.dart';
 /// Uses platform TTS (no network needed) so it works offline and
 /// with any Bluetooth headphones.
 class VoiceCoachService {
-  FlutterTts? _tts;
+  final TtsService _tts;
   bool _initialized = false;
   bool _enabled = true;
   bool _speaking = false;
 
+  VoiceCoachService({required TtsService tts}) : _tts = tts;
+
   /// Queue to avoid overlapping speech.
   final List<String> _queue = [];
   Timer? _cooldown;
+  Timer? _urgentCooldown;
+
+  static final _rng = Random();
 
   /// Minimum interval between voice prompts per level.
   static const _cooldownByLevel = {
@@ -34,24 +40,11 @@ class VoiceCoachService {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    _tts = FlutterTts();
-
-    await _tts!.setLanguage('en-US');
-    await _tts!.setSpeechRate(0.5);
-    await _tts!.setVolume(0.9);
-    await _tts!.setPitch(1.0);
-
-    // Route audio to music stream so it plays through earphones.
-    await _tts!.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
-      IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-      IosTextToSpeechAudioCategoryOptions.duckOthers,
-    ]);
-
-    _tts!.setCompletionHandler(() {
+    await _tts.initialize();
+    _tts.onComplete = () {
       _speaking = false;
       _processQueue();
-    });
-
+    };
     _initialized = true;
   }
 
@@ -74,10 +67,27 @@ class VoiceCoachService {
     await _speak(msg);
   }
 
-  /// Speak an AI-generated coaching insight.
+  /// Speak an AI-generated coaching insight with companion delivery.
+  ///
+  /// Wraps the raw insight in a warm lead-in phrase so it feels like
+  /// a real coach checking in through the earphones. Urgent insights
+  /// (fatigue, stress) bypass the normal cooldown.
   Future<void> speakInsight(WorkoutInsight insight) async {
-    if (_cooldown?.isActive == true) return;
-    await _speak(insight.message);
+    final urgent = _isUrgent(insight.type);
+
+    // Urgent insights use a shorter cooldown; normal ones respect full cooldown
+    if (!urgent && _cooldown?.isActive == true) return;
+    if (urgent && _urgentCooldown?.isActive == true) return;
+
+    // Companion-style delivery: warm lead-in → pause → message
+    final leadIn = _leadInFor(insight.type);
+    final wrapped = '$leadIn. ${insight.message}';
+
+    await _speak(wrapped, priority: urgent);
+
+    if (urgent) {
+      _urgentCooldown = Timer(const Duration(seconds: 15), () {});
+    }
     _cooldown = Timer(
       _cooldownByLevel[_level] ?? const Duration(seconds: 30),
       () {},
@@ -135,23 +145,85 @@ class VoiceCoachService {
   Future<void> stop() async {
     _queue.clear();
     _cooldown?.cancel();
-    if (_tts != null) {
-      await _tts!.stop();
-    }
+    _urgentCooldown?.cancel();
+    await _tts.stop();
     _speaking = false;
   }
 
   void dispose() {
     stop();
-    _tts?.stop();
+    _tts.dispose();
     _cooldown?.cancel();
+    _urgentCooldown?.cancel();
   }
+
+  // ── Companion personality ─────────────────────────────────────────────────
+
+  /// Whether this insight type is urgent enough to bypass normal cooldown.
+  static bool _isUrgent(WorkoutInsightType type) => switch (type) {
+    WorkoutInsightType.fatigue => true,
+    WorkoutInsightType.stress => true,
+    _ => false,
+  };
+
+  /// Short, warm lead-in phrase that humanises the delivery.
+  ///
+  /// Varies randomly so repetitive insights don't sound robotic.
+  static String _leadInFor(WorkoutInsightType type) => switch (type) {
+    WorkoutInsightType.fatigue => _pick([
+      'Heads up',
+      'Just so you know',
+      'Quick check',
+    ]),
+    WorkoutInsightType.energy => _pick([
+      'Looking good',
+      'Nice one',
+      'Good news',
+    ]),
+    WorkoutInsightType.stress => _pick([
+      'Hey',
+      'Take a moment',
+      'Quick thought',
+    ]),
+    WorkoutInsightType.paceAdvice => _pick([
+      'Pace check',
+      'Quick note',
+      'About your pace',
+    ]),
+    WorkoutInsightType.zoneAlert => _pick([
+      'Zone update',
+      'Heart rate check',
+      'Quick flag',
+    ]),
+    WorkoutInsightType.encouragement => _pick([
+      'Hey',
+      'Keep it up',
+      'Right there with you',
+    ]),
+    WorkoutInsightType.recovery => _pick([
+      'Recovery note',
+      'Checking in',
+      'Quick update',
+    ]),
+    WorkoutInsightType.info => _pick([
+      'Just so you know',
+      'Quick update',
+      'Note',
+    ]),
+  };
+
+  static String _pick(List<String> options) =>
+      options[_rng.nextInt(options.length)];
 
   // ── Private ───────────────────────────────────────────────────────────────
 
-  Future<void> _speak(String text) async {
+  Future<void> _speak(String text, {bool priority = false}) async {
     if (!_enabled || !_initialized) return;
-    _queue.add(text);
+    if (priority) {
+      _queue.insert(0, text);
+    } else {
+      _queue.add(text);
+    }
     _processQueue();
   }
 
@@ -160,7 +232,7 @@ class VoiceCoachService {
     _speaking = true;
     final text = _queue.removeAt(0);
     try {
-      await _tts!.speak(text);
+      await _tts.speak(text);
     } catch (e) {
       debugPrint('[VoiceCoach] TTS error: $e');
       _speaking = false;

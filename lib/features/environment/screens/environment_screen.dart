@@ -598,7 +598,7 @@ class _EnvironmentScreenState extends State<EnvironmentScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text('$label: $value', style: const TextStyle(fontSize: 12)),
     );
