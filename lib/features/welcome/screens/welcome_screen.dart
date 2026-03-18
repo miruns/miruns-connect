@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../eeg/widgets/m_signal_logo.dart';
 
 /// Full-screen welcome / splash screen with animated miruns brand logo.
 /// Shown on every cold start before entering the main app.
@@ -365,16 +366,8 @@ class _BrandOrb extends StatelessWidget {
               color: accent.withValues(alpha: 0.06 + breathe * 0.02),
             ),
           ),
-          // Logo image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Image.asset(
-              'assets/images/miruns-icon-512.png',
-              width: 64,
-              height: 64,
-              filterQuality: FilterQuality.high,
-            ),
-          ),
+          // Animated signal logo
+          const MSignalLogo(size: 64, loop: true),
         ],
       ),
     );
