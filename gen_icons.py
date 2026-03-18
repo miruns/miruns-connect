@@ -49,13 +49,14 @@ def _lerp(c1, c2, t):
     return tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
 
 
-def make_icon(px):
+def _layout(px, padding=PADDING):
+    """Compute layout transforms shared by icon renderers."""
     pts, global_ts = _sample_path()
     bx0 = min(p[0] for p in pts)
     bx1 = max(p[0] for p in pts)
     by0 = min(p[1] for p in pts)
     by1 = max(p[1] for p in pts)
-    pad   = PADDING * px
+    pad   = padding * px
     avail = px - 2 * pad
     scale = min(avail / (bx1 - bx0), avail / (by1 - by0))
     draw_w = (bx1 - bx0) * scale
@@ -68,6 +69,11 @@ def make_icon(px):
 
     pixel_pts = [to_px(fx, fy) for fx, fy in pts]
     stroke_w = max(int(px * 0.052), 2)
+    return pixel_pts, global_ts, stroke_w
+
+
+def make_icon(px):
+    pixel_pts, global_ts, stroke_w = _layout(px)
 
     base = Image.new("RGBA", (px, px), BG_COLOR + (255,))
 
@@ -98,12 +104,43 @@ def make_icon(px):
     return base.convert("RGB")
 
 
+def make_notification_icon(px):
+    """Android notification small icon: white M-wave on transparent background.
+
+    Must be monochrome (alpha-only). Android uses only the alpha channel;
+    all opaque pixels are tinted by the system accent colour.
+    """
+    pixel_pts, _, stroke_w = _layout(px, padding=0.18)
+
+    img = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    white = (255, 255, 255, 255)
+    r = max(stroke_w // 2, 1)
+
+    for i in range(1, len(pixel_pts)):
+        draw.line([pixel_pts[i-1], pixel_pts[i]], fill=white, width=stroke_w)
+        x, y = pixel_pts[i-1]
+        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=white)
+    x, y = pixel_pts[-1]
+    draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=white)
+
+    return img
+
+
 ANDROID_ICONS = {
     r"android\app\src\main\res\mipmap-mdpi\ic_launcher.png":    48,
     r"android\app\src\main\res\mipmap-hdpi\ic_launcher.png":    72,
     r"android\app\src\main\res\mipmap-xhdpi\ic_launcher.png":   96,
     r"android\app\src\main\res\mipmap-xxhdpi\ic_launcher.png":  144,
     r"android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png": 192,
+}
+
+ANDROID_NOTIFICATION_ICONS = {
+    r"android\app\src\main\res\drawable-mdpi\ic_notification.png":    24,
+    r"android\app\src\main\res\drawable-hdpi\ic_notification.png":    36,
+    r"android\app\src\main\res\drawable-xhdpi\ic_notification.png":   48,
+    r"android\app\src\main\res\drawable-xxhdpi\ic_notification.png":  72,
+    r"android\app\src\main\res\drawable-xxxhdpi\ic_notification.png": 96,
 }
 
 IOS_ICONS = {
@@ -134,6 +171,14 @@ def generate_all():
         img = make_icon(size)
         img.save(full_path, "PNG")
         print(f"  OK  {size:>4}px  {rel_path}")
+
+    for rel_path, size in ANDROID_NOTIFICATION_ICONS.items():
+        full_path = os.path.join(BASE_DIR, rel_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        img = make_notification_icon(size)
+        img.save(full_path, "PNG")
+        print(f"  OK  {size:>4}px  {rel_path}")
+
     print("\nAll icons generated.")
 
 

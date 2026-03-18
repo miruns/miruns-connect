@@ -185,7 +185,9 @@ class NotificationService {
   Future<void> initialize() async {
     if (_initialised) return;
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
     const iosInit = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -356,6 +358,7 @@ class NotificationService {
           _dailyChannelId,
           _dailyChannelName,
           channelDescription: _dailyChannelDescription,
+          icon: '@drawable/ic_notification',
           importance: Importance.high,
           priority: Priority.high,
           showWhen: true,
@@ -392,6 +395,7 @@ class NotificationService {
           _smartChannelId,
           _smartChannelName,
           channelDescription: _smartChannelDescription,
+          icon: '@drawable/ic_notification',
           importance: Importance.high,
           priority: Priority.high,
           showWhen: true,
@@ -422,6 +426,7 @@ class NotificationService {
           _dailyChannelId,
           _dailyChannelName,
           channelDescription: _dailyChannelDescription,
+          icon: '@drawable/ic_notification',
           importance: Importance.high,
           priority: Priority.high,
           showWhen: true,

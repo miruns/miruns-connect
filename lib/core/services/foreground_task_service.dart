@@ -66,6 +66,9 @@ class ForegroundTaskService {
       serviceId: 256,
       notificationTitle: '🫀 Miruns',
       notificationText: 'Tracking your activity',
+      notificationIcon: const NotificationIcon(
+        metaDataName: 'com.miruns.NOTIFICATION_ICON',
+      ),
       callback: _foregroundTaskCallback,
     );
 
