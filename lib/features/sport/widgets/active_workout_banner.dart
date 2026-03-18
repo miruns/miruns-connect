@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/services/service_providers.dart';
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/services/service_providers.dart';
 
 /// Compact persistent banner shown at the top of every screen while a
 /// workout is active — like a music player mini-bar.
@@ -34,7 +34,7 @@ class ActiveWorkoutBanner extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: state.isPaused
                 ? AppTheme.shimmer
@@ -112,7 +112,7 @@ class ActiveWorkoutBanner extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppTheme.amber.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
                   'PAUSED',

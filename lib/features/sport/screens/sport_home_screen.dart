@@ -704,7 +704,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 color: isSelected
                                     ? AppTheme.cyan.withValues(alpha: 0.10)
                                     : AppTheme.tidePool.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppTheme.cyan.withValues(alpha: 0.6)
@@ -776,7 +776,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                     AppTheme.tidePool,
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: AppTheme.cyan.withValues(alpha: 0.12),
                                 ),
@@ -845,7 +845,7 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: AppTheme.tidePool,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: AppTheme.cyan.withValues(
                                       alpha: 0.15,
@@ -1040,58 +1040,71 @@ class _FixedStartBar extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             AppTheme.void_.withValues(alpha: 0),
-            AppTheme.void_.withValues(alpha: 0.85),
+            AppTheme.void_.withValues(alpha: 0.92),
             AppTheme.void_,
           ],
-          stops: const [0.0, 0.4, 1.0],
+          stops: const [0.0, 0.35, 1.0],
         ),
       ),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, bottomPadding + 20),
+      padding: EdgeInsets.fromLTRB(24, 32, 24, bottomPadding + 20),
       child: GestureDetector(
         onTap: onStart,
         child: AnimatedBuilder(
           animation: pulseAnim,
           builder: (context, _) {
-            final glow = pulseAnim.value * 0.1;
+            final pulse = pulseAnim.value;
             return Container(
-              height: 60,
+              height: 56,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.cyan,
-                    AppTheme.cyan.withValues(alpha: 0.85),
-                  ],
+                borderRadius: BorderRadius.circular(14),
+                color: AppTheme.moonbeam,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1,
                 ),
                 boxShadow: [
+                  // Tight inner glow
                   BoxShadow(
-                    color: AppTheme.cyan.withValues(alpha: 0.25 + glow),
-                    blurRadius: 32,
+                    color: Colors.white.withValues(alpha: 0.06 + pulse * 0.04),
+                    blurRadius: 1,
+                    spreadRadius: 0,
+                  ),
+                  // Medium halo
+                  BoxShadow(
+                    color: AppTheme.moonbeam.withValues(
+                      alpha: 0.15 + pulse * 0.05,
+                    ),
+                    blurRadius: 24,
                     spreadRadius: 0,
                     offset: const Offset(0, 4),
                   ),
+                  // Wide ambient glow
                   BoxShadow(
-                    color: AppTheme.cyan.withValues(alpha: 0.08 + glow * 0.5),
-                    blurRadius: 64,
-                    spreadRadius: 8,
+                    color: AppTheme.moonbeam.withValues(
+                      alpha: 0.06 + pulse * 0.03,
+                    ),
+                    blurRadius: 48,
+                    spreadRadius: 4,
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(selectedType.icon, size: 22, color: AppTheme.void_),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Start ${selectedType.label}',
-                    style: AppTheme.geist(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.void_,
-                      letterSpacing: -0.3,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(selectedType.icon, size: 20, color: AppTheme.void_),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Start ${selectedType.label}',
+                      style: AppTheme.geist(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.void_,
+                        letterSpacing: -0.2,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -1270,7 +1283,7 @@ class _SensorPillRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: dotColor.withValues(alpha: 0.2)),
         ),
         child: Row(
@@ -1347,7 +1360,7 @@ class _RecentWorkoutCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -1358,7 +1371,7 @@ class _RecentWorkoutCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: AppTheme.cyan.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               session.workoutType.icon,
@@ -1392,7 +1405,7 @@ class _RecentWorkoutCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppTheme.cyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '${session.analysis!.performanceScore}',
@@ -1864,7 +1877,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.tidePool,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppTheme.shimmer),
                     ),
                     alignment: Alignment.center,
@@ -1889,7 +1902,7 @@ class _HrScanSheetState extends State<_HrScanSheet> {
                       color: isScanning
                           ? AppTheme.tidePool
                           : AppTheme.cyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isScanning
                             ? AppTheme.shimmer
@@ -1971,7 +1984,7 @@ class _HrDeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -2031,7 +2044,7 @@ class _DeviceTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppTheme.shimmer),
         ),
         child: Row(
@@ -2098,7 +2111,7 @@ class _LiveSensorCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.tidePool,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         clipBehavior: Clip.antiAlias,
