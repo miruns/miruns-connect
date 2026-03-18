@@ -15,6 +15,9 @@ import 'notification_content_service.dart';
 ///
 /// Plus a **Smart Insights** channel for data-driven notifications
 /// triggered from background captures.
+///
+/// All messaging uses sport & fitness language (activity, training,
+/// recovery, performance).
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
 
@@ -40,19 +43,19 @@ class NotificationService {
   // ── Channel IDs ─────────────────────────────────────────────────────────
 
   static const _dailyChannelId = 'miruns_daily_reminder';
-  static const _dailyChannelName = 'Daily Body Blog';
+  static const _dailyChannelName = 'Daily Activity Recap';
   static const _dailyChannelDescription =
-      'A daily reminder to check your body blog';
+      'Morning and evening recaps of your training and recovery';
 
   static const _smartChannelId = 'miruns_smart_insights';
-  static const _smartChannelName = 'Smart Body Insights';
+  static const _smartChannelName = 'Smart Fitness Insights';
   static const _smartChannelDescription =
-      'Data-driven notifications with your real biometrics';
+      'Data-driven notifications based on your real activity and biometrics';
 
   static const persistentChannelId = 'miruns_persistent';
-  static const _persistentChannelName = 'Body Monitoring';
+  static const _persistentChannelName = 'Activity Monitoring';
   static const _persistentChannelDescription =
-      'Keeps Miruns connected to your body in the background';
+      'Keeps Miruns tracking your activity in the background';
 
   static const _morningNotifId = 9001;
   static const _eveningNotifId = 9002;
@@ -63,58 +66,58 @@ class NotificationService {
 
   static const morningMessages = <({String title, String body})>[
     (
-      title: '☀️ Good morning — your body has news',
+      title: '☀️ Good morning — your overnight stats are in',
       body:
-          'Sleep score, recovery, overnight heart rate — it\'s all in your body blog →',
+          'Sleep, recovery, resting heart rate — see how your night set up today →',
     ),
     (
-      title: '🌅 Rise & read your body',
-      body: 'Your body tracked your night. See what happened while you slept →',
+      title: '🌅 Rise & check your recovery',
+      body: 'Miruns tracked your night. See your sleep and readiness score →',
     ),
     (
-      title: '🧬 Your body wrote you an overnight report',
+      title: '🧬 Your overnight recovery report is ready',
       body:
-          'Sleep, heart rate, recovery — all there. Start your day informed →',
+          'Sleep quality, heart rate, rest — everything you need to plan your day →',
     ),
     (
-      title: '⚡ How charged is your body battery?',
+      title: '⚡ How\'s your energy level this morning?',
       body:
-          'Sleep quality + overnight vitals = your energy forecast. Check it →',
+          'Sleep quality + overnight vitals = your readiness forecast. Check it →',
     ),
     (
-      title: '🫀 Your body has a morning briefing',
+      title: '🫀 Morning briefing: recovery & readiness',
       body:
           'Heart, sleep, readiness — one tap to see how you\'re starting the day →',
     ),
     (
-      title: '📖 New day, new body chapter',
+      title: '📖 New day, fresh training data',
       body:
-          'Yesterday\'s story is written. Today\'s is just starting — check in →',
+          'Yesterday\'s activity is logged. Today\'s starts now — check your baseline →',
     ),
     (
-      title: '🎯 Body check-in: start of day',
-      body: 'Your body tracked everything overnight. See the summary →',
+      title: '🎯 Morning check-in: how rested are you?',
+      body: 'Your overnight data is ready. See the recovery summary →',
     ),
     (
-      title: '🔬 Your morning body report is in',
-      body: 'Real data from your real night. Open your body blog →',
+      title: '🔬 Your morning recovery report is in',
+      body: 'Real sleep data from last night. See your readiness →',
     ),
     (
-      title: '💡 Your body knows how you slept',
-      body: 'And it has opinions. See the overnight data →',
+      title: '💡 Miruns knows how you slept',
+      body: 'And it has insights. See your overnight recovery data →',
     ),
     (
-      title: '🌟 Morning insight from your body',
+      title: '🌟 Morning insight: today\'s baseline',
       body:
-          'Sleep, recovery, resting heart rate — today\'s baseline is ready →',
+          'Sleep, recovery, resting heart rate — you\'re ready to train. See the data →',
     ),
     (
-      title: '🏃 Ready for today?',
-      body: 'Your body measured your readiness overnight. See how you scored →',
+      title: '🏃 Ready to train today?',
+      body: 'Your recovery score is in. See how your night went →',
     ),
     (
-      title: '🧘 A moment of body awareness',
-      body: 'Before the day takes over — check how your body is doing →',
+      title: '🧘 Pre-workout awareness',
+      body: 'Before you train — check your recovery and readiness →',
     ),
   ];
 
@@ -122,57 +125,55 @@ class NotificationService {
 
   static const eveningMessages = <({String title, String body})>[
     (
-      title: '🌙 Your body\'s daily wrap-up',
+      title: '🌙 Your daily activity wrap-up',
       body:
-          'Steps, heart, movement, environment — today\'s full story is ready →',
+          'Steps, heart rate, movement, training — today\'s full recap is ready →',
     ),
     (
-      title: '📊 End-of-day body report',
-      body: 'Your body collected data all day. See the complete picture →',
+      title: '📊 End-of-day performance report',
+      body: 'Miruns tracked your entire day. See the complete picture →',
     ),
     (
-      title: '🔥 What did your body do today?',
-      body:
-          'Steps walked, calories burned, heart patterns — all compiled for you →',
+      title: '🔥 What did you accomplish today?',
+      body: 'Steps, calories burned, heart patterns — all compiled for you →',
     ),
     (
-      title: '📝 Your body published today\'s post',
-      body: 'A first-person account of your entire day. Written by your data →',
+      title: '📝 Today\'s activity summary is ready',
+      body: 'A complete account of your day — movement, training, recovery →',
     ),
     (
-      title: '🧠 Your body noticed things today',
-      body: 'Patterns, anomalies, streaks — check what it observed →',
+      title: '🧠 Miruns spotted patterns today',
+      body: 'Trends, anomalies, streaks — check what it found →',
     ),
     (
-      title: '💬 Your body left you a note',
-      body: 'With real data. And real insights. Open it →',
+      title: '💬 Your evening recap is waiting',
+      body: 'Real data. Real insights from your day. Open it →',
     ),
     (
-      title: '🫀 Pulse. Steps. Story.',
-      body:
-          'Your body turned today\'s numbers into narrative. Read the evening edition →',
+      title: '🫀 Pulse. Steps. Performance.',
+      body: 'Today\'s numbers are in. See your evening activity recap →',
     ),
     (
-      title: '🪞 Day in review: the inside edition',
-      body: 'Forget appearances — your body blog shows what really happened →',
+      title: '🪞 Day in review: the full picture',
+      body: 'Training, recovery, movement — see what really happened today →',
     ),
     (
-      title: '🌊 Today\'s body wave',
+      title: '🌊 Today\'s activity overview',
       body: 'Energy, recovery, movement — the full picture before you rest →',
     ),
     (
-      title: '🎤 Your body has the mic tonight',
-      body: 'Steps, rhythm, environment — all in today\'s evening narrative →',
+      title: '🏅 Here\'s how you performed today',
+      body: 'Steps, training, heart rate — all in your evening recap →',
     ),
     (
-      title: '🚀 Your body has end-of-day news',
+      title: '🚀 End-of-day fitness update',
       body:
-          'Not just numbers — a story. Steps, rest, stress. All real. All you →',
+          'Steps, rest, intensity — all logged. See your complete daily summary →',
     ),
     (
       title: '🎯 One tap. Your whole day.',
       body:
-          'Your body blog summarised everything. Don\'t miss tonight\'s edition →',
+          'Miruns summarised all your activity. Don\'t miss tonight\'s recap →',
     ),
   ];
 

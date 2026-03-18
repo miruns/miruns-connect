@@ -483,7 +483,7 @@ class ActiveWorkoutNotifier extends ChangeNotifier {
   void _restoreForegroundNotification() {
     FlutterForegroundTask.updateService(
       notificationTitle: '🫀 Miruns',
-      notificationText: 'Connected to your body',
+      notificationText: 'Tracking your activity',
     ).ignore();
   }
 
