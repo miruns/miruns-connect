@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -40,7 +41,9 @@ class TtsService {
   final http.Client _client;
   FlutterTts? _systemTts;
   AudioPlayer? _player;
+  AudioSession? _audioSession;
   File? _lastWavFile;
+  Timer? _duckingReleaseTimer;
 
   bool _initialized = false;
 
@@ -95,6 +98,31 @@ class TtsService {
       }
     });
 
+    // Configure audio session for speech-over-music ducking.
+    // On Android: requests AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK so Spotify /
+    // YouTube Music / podcasts lower volume instead of pausing.
+    // On iOS: sets playback category with duckOthers so other audio dims.
+    try {
+      _audioSession = await AudioSession.instance;
+      await _audioSession!.configure(
+        AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions.mixWithOthers |
+              AVAudioSessionCategoryOptions.duckOthers,
+          avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+          androidAudioAttributes: const AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.speech,
+            usage: AndroidAudioUsage.assistant,
+          ),
+          androidAudioFocusGainType:
+              AndroidAudioFocusGainType.gainTransientMayDuck,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[TtsService] Audio session config failed: $e');
+    }
+
     _initialized = true;
     debugPrint(
       '[TtsService] initialized (kokoro=${kokoroConfigured ? "on" : "off"})',
@@ -103,11 +131,14 @@ class TtsService {
 
   /// Speak [text] using the best available engine.
   ///
-  /// Tries Kokoro TTS Gateway first; on any failure falls back to
-  /// platform TTS. Returns once audio begins playing — listen to
-  /// [onComplete] for when the utterance ends.
+  /// Ducks external audio (Spotify, podcasts …) first so the listener
+  /// hears the music fade, then the coach's voice cleanly. Audio
+  /// restores gracefully after the utterance ends.
   Future<void> speak(String text) async {
     if (!_initialized) return;
+
+    // Duck external audio and let the listener perceive the fade.
+    await _activateDucking();
 
     if (_shouldTryKokoro) {
       try {
@@ -123,12 +154,15 @@ class TtsService {
   }
 
   Future<void> stop() async {
+    _duckingReleaseTimer?.cancel();
     await _player?.stop();
     await _systemTts?.stop();
+    _audioSession?.setActive(false);
     _cleanupWavFile();
   }
 
   void dispose() {
+    _duckingReleaseTimer?.cancel();
     stop();
     _player?.dispose();
   }
@@ -184,6 +218,7 @@ class TtsService {
   }
 
   void _handleComplete() {
+    _scheduleDuckingRelease();
     onComplete?.call();
   }
 
@@ -196,6 +231,30 @@ class TtsService {
         'backing off for ${_kokoroBackoffDuration.inMinutes} min',
       );
     }
+  }
+
+  // ── Audio ducking ─────────────────────────────────────────────────────────
+
+  /// Duck external audio and pause briefly so the listener perceives
+  /// the music fading before the coach starts speaking.
+  Future<void> _activateDucking() async {
+    _duckingReleaseTimer?.cancel();
+    try {
+      await _audioSession?.setActive(true);
+      // Settling breath — the music dims, a beat of silence, then voice.
+      await Future.delayed(const Duration(milliseconds: 350));
+    } catch (e) {
+      debugPrint('[TtsService] Ducking activation failed: $e');
+    }
+  }
+
+  /// Release ducking after a grace period so music fades back naturally
+  /// instead of snapping back the instant speech ends.
+  void _scheduleDuckingRelease() {
+    _duckingReleaseTimer?.cancel();
+    _duckingReleaseTimer = Timer(const Duration(milliseconds: 500), () {
+      _audioSession?.setActive(false);
+    });
   }
 
   void _cleanupWavFile() {
