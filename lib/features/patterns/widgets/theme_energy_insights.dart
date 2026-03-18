@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Shows the strongest correlations between themes and energy levels.
 ///
@@ -79,7 +79,7 @@ class ThemeEnergyInsights extends StatelessWidget {
                       children: [
                         Text(
                           insight.theme,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onSurface,
@@ -88,7 +88,7 @@ class ThemeEnergyInsights extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           insight.description,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 12,
                             color: theme.colorScheme.onSurface
                                 .withValues(alpha: 0.6),
@@ -109,7 +109,7 @@ class ThemeEnergyInsights extends StatelessWidget {
                     ),
                     child: Text(
                       '${insight.percentage}%',
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: insight.color,

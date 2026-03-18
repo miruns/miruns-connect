@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// A top-of-page narrative card that shows the AI-generated pattern story.
 ///
@@ -103,7 +103,7 @@ class _PatternNarrativeCardState extends State<PatternNarrativeCard>
                   const SizedBox(width: 6),
                   Text(
                     'Composing your body story…',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
@@ -165,7 +165,7 @@ class _PatternNarrativeCardState extends State<PatternNarrativeCard>
               const SizedBox(width: 6),
               Text(
                 'YOUR BODY STORY',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
@@ -178,7 +178,7 @@ class _PatternNarrativeCardState extends State<PatternNarrativeCard>
           // Narrative text
           Text(
             widget.narrative!,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13.5,
               height: 1.55,
               fontWeight: FontWeight.w400,

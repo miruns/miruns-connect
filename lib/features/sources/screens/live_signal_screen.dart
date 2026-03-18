@@ -4,11 +4,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bci_decoding_view.dart';
 import '../../../core/widgets/bci_monitoring_view.dart';
 import '../../../core/widgets/live_signal_chart.dart';
@@ -213,7 +212,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         body: Center(
           child: Text(
             'Source "${widget.sourceId}" not found.',
-            style: GoogleFonts.inter(fontSize: 16, color: AppTheme.fog),
+            style: AppTheme.geist(fontSize: 16, color: AppTheme.fog),
           ),
         ),
       );
@@ -226,7 +225,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         elevation: 0,
         title: Text(
           _provider!.displayName,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: AppTheme.moonbeam,
@@ -255,7 +254,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               ),
               child: Text(
                 'DEMO',
-                style: GoogleFonts.robotoMono(
+                style: AppTheme.geistMono(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.aurora,
@@ -310,7 +309,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           padding: const EdgeInsets.all(24),
           child: Text(
             'Scanning for ${_provider!.displayName} devices…',
-            style: GoogleFonts.inter(fontSize: 14, color: AppTheme.fog),
+            style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
           ),
         ),
         if (_devices.isNotEmpty) Expanded(child: _buildDeviceList()),
@@ -332,7 +331,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
             ),
             child: Text(
               _errorMessage!,
-              style: GoogleFonts.inter(fontSize: 12, color: AppTheme.crimson),
+              style: AppTheme.geist(fontSize: 12, color: AppTheme.crimson),
             ),
           ),
         if (_devices.isEmpty)
@@ -349,7 +348,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'No devices found',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 16,
                       color: AppTheme.fog,
                     ),
@@ -358,7 +357,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   Text(
                     'Make sure your ${_provider!.displayName} board is powered on.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 13,
                       color: AppTheme.fog.withValues(alpha: 0.6),
                     ),
@@ -400,7 +399,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         icon: const Icon(Icons.bluetooth_searching_rounded, size: 18),
         label: Text(
           'Scan for devices',
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          style: AppTheme.geist(fontSize: 14, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
@@ -422,7 +421,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
         label: Text(
           'Try demo mode',
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          style: AppTheme.geist(fontSize: 14, fontWeight: FontWeight.w600),
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.aurora,
@@ -453,7 +452,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           const SizedBox(height: 20),
           Text(
             'Connecting…',
-            style: GoogleFonts.inter(fontSize: 16, color: AppTheme.moonbeam),
+            style: AppTheme.geist(fontSize: 16, color: AppTheme.moonbeam),
           ),
         ],
       ),
@@ -491,7 +490,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'Recording — ${_recordedSamples.length} samples',
-                    style: GoogleFonts.robotoMono(
+                    style: AppTheme.geistMono(
                       fontSize: 11,
                       color: AppTheme.crimson,
                       fontWeight: FontWeight.w600,
@@ -538,7 +537,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               const SizedBox(width: 10),
               Text(
                 mode.label,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                   color: isActive ? mode.color : AppTheme.moonbeam,
@@ -558,7 +557,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   ),
                   child: Text(
                     'DEMO',
-                    style: GoogleFonts.robotoMono(
+                    style: AppTheme.geistMono(
                       fontSize: 8,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.aurora,
@@ -638,7 +637,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           const SizedBox(height: 16),
           Text(
             'Connection error',
-            style: GoogleFonts.inter(fontSize: 16, color: AppTheme.crimson),
+            style: AppTheme.geist(fontSize: 16, color: AppTheme.crimson),
           ),
           if (_errorMessage != null)
             Padding(
@@ -646,7 +645,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12, color: AppTheme.fog),
+                style: AppTheme.geist(fontSize: 12, color: AppTheme.fog),
               ),
             ),
           const SizedBox(height: 24),
@@ -692,7 +691,7 @@ class _DeviceTile extends StatelessWidget {
                 children: [
                   Text(
                     device.name,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.moonbeam,
@@ -700,7 +699,7 @@ class _DeviceTile extends StatelessWidget {
                   ),
                   Text(
                     device.device.remoteId.str,
-                    style: GoogleFonts.robotoMono(
+                    style: AppTheme.geistMono(
                       fontSize: 10,
                       color: AppTheme.fog.withValues(alpha: 0.5),
                     ),
@@ -717,7 +716,7 @@ class _DeviceTile extends StatelessWidget {
               ),
               child: Text(
                 '${device.rssi} dBm',
-                style: GoogleFonts.robotoMono(
+                style: AppTheme.geistMono(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: _rssiColor(device.rssi),

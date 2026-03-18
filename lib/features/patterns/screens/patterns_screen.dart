@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/capture_entry.dart';
@@ -15,6 +14,7 @@ import '../widgets/pattern_narrative_card.dart';
 import '../widgets/rhythm_strip.dart';
 import '../widgets/section_card.dart';
 import '../widgets/theme_energy_insights.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 // ── Data providers ──────────────────────────────────────────────────────────
 
@@ -122,7 +122,7 @@ class _PatternsScreenState extends ConsumerState<PatternsScreen> {
           error: (e, _) => Center(
             child: Text(
               'Could not load captures: $e',
-              style: GoogleFonts.inter(fontSize: 14),
+              style: AppTheme.geist(fontSize: 14),
             ),
           ),
           data: (captures) {
@@ -558,7 +558,7 @@ class _AnalysisBanner extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               'Analysis complete — patterns updated',
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF4CAF50),
@@ -598,7 +598,7 @@ class _AnalysisBanner extends StatelessWidget {
                   done == 0
                       ? 'Preparing to analyse $total capture${total == 1 ? '' : 's'}…'
                       : 'Analysing captures — $remaining left',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: theme.colorScheme.primary,
@@ -608,7 +608,7 @@ class _AnalysisBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '$done / $total',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.primary.withValues(alpha: 0.75),
@@ -633,7 +633,7 @@ class _AnalysisBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Results appear below as each capture is processed.',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 11,
               color: theme.colorScheme.primary.withValues(alpha: 0.6),
             ),
@@ -690,7 +690,7 @@ class _IntervalPicker extends StatelessWidget {
                 ),
                 child: Text(
                   interval.label,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected
@@ -811,7 +811,7 @@ class _EnergyLegendItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           count.toString(),
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: color,
@@ -819,7 +819,7 @@ class _EnergyLegendItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
           ),
@@ -902,7 +902,7 @@ class _FrequencyChips extends StatelessWidget {
               ],
               Text(
                 e.key,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: color.withValues(alpha: dark ? 0.9 : 0.85),
@@ -930,7 +930,7 @@ class _FrequencyChips extends StatelessWidget {
                 ),
                 child: Text(
                   e.value.toString(),
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: color,
@@ -1004,7 +1004,7 @@ class _SignalList extends StatelessWidget {
               ),
               title: Text(
                 signal.key,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: theme.colorScheme.onSurface,
@@ -1012,7 +1012,7 @@ class _SignalList extends StatelessWidget {
               ),
               trailing: Text(
                 '×${signal.value}',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   color: Colors.orange.shade400,
                   fontWeight: FontWeight.w600,
@@ -1087,7 +1087,7 @@ class _MomentCard extends StatelessWidget {
                   children: [
                     Text(
                       DateFormat('MMM d, h:mm a').format(moment.timestamp),
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 11,
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.45,
@@ -1113,7 +1113,7 @@ class _MomentCard extends StatelessWidget {
                       ),
                       child: Text(
                         moment.energyLevel,
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: ec,
@@ -1125,7 +1125,7 @@ class _MomentCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   moment.summary,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     height: 1.4,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
@@ -1150,7 +1150,7 @@ class _MomentCard extends StatelessWidget {
                             ),
                             child: Text(
                               '#$t',
-                              style: GoogleFonts.inter(
+                              style: AppTheme.geist(
                                 fontSize: 10,
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.5,
@@ -1193,7 +1193,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'No captures yet',
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
@@ -1203,7 +1203,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               'Take your first capture and patterns will start building here automatically.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 14,
                 height: 1.5,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),

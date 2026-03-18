@@ -5,9 +5,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/body_blog_entry.dart';
 import '../../../core/models/body_blog_version.dart';
 import '../../../core/services/service_providers.dart';
@@ -266,6 +266,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
@@ -296,7 +297,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
                             ? (dark
                                   ? const Color(0xFF0A84FF)
                                   : const Color(0xFF007AFF))
-                            : (dark ? Colors.white12 : Colors.black12),
+                            : c.divider,
                       ),
                     ),
                     // ── Refresh action ──
@@ -346,7 +347,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   "Refresh",
-                                  style: GoogleFonts.inter(
+                                  style: AppTheme.geist(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     color: dark
@@ -455,6 +456,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
   }
 
   Widget _emptyState(bool dark) {
+    final c = context.miruns;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -464,19 +466,19 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
             Text(
               'Ready to check in?',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: dark ? Colors.white70 : Colors.black54,
+                color: c.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               'Tap the chat icon above to start a conversation',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 14,
-                color: dark ? Colors.white38 : Colors.black38,
+                color: c.textSubtle,
                 height: 1.6,
               ),
             ),
@@ -550,6 +552,7 @@ class _BlogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final dateLabel = _formatDate(entry.date);
     final primary = Theme.of(context).colorScheme.primary;
     final readTime = _estimateReadTime(
@@ -614,7 +617,7 @@ class _BlogPage extends StatelessWidget {
                 children: [
                   Text(
                     entry.summary,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 16,
                       height: 1.8,
                       fontWeight: FontWeight.w400,
@@ -704,10 +707,10 @@ class _BlogPage extends StatelessWidget {
                           const SizedBox(width: 10),
                           Text(
                             'Gathering a better draft…',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: dark ? Colors.white38 : Colors.black38,
+                              color: c.textSubtle,
                             ),
                           ),
                         ],
@@ -717,7 +720,7 @@ class _BlogPage extends StatelessWidget {
                         icon: _ShimmerAiIcon(size: 15, dark: dark),
                         label: Text(
                           'Rewrite today',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -742,17 +745,13 @@ class _BlogPage extends StatelessWidget {
             Center(
               child: TextButton.icon(
                 onPressed: onViewHistory,
-                icon: Icon(
-                  Icons.history_rounded,
-                  size: 16,
-                  color: dark ? Colors.white30 : Colors.black26,
-                ),
+                icon: Icon(Icons.history_rounded, size: 16, color: c.textFaint),
                 label: Text(
                   'Open day history',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: dark ? Colors.white38 : Colors.black38,
+                    color: c.textSubtle,
                   ),
                 ),
               ),
@@ -1191,7 +1190,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
                       const SizedBox(width: 5),
                       Text(
                         widget.moodLabel,
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.8,
@@ -1205,7 +1204,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
                   const SizedBox(height: 10),
                   Text(
                     widget.headline,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
                       height: 1.15,
@@ -1215,7 +1214,7 @@ class _JournalHeroPanelState extends State<_JournalHeroPanel>
                   const SizedBox(height: 12),
                   Text(
                     widget.previewText,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       height: 1.7,
                       fontWeight: FontWeight.w400,
@@ -1277,7 +1276,7 @@ class _JournalMetaPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.2,
@@ -1298,6 +1297,7 @@ class _JournalSpotlightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -1334,7 +1334,7 @@ class _JournalSpotlightCard extends StatelessWidget {
               children: [
                 Text(
                   fact.label,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.0,
@@ -1344,10 +1344,10 @@ class _JournalSpotlightCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   fact.value,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
               ],
@@ -1402,7 +1402,7 @@ class _JournalGlassSection extends StatelessWidget {
         children: [
           Text(
             eyebrow.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.4,
@@ -1412,7 +1412,7 @@ class _JournalGlassSection extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             title,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -1451,7 +1451,7 @@ class _JournalQuoteCallout extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
@@ -1461,12 +1461,11 @@ class _JournalQuoteCallout extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             text,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 14,
               height: 1.7,
-              fontStyle: FontStyle.italic,
               color: dark ? Colors.white70 : const Color(0xFF3B3B42),
-            ),
+            ).copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       ),
@@ -1512,6 +1511,7 @@ class _JournalMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -1542,7 +1542,7 @@ class _JournalMetricCard extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             item.label,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.7,
@@ -1552,18 +1552,18 @@ class _JournalMetricCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             item.value,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               height: 1.2,
-              color: dark ? Colors.white : Colors.black87,
+              color: c.textStrong,
             ),
           ),
           if (item.caption != null) ...[
             const SizedBox(height: 6),
             Text(
               item.caption!,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 12,
                 height: 1.5,
                 color: dark ? Colors.white38 : Colors.black45,
@@ -1584,6 +1584,7 @@ class _JournalContextChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -1610,7 +1611,7 @@ class _JournalContextChip extends StatelessWidget {
             children: [
               Text(
                 item.label,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -1620,10 +1621,10 @@ class _JournalContextChip extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 item.value,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: dark ? Colors.white70 : Colors.black87,
+                  color: c.textBody,
                 ),
               ),
             ],
@@ -1656,15 +1657,13 @@ class _JournalPrimaryButton extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(
           label,
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+          style: AppTheme.geist(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         style: FilledButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
     );
@@ -1744,6 +1743,7 @@ class _GlanceCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1751,18 +1751,18 @@ class _GlanceCell extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           item.value,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: dark ? Colors.white : Colors.black87,
+            color: c.textStrong,
           ),
         ),
         Text(
           item.unit,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             fontWeight: FontWeight.w400,
-            color: dark ? Colors.white38 : Colors.black38,
+            color: c.textSubtle,
           ),
         ),
       ],
@@ -1781,6 +1781,7 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -1791,10 +1792,10 @@ class _Tag extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: dark ? Colors.white54 : Colors.black45,
+          color: c.textMuted,
         ),
       ),
     );
@@ -1909,6 +1910,7 @@ class _SensorStatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final specs = _buildSensorSpecs(snapshot);
 
@@ -1920,11 +1922,11 @@ class _SensorStatusRow extends StatelessWidget {
       children: [
         Text(
           'DATA SOURCES',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 10,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.4,
-            color: dark ? Colors.white24 : Colors.black26,
+            color: c.border,
           ),
         ),
         const SizedBox(height: 10),
@@ -2013,6 +2015,7 @@ class _DateNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final hasNewer = current > 0;
     final hasOlder = current < entries.length - 1;
@@ -2073,7 +2076,7 @@ class _DateNav extends StatelessWidget {
                 children: [
                   Text(
                     _relativeLabel(entries[current].date),
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
@@ -2083,10 +2086,10 @@ class _DateNav extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     DateFormat('MMM d, y').format(entries[current].date),
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: dark ? Colors.white54 : Colors.black45,
+                      color: c.textMuted,
                     ),
                   ),
                 ],
@@ -2149,10 +2152,8 @@ class _DateArrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = enabled
-        ? (dark ? Colors.white70 : Colors.black54)
-        : Colors.transparent;
+    final c = context.miruns;
+    final color = enabled ? c.textSecondary : Colors.transparent;
 
     return GestureDetector(
       onTap: enabled ? onTap : null,
@@ -2168,7 +2169,7 @@ class _DateArrow extends StatelessWidget {
                 Icon(icon, color: color, size: 22),
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: color,
@@ -2216,7 +2217,7 @@ class _TodayPill extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'Today',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -2242,6 +2243,7 @@ class _ShareFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     // Solid pill: icon + label so thumb can't miss it
     final bg = dark ? const Color(0xFF2C2C2E) : const Color(0xFFE8E8ED);
@@ -2265,7 +2267,7 @@ class _ShareFab extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: dark ? Colors.white60 : Colors.black45,
+                      color: c.textMuted,
                     ),
                   )
                 : Row(
@@ -2274,15 +2276,15 @@ class _ShareFab extends StatelessWidget {
                       Icon(
                         Icons.ios_share_rounded,
                         size: 17,
-                        color: dark ? Colors.white : Colors.black87,
+                        color: c.textStrong,
                       ),
                       const SizedBox(width: 7),
                       Text(
                         'Share',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: dark ? Colors.white : Colors.black87,
+                          color: c.textStrong,
                         ),
                       ),
                     ],
@@ -2322,7 +2324,7 @@ class _AiBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             'Generated',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -2344,8 +2346,8 @@ class _RawDataBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = dark ? Colors.white38 : Colors.black38;
+    final c = context.miruns;
+    final color = c.textSubtle;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
@@ -2359,7 +2361,7 @@ class _RawDataBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             'Raw data',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
@@ -2384,14 +2386,15 @@ class _PendingAiPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final dimColor = dark ? Colors.white54 : Colors.black45;
-    final labelStyle = GoogleFonts.inter(
+    final c = context.miruns;
+    final dimColor = c.textMuted;
+    final labelStyle = AppTheme.geist(
       fontSize: 11,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.4,
       color: dimColor,
     );
-    final valueStyle = GoogleFonts.inter(
+    final valueStyle = AppTheme.geist(
       fontSize: 15,
       fontWeight: FontWeight.w600,
       color: dark ? Colors.white.withValues(alpha: 0.87) : Colors.black87,
@@ -2433,17 +2436,17 @@ class _PendingAiPanel extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'No health data collected yet',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white70 : Colors.black54,
+                    color: c.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Grant health permissions so the app can read your\nsteps, sleep and heart rate.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     height: 1.6,
                     color: dimColor,
@@ -2547,10 +2550,10 @@ class _PendingAiPanel extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'AI insights not yet generated. Tap ✦ in the header to write your entry.',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 13,
                       height: 1.5,
-                      color: dark ? Colors.white60 : Colors.black45,
+                      color: c.textMuted,
                     ),
                   ),
                 ),
@@ -2581,6 +2584,7 @@ class _DataTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -2600,16 +2604,16 @@ class _DataTile extends StatelessWidget {
             children: [
               Text(
                 label.toUpperCase(),
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.8,
-                  color: dark ? Colors.white38 : Colors.black38,
+                  color: c.textSubtle,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: dark
@@ -2833,7 +2837,7 @@ class _RefreshJourneyOverlayState extends State<_RefreshJourneyOverlay>
                             ),
                             child: Text(
                               '${widget.toneName} voice',
-                              style: GoogleFonts.inter(
+                              style: AppTheme.geist(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: primary.withValues(alpha: 0.7),
@@ -2907,7 +2911,7 @@ class _RefreshJourneyOverlayState extends State<_RefreshJourneyOverlay>
                             ? Text(
                                 'Your entry is ready ✦',
                                 key: const ValueKey('done-phrase'),
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w400,
                                   color: primary.withValues(alpha: 0.7),
@@ -2916,7 +2920,7 @@ class _RefreshJourneyOverlayState extends State<_RefreshJourneyOverlay>
                             : Text(
                                 _refreshJourneyPhrases[_phraseIndex],
                                 key: ValueKey<int>(_phraseIndex),
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w300,
                                   letterSpacing: 0.3,
@@ -2933,7 +2937,7 @@ class _RefreshJourneyOverlayState extends State<_RefreshJourneyOverlay>
                       if (_elapsed >= 5)
                         Text(
                           '${_elapsed}s',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             color: dark
@@ -2985,6 +2989,7 @@ class _RefreshPipelineRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return FadeTransition(
       opacity: fade,
       child: AnimatedBuilder(
@@ -2994,12 +2999,12 @@ class _RefreshPipelineRow extends StatelessWidget {
               ? primary
               : _isActive
               ? (dark ? Colors.white.withValues(alpha: 0.85) : Colors.black87)
-              : (dark ? Colors.white24 : Colors.black26);
+              : c.border;
           final subColor = _isDone
               ? primary.withValues(alpha: 0.55)
               : _isActive
-              ? (dark ? Colors.white54 : Colors.black45)
-              : (dark ? Colors.white12 : Colors.black12);
+              ? c.textMuted
+              : c.divider;
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
@@ -3060,9 +3065,7 @@ class _RefreshPipelineRow extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 16,
-                    color: _isDone
-                        ? primary
-                        : (dark ? Colors.white70 : Colors.black54),
+                    color: _isDone ? primary : c.textSecondary,
                   ),
                 ),
 
@@ -3075,7 +3078,7 @@ class _RefreshPipelineRow extends StatelessWidget {
                     children: [
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 300),
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 14,
                           fontWeight: _isActive
                               ? FontWeight.w600
@@ -3087,7 +3090,7 @@ class _RefreshPipelineRow extends StatelessWidget {
                       const SizedBox(height: 1),
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 300),
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 11,
                           fontWeight: FontWeight.w300,
                           color: subColor,
@@ -3196,7 +3199,7 @@ class _ZenLoaderState extends State<_ZenLoader>
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final elapsed = _formatElapsed(_elapsedSeconds);
     return AnimatedBuilder(
@@ -3218,10 +3221,10 @@ class _ZenLoaderState extends State<_ZenLoader>
               child: Text(
                 _zenPhrases[_phraseIndex],
                 key: ValueKey<int>(_phraseIndex),
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 14,
                   fontWeight: FontWeight.w300,
-                  color: dark ? Colors.white38 : Colors.black38,
+                  color: c.textSubtle,
                 ),
               ),
             ),
@@ -3229,10 +3232,10 @@ class _ZenLoaderState extends State<_ZenLoader>
               const SizedBox(height: 8),
               Text(
                 elapsed,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: dark ? Colors.white24 : Colors.black26,
+                  color: c.border,
                 ),
               ),
             ],
@@ -3333,6 +3336,7 @@ class _FirstVisitBootstrapState extends State<_FirstVisitBootstrap>
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return AnimatedBuilder(
@@ -3449,11 +3453,11 @@ class _FirstVisitBootstrapState extends State<_FirstVisitBootstrap>
                           ? 'Composing your story...'
                           : 'Almost there...',
                       key: ValueKey<int>(_stageIndex),
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 12,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 0.4,
-                        color: dark ? Colors.white24 : Colors.black26,
+                        color: c.border,
                       ),
                     ),
                   ),
@@ -3502,6 +3506,7 @@ class _PipelineStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final isActive = _state == _StageState.active;
     final isDone = _state == _StageState.done;
 
@@ -3513,13 +3518,13 @@ class _PipelineStage extends StatelessWidget {
           final labelColor = isDone
               ? primary
               : isActive
-              ? (dark ? Colors.white70 : Colors.black87)
-              : (dark ? Colors.white24 : Colors.black26);
+              ? c.textBody
+              : c.border;
           final subColor = isDone
               ? primary.withValues(alpha: 0.65)
               : isActive
-              ? (dark ? Colors.white54 : Colors.black45)
-              : (dark ? Colors.white12 : Colors.black12);
+              ? c.textMuted
+              : c.divider;
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
@@ -3550,7 +3555,7 @@ class _PipelineStage extends StatelessWidget {
                             ? primary.withValues(
                                 alpha: 0.55 + breathe.value * 0.45,
                               )
-                            : (dark ? Colors.white12 : Colors.black12),
+                            : c.divider,
                         width: isActive ? 2 : 1.5,
                       ),
                     ),
@@ -3582,7 +3587,7 @@ class _PipelineStage extends StatelessWidget {
                         children: [
                           AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 300),
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 15,
                               fontWeight: isActive
                                   ? FontWeight.w600
@@ -3606,9 +3611,7 @@ class _PipelineStage extends StatelessWidget {
                                 child: Icon(
                                   ic,
                                   size: 13,
-                                  color: isDone
-                                      ? primary
-                                      : (dark ? Colors.white : Colors.black87),
+                                  color: isDone ? primary : c.textStrong,
                                 ),
                               ),
                             ),
@@ -3617,7 +3620,7 @@ class _PipelineStage extends StatelessWidget {
                       const SizedBox(height: 3),
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 300),
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 12,
                           fontWeight: FontWeight.w300,
                           color: subColor,
@@ -3723,6 +3726,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
   Future<void> _showNoteEditor() async {
     final controller = TextEditingController(text: _entry.userNote ?? '');
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     String? selectedMood = _entry.userMood;
 
@@ -3751,10 +3755,10 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                     children: [
                       Text(
                         'How are you feeling?',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: dark ? Colors.white : Colors.black87,
+                          color: c.textStrong,
                         ),
                       ),
                       const Spacer(),
@@ -3775,7 +3779,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                           },
                           child: Text(
                             'Clear',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               color: Colors.redAccent,
                               fontSize: 13,
                             ),
@@ -3826,7 +3830,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                               const SizedBox(height: 4),
                               Text(
                                 label,
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 10,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
@@ -3852,14 +3856,14 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                     autofocus: true,
                     maxLines: 5,
                     minLines: 2,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       height: 1.6,
-                      color: dark ? Colors.white70 : Colors.black87,
+                      color: c.textBody,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Add a note (optional)',
-                      hintStyle: GoogleFonts.inter(
+                      hintStyle: AppTheme.geist(
                         color: dark ? Colors.white30 : Colors.black38,
                       ),
                       border: OutlineInputBorder(
@@ -3908,7 +3912,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                       ),
                       child: Text(
                         selectedMood != null ? '$selectedMood  Save' : 'Save',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),
@@ -4047,7 +4051,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                 Text(
                                   paragraphs[i],
                                   style: i == 0
-                                      ? GoogleFonts.inter(
+                                      ? AppTheme.geist(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w500,
                                           height: 1.7,
@@ -4055,7 +4059,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                               ? Colors.white
                                               : const Color(0xFF1A1A1A),
                                         )
-                                      : GoogleFonts.inter(
+                                      : AppTheme.geist(
                                           fontSize: 16,
                                           height: 1.95,
                                           fontWeight: FontWeight.w400,
@@ -4140,7 +4144,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                   icon: const Icon(Icons.add_comment_outlined),
                                   label: Text(
                                     'Add a private note',
-                                    style: GoogleFonts.inter(
+                                    style: AppTheme.geist(
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -4192,7 +4196,7 @@ class _BlogDetailPageState extends ConsumerState<_BlogDetailPage> {
                                   _aiRegenerating
                                       ? 'Writing…'
                                       : 'Rewrite story',
-                                  style: GoogleFonts.inter(
+                                  style: AppTheme.geist(
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -4244,6 +4248,7 @@ class _DetailTopButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Material(
@@ -4273,20 +4278,16 @@ class _DetailTopButton extends StatelessWidget {
                 Icon(
                   icon,
                   size: 16,
-                  color: isPrimary
-                      ? primary
-                      : (dark ? Colors.white70 : Colors.black54),
+                  color: isPrimary ? primary : c.textSecondary,
                 ),
                 const SizedBox(width: 8),
               ],
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: isPrimary
-                      ? primary
-                      : (dark ? Colors.white70 : Colors.black54),
+                  color: isPrimary ? primary : c.textSecondary,
                 ),
               ),
               if (trailing != null) ...[const SizedBox(width: 8), trailing!],
@@ -4312,6 +4313,7 @@ class _VersionHistorySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final bg = dark ? const Color(0xFF1A1A1A) : Colors.white;
 
@@ -4347,7 +4349,7 @@ class _VersionHistorySheet extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Day history  ·  ${DateFormat('MMM d').format(date)}',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: dark
@@ -4358,10 +4360,7 @@ class _VersionHistorySheet extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '${versions.length} version${versions.length != 1 ? 's' : ''}',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: dark ? Colors.white38 : Colors.black38,
-                    ),
+                    style: AppTheme.geist(fontSize: 12, color: c.textSubtle),
                   ),
                 ],
               ),
@@ -4372,9 +4371,9 @@ class _VersionHistorySheet extends StatelessWidget {
                   ? Center(
                       child: Text(
                         'No history recorded yet.',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 14,
-                          color: dark ? Colors.white38 : Colors.black38,
+                          color: c.textSubtle,
                         ),
                       ),
                     )
@@ -4433,6 +4432,7 @@ class _VersionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final timeStr = DateFormat('HH:mm').format(version.generatedAt.toLocal());
 
     return IntrinsicHeight(
@@ -4450,9 +4450,7 @@ class _VersionTile extends StatelessWidget {
                   height: 9,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isLatest
-                        ? primary
-                        : (dark ? Colors.white24 : Colors.black26),
+                    color: isLatest ? primary : c.border,
                   ),
                 ),
                 if (!isLast)
@@ -4495,12 +4493,10 @@ class _VersionTile extends StatelessWidget {
                       children: [
                         Text(
                           timeStr,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isLatest
-                                ? primary
-                                : (dark ? Colors.white54 : Colors.black45),
+                            color: isLatest ? primary : c.textMuted,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -4519,13 +4515,11 @@ class _VersionTile extends StatelessWidget {
                           ),
                           child: Text(
                             _triggerLabel.toUpperCase(),
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.6,
-                              color: isLatest
-                                  ? primary
-                                  : (dark ? Colors.white54 : Colors.black45),
+                              color: isLatest ? primary : c.textMuted,
                             ),
                           ),
                         ),
@@ -4545,7 +4539,7 @@ class _VersionTile extends StatelessWidget {
                       version.headline,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         height: 1.3,
@@ -4560,9 +4554,9 @@ class _VersionTile extends StatelessWidget {
                         version.summary,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 11,
-                          color: dark ? Colors.white38 : Colors.black38,
+                          color: c.textSubtle,
                         ),
                       ),
                     ],
@@ -4578,6 +4572,7 @@ class _VersionTile extends StatelessWidget {
 
   void _showDetail(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     showDialog<void>(
       context: context,
@@ -4595,7 +4590,7 @@ class _VersionTile extends StatelessWidget {
                   children: [
                     Text(
                       DateFormat('HH:mm').format(version.generatedAt.toLocal()),
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.2,
@@ -4605,20 +4600,20 @@ class _VersionTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       _triggerLabel.toUpperCase(),
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.2,
-                        color: dark ? Colors.white38 : Colors.black38,
+                        color: c.textSubtle,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       '${version.moodEmoji}  ${version.mood.toUpperCase()}',
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: dark ? Colors.white38 : Colors.black38,
+                        color: c.textSubtle,
                       ),
                     ),
                   ],
@@ -4626,20 +4621,20 @@ class _VersionTile extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   version.headline,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     height: 1.3,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   version.summary,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     height: 1.65,
-                    color: dark ? Colors.white70 : Colors.black54,
+                    color: c.textSecondary,
                   ),
                 ),
                 if (version.fullBody.isNotEmpty) ...[
@@ -4652,11 +4647,11 @@ class _VersionTile extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     version.fullBody,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
                       height: 1.7,
                       fontWeight: FontWeight.w300,
-                      color: dark ? Colors.white70 : Colors.black54,
+                      color: c.textSecondary,
                     ),
                   ),
                 ],
@@ -4665,10 +4660,7 @@ class _VersionTile extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text(
-                      'Close',
-                      style: GoogleFonts.inter(fontSize: 13),
-                    ),
+                    child: Text('Close', style: AppTheme.geist(fontSize: 13)),
                   ),
                 ),
               ],
@@ -4690,6 +4682,7 @@ class _ToneSelectorBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final bgColor = dark ? const Color(0xFF1C1C1E) : Colors.white;
 
@@ -4734,19 +4727,19 @@ class _ToneSelectorBottomSheet extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Generate a New Entry',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: dark ? Colors.white : Colors.black87,
+                      color: c.textStrong,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Collect fresh data from your body and create a new story with your chosen tone',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
-                      color: dark ? Colors.white60 : Colors.black54,
+                      color: c.textSecondary,
                       height: 1.4,
                     ),
                   ),
@@ -4762,10 +4755,10 @@ class _ToneSelectorBottomSheet extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Choose Your Tone',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white54 : Colors.black45,
+                    color: c.textMuted,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -4858,6 +4851,7 @@ class _ToneOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return InkWell(
@@ -4867,7 +4861,7 @@ class _ToneOption extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: dark ? Colors.white10 : Colors.black12),
+          border: Border.all(color: c.borderSubtle),
         ),
         child: Row(
           children: [
@@ -4887,28 +4881,21 @@ class _ToneOption extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: dark ? Colors.white : Colors.black87,
+                      color: c.textStrong,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     description,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: dark ? Colors.white54 : Colors.black54,
-                    ),
+                    style: AppTheme.geist(fontSize: 12, color: c.textMuted),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: dark ? Colors.white24 : Colors.black26,
-            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: c.border),
           ],
         ),
       ),

@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../widgets/m_signal_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -357,7 +356,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
               ),
               child: Text(
                 'Skip',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.fog,
@@ -409,7 +408,7 @@ class _WelcomePage extends StatelessWidget {
             // App name
             Text(
               'miruns',
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 40,
                 fontWeight: FontWeight.w300,
                 color: AppTheme.moonbeam,
@@ -424,7 +423,7 @@ class _WelcomePage extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
                   'Your brain, live.',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     color: AppTheme.fog,
@@ -474,7 +473,7 @@ class _DeviceChoicePage extends StatelessWidget {
         children: [
           Text(
             'Do you have a\nmiruns headset?',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 32,
               fontWeight: FontWeight.w600,
               color: AppTheme.moonbeam,
@@ -485,7 +484,7 @@ class _DeviceChoicePage extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'The headset captures your live signals\nand streams them to the app.',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 15,
               color: AppTheme.fog,
               height: 1.55,
@@ -541,7 +540,7 @@ class _DeviceChoicePage extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 "I don't have one — demo mode",
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.fog,
@@ -586,7 +585,7 @@ class _PairPage extends StatelessWidget {
         children: [
           Text(
             'Find your\nheadset',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 32,
               fontWeight: FontWeight.w600,
               color: AppTheme.moonbeam,
@@ -597,7 +596,7 @@ class _PairPage extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'Put on your EAREEG and power it on.',
-            style: GoogleFonts.inter(fontSize: 15, color: AppTheme.fog),
+            style: AppTheme.geist(fontSize: 15, color: AppTheme.fog),
           ),
           const SizedBox(height: 36),
 
@@ -635,7 +634,7 @@ class _PairPage extends StatelessWidget {
               ),
               child: Text(
                 'Use Demo Mode',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.fog,
@@ -680,7 +679,7 @@ class _SignalCheckPage extends StatelessWidget {
         children: [
           Text(
             isDemoMode ? 'Demo mode' : 'Signal check',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 32,
               fontWeight: FontWeight.w600,
               color: AppTheme.moonbeam,
@@ -692,7 +691,7 @@ class _SignalCheckPage extends StatelessWidget {
             isDemoMode
                 ? 'Exploring without a headset.\nYou can pair one anytime from Settings.'
                 : 'Adjust your headset until\nall electrodes are green.',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 15,
               color: AppTheme.fog,
               height: 1.55,
@@ -800,7 +799,7 @@ class _ReadyPage extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               "You're ready.",
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 34,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.moonbeam,
@@ -810,7 +809,7 @@ class _ReadyPage extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: labelColor,
@@ -820,7 +819,7 @@ class _ReadyPage extends StatelessWidget {
             Text(
               'Pair a headset anytime\nfrom Settings.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 13,
                 color: AppTheme.fog,
                 height: 1.6,
@@ -900,7 +899,7 @@ class _DataChip extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: color,
@@ -1008,7 +1007,7 @@ class _ScanStatus extends StatelessWidget {
       return Center(
         child: Text(
           'Scanning for EAREEG…',
-          style: GoogleFonts.inter(fontSize: 14, color: AppTheme.fog),
+          style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
         ),
       );
     }
@@ -1018,14 +1017,14 @@ class _ScanStatus extends StatelessWidget {
         children: [
           Text(
             'No headset found.',
-            style: GoogleFonts.inter(fontSize: 14, color: AppTheme.fog),
+            style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: onRescan,
             child: Text(
               'Try again',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.glow),
+              style: AppTheme.geist(fontSize: 14, color: AppTheme.glow),
             ),
           ),
         ],
@@ -1086,7 +1085,7 @@ class _DeviceRow extends StatelessWidget {
             Expanded(
               child: Text(
                 device.name,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.moonbeam,
@@ -1176,7 +1175,7 @@ class _ElectrodeIndicator extends StatelessWidget {
         const SizedBox(height: 5),
         Text(
           label,
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 10,
             fontWeight: FontWeight.w500,
             color: AppTheme.fog,
@@ -1244,7 +1243,7 @@ class _PrimaryButton extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppTheme.void_,

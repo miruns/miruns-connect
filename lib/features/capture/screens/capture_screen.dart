@@ -6,15 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/capture_entry.dart';
 import '../../../core/models/nutrition_log.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/live_hr_waveform.dart';
 
 /// Capture tab — camera-inspired data capture.
@@ -421,7 +420,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               const SizedBox(height: 12),
               Text(
                 'Connecting to ${_bleDeviceName ?? 'device'}…',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   color: theme.colorScheme.primary.withValues(alpha: 0.6),
                 ),
@@ -497,7 +496,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               const SizedBox(width: 8),
               Text(
                 'Scanned Food',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Colors.teal,
@@ -522,7 +521,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                       const SizedBox(width: 4),
                       Text(
                         'Scan more',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: Colors.teal,
@@ -548,6 +547,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     bool dark,
     NutritionLog log,
   ) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -565,7 +565,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               child: Center(
                 child: Text(
                   log.nutriScore!.toUpperCase(),
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -582,10 +582,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               children: [
                 Text(
                   log.displayLabel,
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: c.textStrong,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -593,10 +593,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 if (log.per100g != null)
                   Text(
                     log.per100g!.macroLine,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: dark ? Colors.white54 : Colors.black45,
-                    ),
+                    style: AppTheme.geist(fontSize: 11, color: c.textMuted),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -609,11 +606,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               HapticFeedback.selectionClick();
               setState(() => _scannedProducts.remove(log));
             },
-            child: Icon(
-              Icons.close_rounded,
-              size: 18,
-              color: dark ? Colors.white38 : Colors.black26,
-            ),
+            child: Icon(Icons.close_rounded, size: 18, color: c.textSubtle),
           ),
         ],
       ),
@@ -751,6 +744,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   // ─────────────────────────────────────────────────────────────────────
 
   Widget _buildViewfinder(ThemeData theme, bool dark) {
+    final c = context.miruns;
     final activeSources = [
       if (_includeHealth) (Icons.favorite_rounded, 'Health', Colors.redAccent),
       if (_includeEnvironment)
@@ -795,12 +789,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             child: activeSources.isEmpty
                 ? Text(
                     'No sources selected',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: dark
-                          ? Colors.white.withValues(alpha: 0.3)
-                          : Colors.black.withValues(alpha: 0.3),
-                    ),
+                    style: AppTheme.geist(fontSize: 13, color: c.tintStrong),
                   )
                 : Column(
                     mainAxisSize: MainAxisSize.min,
@@ -847,13 +836,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                 const SizedBox(height: 4),
                                 Text(
                                   label,
-                                  style: GoogleFonts.inter(
+                                  style: AppTheme.geist(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.3,
-                                    color: dark
-                                        ? Colors.white54
-                                        : Colors.black45,
+                                    color: c.textMuted,
                                   ),
                                 ),
                               ],
@@ -901,7 +888,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       ),
       child: Text(
         'REC',
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 10,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -998,6 +985,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     VoidCallback onTap,
     Color accentColor,
   ) {
+    final c = context.miruns;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1023,22 +1011,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: active
-                  ? accentColor
-                  : (dark ? Colors.white38 : Colors.black38),
-            ),
+            Icon(icon, size: 16, color: active ? accentColor : c.textSubtle),
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 13,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active
-                    ? accentColor
-                    : (dark ? Colors.white54 : Colors.black45),
+                color: active ? accentColor : c.textMuted,
                 letterSpacing: 0.1,
               ),
             ),
@@ -1053,6 +1033,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   // ─────────────────────────────────────────────────────────────────────
 
   Widget _buildContextRow(ThemeData theme, bool dark) {
+    final c = context.miruns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1112,9 +1093,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             border: Border.all(
               color: _noteExpanded
                   ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                  : (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.08,
-                    ),
+                  : c.contrast.withValues(alpha: 0.08),
               width: 1.5,
             ),
           ),
@@ -1125,9 +1104,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               hintText: _noteExpanded
                   ? 'How are you feeling? What\'s on your mind?'
                   : 'Add a note...',
-              hintStyle: GoogleFonts.inter(
+              hintStyle: AppTheme.geist(
                 fontSize: 14,
-                color: dark ? Colors.white24 : Colors.black26,
+                color: c.border,
                 fontWeight: FontWeight.w400,
               ),
               border: InputBorder.none,
@@ -1138,18 +1117,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               prefixIcon: Icon(
                 Icons.edit_note_rounded,
                 size: 20,
-                color: dark
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : Colors.black26,
+                color: c.textFaint,
               ),
               suffixIcon: _userNote != null && _userNote!.isNotEmpty
                   ? IconButton(
                       icon: Icon(
                         Icons.clear_rounded,
                         size: 18,
-                        color: dark
-                            ? Colors.white.withValues(alpha: 0.3)
-                            : Colors.black26,
+                        color: c.textFaint,
                       ),
                       onPressed: () {
                         _noteController.clear();
@@ -1161,7 +1136,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                     )
                   : null,
             ),
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 14,
               color: dark
                   ? Colors.white.withValues(alpha: 0.87)
@@ -1186,7 +1161,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       children: [
         Text(
           'RECENT',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.8,
@@ -1225,7 +1200,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 const SizedBox(width: 4),
                 Text(
                   _isProcessing ? 'PROCESSING…' : 'PROCESS ALL',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.0,
@@ -1245,6 +1220,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   // ─────────────────────────────────────────────────────────────────────
 
   Widget _buildCaptureCard(ThemeData theme, bool dark, CaptureEntry capture) {
+    final c = context.miruns;
     final dateFormat = DateFormat('MMM d · h:mm a');
 
     return Padding(
@@ -1262,9 +1238,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   : Colors.black.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: (dark ? Colors.white : Colors.black).withValues(
-                  alpha: dark ? 0.06 : 0.04,
-                ),
+                color: c.contrast.withValues(alpha: dark ? 0.06 : 0.04),
               ),
             ),
             child: Row(
@@ -1290,10 +1264,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                         children: [
                           Text(
                             dateFormat.format(capture.timestamp),
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: dark ? Colors.white60 : Colors.black54,
+                              color: c.textSecondary,
                             ),
                           ),
                           const Spacer(),
@@ -1308,9 +1282,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                         const SizedBox(height: 4),
                         Text(
                           capture.userNote!,
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 13,
-                            color: dark ? Colors.white70 : Colors.black87,
+                            color: c.textBody,
                             height: 1.5,
                           ),
                           maxLines: 1,
@@ -1342,9 +1316,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: dark
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.2),
+                  color: c.contrast.withValues(alpha: 0.2),
                 ),
               ],
             ),
@@ -1370,14 +1342,13 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   // ─────────────────────────────────────────────────────────────────────
 
   Widget _buildCaptureBar(ThemeData theme, bool dark) {
+    final c = context.miruns;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: Container(
           decoration: BoxDecoration(
-            color: (dark ? Colors.black : Colors.white).withValues(
-              alpha: dark ? 0.55 : 0.72,
-            ),
+            color: c.contrastReverse.withValues(alpha: dark ? 0.55 : 0.72),
             border: Border(
               top: BorderSide(
                 color: (dark ? AppTheme.shimmer : Colors.black).withValues(
@@ -1414,7 +1385,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _isCapturing
-                              ? (dark ? Colors.white12 : Colors.black12)
+                              ? c.divider
                               : theme.colorScheme.primary,
                           boxShadow: _isCapturing
                               ? null
@@ -1436,7 +1407,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      dark ? Colors.white60 : Colors.black38,
+                                      c.textMuted,
                                     ),
                                   ),
                                 ),
@@ -1471,6 +1442,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     Color? color,
     double size = 48,
   }) {
+    final c = context.miruns;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1479,21 +1451,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.10),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: color ?? (dark ? Colors.white70 : Colors.black54),
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: c.tintSubtle),
+        child: Icon(icon, size: 20, color: color ?? c.textSecondary),
       ),
     );
   }
 
   /// Gallery button with optional amber badge for pending captures.
   Widget _galleryButton(ThemeData theme, bool dark) {
+    final c = context.miruns;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1510,14 +1476,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               height: 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: (dark ? Colors.white : Colors.black).withValues(
-                  alpha: 0.10,
-                ),
+                color: c.tintSubtle,
               ),
               child: Icon(
                 Icons.photo_library_outlined,
                 size: 20,
-                color: dark ? Colors.white70 : Colors.black54,
+                color: c.textSecondary,
               ),
             ),
             if (_unprocessedCount > 0)
@@ -1538,7 +1502,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   alignment: Alignment.center,
                   child: Text(
                     '$_unprocessedCount',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 8,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -1563,12 +1527,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         SnackBar(
           content: Text(
             'No captures yet — hit the shutter button to create one.',
-            style: GoogleFonts.inter(fontSize: 13),
+            style: AppTheme.geist(fontSize: 13),
           ),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       );
       return;
@@ -1580,6 +1542,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) {
         final dark = Theme.of(sheetCtx).brightness == Brightness.dark;
+        final c = sheetCtx.miruns;
         final theme = Theme.of(sheetCtx);
 
         return DraggableScrollableSheet(
@@ -1602,9 +1565,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.2,
-                    ),
+                    color: c.contrast.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1616,10 +1577,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                     children: [
                       Text(
                         'Recents',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
-                          color: dark ? Colors.white : Colors.black87,
+                          color: c.textStrong,
                           letterSpacing: -0.4,
                         ),
                       ),
@@ -1638,7 +1599,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                         ),
                         child: Text(
                           '${_recentCaptures!.length}',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.primary,
@@ -1669,7 +1630,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                               const SizedBox(width: 4),
                               Text(
                                 '$_unprocessedCount pending',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.amber.shade600,
@@ -1704,7 +1665,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                 ),
                           label: Text(
                             'Process all',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.primary,
@@ -1745,6 +1706,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
 
   void _showCaptureDetails(CaptureEntry capture) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
 
     showModalBottomSheet(
       context: context,
@@ -1773,9 +1735,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.2,
-                    ),
+                    color: c.contrast.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1789,10 +1749,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                           Expanded(
                             child: Text(
                               'Capture Details',
-                              style: GoogleFonts.inter(
+                              style: AppTheme.geist(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w700,
-                                color: dark ? Colors.white : Colors.black87,
+                                color: c.textStrong,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -1801,7 +1761,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                             onPressed: () => Navigator.pop(context),
                             icon: Icon(
                               Icons.close_rounded,
-                              color: dark ? Colors.white38 : Colors.black26,
+                              color: c.textSubtle,
                             ),
                           ),
                         ],
@@ -1856,7 +1816,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                     ),
                               label: Text(
                                 _isProcessing ? 'Processing…' : 'Process Now',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: theme.colorScheme.primary,
@@ -1943,6 +1903,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     IconData icon, {
     Color? valueColor,
   }) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -1958,11 +1919,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               const SizedBox(width: 8),
               Text(
                 title.toUpperCase(),
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
-                  color: dark ? Colors.white38 : Colors.black38,
+                  color: c.textSubtle,
                 ),
               ),
             ],
@@ -1970,7 +1931,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color:
@@ -2033,6 +1994,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   ]);
 
   Widget _buildCalendarData(ThemeData theme, bool dark, List<String> events) {
+    final c = context.miruns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2046,11 +2008,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             const SizedBox(width: 8),
             Text(
               'CALENDAR EVENTS',
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
-                color: dark ? Colors.white38 : Colors.black38,
+                color: c.textSubtle,
               ),
             ),
           ],
@@ -2075,15 +2037,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                       children: [
                         Text(
                           '•  ',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 14,
-                            color: dark ? Colors.white60 : Colors.black54,
+                            color: c.textSecondary,
                           ),
                         ),
                         Expanded(
                           child: Text(
                             e,
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 14,
                               color: dark
                                   ? Colors.white.withValues(alpha: 0.87)
@@ -2110,6 +2072,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     IconData icon,
     List<(String, String)> metrics,
   ) {
+    final c = context.miruns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2123,11 +2086,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             const SizedBox(width: 8),
             Text(
               title,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
-                color: dark ? Colors.white38 : Colors.black38,
+                color: c.textSubtle,
               ),
             ),
           ],
@@ -2153,23 +2116,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   }
 
   Widget _buildMetric(bool dark, String label, String value) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: dark ? Colors.white38 : Colors.black38,
-            ),
-          ),
+          Text(label, style: AppTheme.geist(fontSize: 13, color: c.textSubtle)),
           const SizedBox(width: 16),
           Flexible(
             child: Text(
               value,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: dark
@@ -2306,6 +2264,7 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -2323,9 +2282,7 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: (dark ? Colors.white : Colors.black).withValues(
-                  alpha: 0.2,
-                ),
+                color: c.contrast.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2345,10 +2302,10 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
                 Expanded(
                   child: Text(
                     'Connect HR Device',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: dark ? Colors.white : Colors.black,
+                      color: c.contrast,
                     ),
                   ),
                 ),
@@ -2365,9 +2322,7 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
                 IconButton(
                   icon: Icon(
                     Icons.close_rounded,
-                    color: (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.4,
-                    ),
+                    color: c.contrast.withValues(alpha: 0.4),
                   ),
                   onPressed: widget.onCancel,
                 ),
@@ -2377,11 +2332,9 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
 
           Text(
             'Searching for Heart Rate Profile (BLE 0x180D) devices…',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 12,
-              color: (dark ? Colors.white : Colors.black).withValues(
-                alpha: 0.4,
-              ),
+              color: c.contrast.withValues(alpha: 0.4),
             ),
             textAlign: TextAlign.center,
           ),
@@ -2397,18 +2350,14 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
                   Icon(
                     Icons.bluetooth_disabled_rounded,
                     size: 40,
-                    color: (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.15,
-                    ),
+                    color: c.tintMedium,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'No devices found',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 14,
-                      color: (dark ? Colors.white : Colors.black).withValues(
-                        alpha: 0.35,
-                      ),
+                      color: c.contrast.withValues(alpha: 0.35),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -2446,18 +2395,16 @@ class _BleDevicePickerSheetState extends State<_BleDevicePickerSheet> {
                     ),
                     title: Text(
                       d.name,
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontWeight: FontWeight.w600,
-                        color: dark ? Colors.white : Colors.black,
+                        color: c.contrast,
                       ),
                     ),
                     subtitle: Text(
                       'Signal: ${'▮' * bars}${'▯' * (5 - bars)}  ${d.rssi} dBm',
-                      style: GoogleFonts.robotoMono(
+                      style: AppTheme.geistMono(
                         fontSize: 11,
-                        color: (dark ? Colors.white : Colors.black).withValues(
-                          alpha: 0.4,
-                        ),
+                        color: c.contrast.withValues(alpha: 0.4),
                       ),
                     ),
                     trailing: Icon(Icons.chevron_right_rounded, color: primary),
@@ -2551,6 +2498,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
+    final c = context.miruns;
     final height = MediaQuery.sizeOf(context).height * 0.75;
 
     return Container(
@@ -2567,9 +2515,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: (dark ? Colors.white : Colors.black).withValues(
-                alpha: 0.2,
-              ),
+              color: c.contrast.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -2586,19 +2532,16 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                 const SizedBox(width: 10),
                 Text(
                   'Scan Food Barcode',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: dark ? Colors.white : Colors.black,
+                    color: c.contrast,
                   ),
                 ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: dark ? Colors.white54 : Colors.black38,
-                  ),
+                  child: Icon(Icons.close_rounded, color: c.textMuted),
                 ),
               ],
             ),
@@ -2616,6 +2559,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
   }
 
   Widget _buildScannerView(ThemeData theme, bool dark) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -2680,7 +2624,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                                 _isLookingUp
                                     ? 'Looking up $_lastScannedCode…'
                                     : _errorMessage ?? '',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 12,
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -2700,10 +2644,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
           const SizedBox(height: 12),
           Text(
             'Point camera at a food barcode',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: dark ? Colors.white38 : Colors.black38,
-            ),
+            style: AppTheme.geist(fontSize: 13, color: c.textSubtle),
           ),
         ],
       ),
@@ -2711,6 +2652,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
   }
 
   Widget _buildProductResult(ThemeData theme, bool dark) {
+    final c = context.miruns;
     final p = _foundProduct!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2745,7 +2687,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                         child: Center(
                           child: Text(
                             p.nutriScore!.toUpperCase(),
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
@@ -2759,18 +2701,18 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                         children: [
                           Text(
                             p.productName,
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: dark ? Colors.white : Colors.black87,
+                              color: c.textStrong,
                             ),
                           ),
                           if (p.brand != null)
                             Text(
                               p.brand!,
-                              style: GoogleFonts.inter(
+                              style: AppTheme.geist(
                                 fontSize: 13,
-                                color: dark ? Colors.white54 : Colors.black45,
+                                color: c.textMuted,
                               ),
                             ),
                         ],
@@ -2783,7 +2725,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                 if (p.per100g != null) ...[
                   Text(
                     'Per 100 g',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.teal,
@@ -2797,7 +2739,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                   const SizedBox(height: 14),
                   Text(
                     'Per serving (${p.servingSize})',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.teal,
@@ -2828,7 +2770,7 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                     child: Center(
                       child: Text(
                         'Add to Capture',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -2854,17 +2796,15 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
                     horizontal: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: (dark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.08,
-                    ),
+                    color: c.contrast.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'Scan Again',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: dark ? Colors.white70 : Colors.black54,
+                      color: c.textSecondary,
                     ),
                   ),
                 ),
@@ -2908,18 +2848,19 @@ class _BarcodeScannerSheetState extends State<_BarcodeScannerSheet> {
   }
 
   Widget _macroChip(String emoji, String label, bool dark) {
+    final c = context.miruns;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
+        color: c.tintFaint,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         '$emoji $label',
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: dark ? Colors.white70 : Colors.black54,
+          color: c.textSecondary,
         ),
       ),
     );

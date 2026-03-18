@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Full-screen welcome / splash screen with animated miruns brand logo.
 /// Shown on every cold start before entering the main app.
@@ -188,7 +187,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         opacity: _logoOpacity.value,
                         child: Text(
                           'miruns',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 52,
                             fontWeight: FontWeight.w200,
                             letterSpacing: -1.0,
@@ -227,7 +226,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         opacity: _taglineOpacity.value,
                         child: Text(
                           'Neuroscience meets sport.',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 15,
                             fontWeight: FontWeight.w300,
                             letterSpacing: 0.5,
@@ -262,7 +261,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(9999),
                                   ),
-                                  textStyle: GoogleFonts.inter(
+                                  textStyle: AppTheme.geist(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -286,7 +285,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         opacity: _buttonOpacity.value * 0.5,
                         child: Text(
                           'v1.0',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
                             color: const Color(0xFF444444),

@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../services/ble_source_provider.dart';
 import '../services/fft_engine.dart';
@@ -250,7 +249,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
               children: [
                 Text(
                   'SPECTRAL ANALYSIS',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.aurora.withValues(alpha: 0.9),
@@ -260,7 +259,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
                 if (widget.sourceName != null)
                   Text(
                     widget.sourceName!,
-                    style: GoogleFonts.robotoMono(
+                    style: AppTheme.geistMono(
                       fontSize: 9,
                       color: AppTheme.fog.withValues(alpha: 0.5),
                       letterSpacing: 0.5,
@@ -287,7 +286,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
               ),
               child: Text(
                 '${_spectra[_activeChannel]!.dominantFrequency.toStringAsFixed(1)} Hz',
-                style: GoogleFonts.robotoMono(
+                style: AppTheme.geistMono(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.aurora,
@@ -353,7 +352,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
               child: Center(
                 child: Text(
                   descriptors[i].label,
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 10,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                     color: isActive
@@ -419,7 +418,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
                     const SizedBox(width: 4),
                     Text(
                       v.label,
-                      style: GoogleFonts.robotoMono(
+                      style: AppTheme.geistMono(
                         fontSize: 9,
                         fontWeight: isActive
                             ? FontWeight.w700
@@ -457,7 +456,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
             const SizedBox(height: 12),
             Text(
               'Collecting samples…',
-              style: GoogleFonts.robotoMono(
+              style: AppTheme.geistMono(
                 fontSize: 12,
                 color: AppTheme.fog.withValues(alpha: 0.5),
               ),
@@ -465,7 +464,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
             const SizedBox(height: 4),
             Text(
               '${widget.fftSize - _sampleCount.clamp(0, widget.fftSize)} remaining',
-              style: GoogleFonts.robotoMono(
+              style: AppTheme.geistMono(
                 fontSize: 10,
                 color: AppTheme.fog.withValues(alpha: 0.3),
               ),
@@ -511,7 +510,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
       return Center(
         child: Text(
           'Building waterfall…',
-          style: GoogleFonts.robotoMono(
+          style: AppTheme.geistMono(
             fontSize: 12,
             color: AppTheme.fog.withValues(alpha: 0.5),
           ),
@@ -572,7 +571,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
           Text(
             'FFT ${widget.fftSize} · ${widget.sampleRateHz.toInt()} Hz · '
             '${(widget.sampleRateHz / widget.fftSize).toStringAsFixed(1)} Hz/bin',
-            style: GoogleFonts.robotoMono(
+            style: AppTheme.geistMono(
               fontSize: 8,
               color: Colors.white.withValues(alpha: 0.15),
             ),
@@ -580,7 +579,7 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
           if (spectrum != null)
             Text(
               'Σ ${spectrum.totalPower.toStringAsFixed(1)} µV²',
-              style: GoogleFonts.robotoMono(
+              style: AppTheme.geistMono(
                 fontSize: 8,
                 color: AppTheme.aurora.withValues(alpha: 0.3),
               ),
@@ -966,7 +965,7 @@ class _BandMeter extends StatelessWidget {
               children: [
                 Text(
                   band.label,
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: color,
@@ -975,7 +974,7 @@ class _BandMeter extends StatelessWidget {
                 ),
                 Text(
                   '${band.lowHz.toStringAsFixed(0)}–${band.highHz.toStringAsFixed(0)} Hz',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 8,
                     color: AppTheme.fog.withValues(alpha: 0.5),
                   ),
@@ -1066,7 +1065,7 @@ class _BandMeter extends StatelessWidget {
               children: [
                 Text(
                   '${(fraction * 100).toStringAsFixed(0)}%',
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: color,
@@ -1074,7 +1073,7 @@ class _BandMeter extends StatelessWidget {
                 ),
                 Text(
                   power.toStringAsFixed(1),
-                  style: GoogleFonts.robotoMono(
+                  style: AppTheme.geistMono(
                     fontSize: 8,
                     color: AppTheme.fog.withValues(alpha: 0.4),
                   ),

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'miruns_colors.dart';
+
+export 'miruns_colors.dart';
+
 /// miruns Geist-aligned design system.
 ///
 /// Follows Vercel's Geist design language: Inter typeface, neutral gray scale,
@@ -660,6 +664,9 @@ class AppTheme {
         backgroundColor: crimson,
         textColor: moonbeam,
       ),
+
+      // ── Semantic Colors ──
+      extensions: const <ThemeExtension>[MirunsColors.dark],
     );
   }
 
@@ -1102,6 +1109,9 @@ class AppTheme {
         backgroundColor: Color(0xFFE5484D),
         textColor: _lightSurface,
       ),
+
+      // ── Semantic Colors ──
+      extensions: const <ThemeExtension>[MirunsColors.light],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 
 /// Themed section card with an expandable ⓘ info panel for transparency.
 ///
@@ -84,7 +85,7 @@ class _SectionCardState extends State<SectionCard>
                 children: [
                   Text(
                     widget.title.toUpperCase(),
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
@@ -137,7 +138,7 @@ class _SectionCardState extends State<SectionCard>
                     children: [
                       Text(
                         widget.explanation,
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 12,
                           height: 1.5,
                           color: theme.colorScheme.onSurface.withValues(
@@ -160,13 +161,12 @@ class _SectionCardState extends State<SectionCard>
                             Expanded(
                               child: Text(
                                 widget.dataSource!,
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 10,
-                                  fontStyle: FontStyle.italic,
                                   color: theme.colorScheme.onSurface.withValues(
                                     alpha: 0.4,
                                   ),
-                                ),
+                                ).copyWith(fontStyle: FontStyle.italic),
                               ),
                             ),
                           ],

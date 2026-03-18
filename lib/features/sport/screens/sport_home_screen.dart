@@ -10,7 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/ble_heart_rate_service.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../models/sport_profile.dart';
 import '../models/workout_session.dart';

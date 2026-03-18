@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/body_blog_entry.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -42,6 +42,7 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
     final insight = _deriveInsight(widget.entry);
 
@@ -99,7 +100,7 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
                   const SizedBox(width: 8),
                   Text(
                     insight.category.toUpperCase(),
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.6,
@@ -114,15 +115,14 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
               // Main reflection text — the "mantra"
               Text(
                 insight.reflection,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  fontStyle: FontStyle.italic,
                   height: 1.5,
                   color: dark
                       ? Colors.white.withValues(alpha: 0.87)
                       : Colors.black.withValues(alpha: 0.80),
-                ),
+                ).copyWith(fontStyle: FontStyle.italic),
               ),
 
               const SizedBox(height: 14),
@@ -130,11 +130,11 @@ class _InsightReflectionCardState extends State<InsightReflectionCard>
               // Supporting data point
               Text(
                 insight.evidence,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
                   height: 1.5,
-                  color: dark ? Colors.white38 : Colors.black38,
+                  color: c.textSubtle,
                 ),
               ),
             ],

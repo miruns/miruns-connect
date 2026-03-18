@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../shared/widgets/nav_menu_button.dart';
 import '../widgets/m_signal_logo.dart';
 
@@ -122,7 +121,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                   const SizedBox(width: 8),
                   Text(
                     'miruns',
-                    style: GoogleFonts.inter(
+                    style: AppTheme.geist(
                       fontSize: 20,
                       fontWeight: FontWeight.w300,
                       color: AppTheme.moonbeam,
@@ -205,7 +204,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                               const SizedBox(height: 8),
                               Text(
                                 'Start',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.moonbeam,
@@ -214,7 +213,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                               ),
                               Text(
                                 'session',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
                                   color: AppTheme.fog,
@@ -234,7 +233,7 @@ class _EegHomeScreenState extends ConsumerState<EegHomeScreen>
                 _isConnected
                     ? 'Connected · ready to stream'
                     : 'Tap to scan & connect',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 13,
                   color: _isConnected ? AppTheme.seaGreen : AppTheme.fog,
                 ),
@@ -300,7 +299,7 @@ class _StatusPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: dot,
@@ -425,7 +424,7 @@ class _ExpertToggle extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'Expert',
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: color,
@@ -471,7 +470,7 @@ class _ExpertPanel extends StatelessWidget {
         children: [
           Text(
             'EXPERT MODE',
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: AppTheme.aurora.withValues(alpha: 0.7),
@@ -551,7 +550,7 @@ class _ExpertShortcut extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: AppTheme.geist(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.moonbeam,
@@ -560,7 +559,7 @@ class _ExpertShortcut extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               sublabel,
-              style: GoogleFonts.inter(fontSize: 10, color: AppTheme.fog),
+              style: AppTheme.geist(fontSize: 10, color: AppTheme.fog),
             ),
           ],
         ),

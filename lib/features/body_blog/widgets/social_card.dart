@@ -4,11 +4,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/body_blog_entry.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ class SocialCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   '${entry.moodEmoji}  ${entry.mood.toUpperCase()}',
-                  style: GoogleFonts.inter(
+                  style: AppTheme.geist(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 1.1,
@@ -94,7 +94,7 @@ class SocialCard extends StatelessWidget {
                   children: [
                     Text(
                       headline,
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: _headlineFontSize(headline),
                         fontWeight: FontWeight.w700,
                         height: 1.22,
@@ -118,13 +118,12 @@ class SocialCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 '"$excerpt"',
-                                style: GoogleFonts.inter(
+                                style: AppTheme.geist(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w300,
-                                  fontStyle: FontStyle.italic,
                                   height: 1.55,
                                   color: _cream.withValues(alpha: 0.62),
-                                ),
+                                ).copyWith(fontStyle: FontStyle.italic),
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -168,7 +167,7 @@ class SocialCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'miruns',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           height: 1.1,
@@ -178,7 +177,7 @@ class SocialCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         '· body journal',
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 8.5,
                           fontWeight: FontWeight.w300,
                           letterSpacing: 1.2,
@@ -198,7 +197,7 @@ class SocialCard extends StatelessWidget {
                     children: [
                       Text(
                         dateStr,
-                        style: GoogleFonts.inter(
+                        style: AppTheme.geist(
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 1.1,
@@ -212,7 +211,7 @@ class SocialCard extends StatelessWidget {
                         children: [
                           Text(
                             'Read more at  ',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 9,
                               fontWeight: FontWeight.w300,
                               color: _urlColor,
@@ -220,7 +219,7 @@ class SocialCard extends StatelessWidget {
                           ),
                           Text(
                             'miruns',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 9,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.4,
@@ -229,7 +228,7 @@ class SocialCard extends StatelessWidget {
                           ),
                           Text(
                             '  ↗',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 9,
                               color: _accent.withValues(alpha: 0.7),
                             ),
@@ -297,7 +296,7 @@ class _SocialTag extends StatelessWidget {
       ),
       child: Text(
         '#$label',
-        style: GoogleFonts.inter(
+        style: AppTheme.geist(
           fontSize: 9.5,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.4,

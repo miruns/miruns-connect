@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/body_blog_entry.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -46,6 +46,7 @@ class _BodyHarmonyRingState extends State<BodyHarmonyRing>
   Widget build(BuildContext context) {
     final s = widget.snapshot;
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     final primary = Theme.of(context).colorScheme.primary;
 
     // Build ring data from available metrics
@@ -124,11 +125,11 @@ class _BodyHarmonyRingState extends State<BodyHarmonyRing>
               // Section label
               Text(
                 'BODY HARMONY',
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.8,
-                  color: dark ? Colors.white24 : Colors.black26,
+                  color: c.border,
                 ),
               ),
               const SizedBox(height: 20),
@@ -155,7 +156,7 @@ class _BodyHarmonyRingState extends State<BodyHarmonyRing>
                           curve: Curves.easeOutCubic,
                           builder: (_, v, __) => Text(
                             '${v.round()}',
-                            style: GoogleFonts.inter(
+                            style: AppTheme.geist(
                               fontSize: 38,
                               fontWeight: FontWeight.w200,
                               letterSpacing: -1,
@@ -167,7 +168,7 @@ class _BodyHarmonyRingState extends State<BodyHarmonyRing>
                         ),
                         Text(
                           _harmonyLabel(harmony),
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
@@ -363,6 +364,7 @@ class _RingLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -384,16 +386,16 @@ class _RingLegend extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           '${ring.icon} ${ring.label}',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: dark ? Colors.white54 : Colors.black45,
+            color: c.textMuted,
           ),
         ),
         const SizedBox(width: 4),
         Text(
           '${(ring.value * 100).round()}%',
-          style: GoogleFonts.inter(
+          style: AppTheme.geist(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             color: ring.color.withValues(alpha: 0.8),

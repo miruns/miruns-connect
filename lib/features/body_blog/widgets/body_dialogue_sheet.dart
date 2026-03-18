@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../../core/models/ai_models.dart';
 import '../../../core/models/body_blog_entry.dart';
 import '../../../core/services/body_dialogue_service.dart';
@@ -163,7 +163,7 @@ class _BodyDialogueSheetState extends ConsumerState<_BodyDialogueSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 _error!,
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.redAccent),
+                style: AppTheme.geist(fontSize: 12, color: Colors.redAccent),
               ),
             ),
 
@@ -198,6 +198,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Column(
       children: [
         const SizedBox(height: 10),
@@ -206,7 +207,7 @@ class _Header extends StatelessWidget {
           width: 36,
           height: 4,
           decoration: BoxDecoration(
-            color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+            color: c.tintMedium,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -223,37 +224,28 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'Ask Your Body',
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: dark ? Colors.white : Colors.black87,
+                        color: c.textStrong,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'A conversation with yourself',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: dark ? Colors.white38 : Colors.black38,
-                      ),
+                      style: AppTheme.geist(fontSize: 12, color: c.textSubtle),
                     ),
                   ],
                 ),
               ),
               IconButton(
                 onPressed: onClose,
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: dark ? Colors.white54 : Colors.black45,
-                ),
+                icon: Icon(Icons.close_rounded, color: c.textMuted),
               ),
             ],
           ),
         ),
-        Divider(
-          height: 1,
-          color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-        ),
+        Divider(height: 1, color: c.tintFaint),
       ],
     );
   }
@@ -279,6 +271,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
       child: Column(
@@ -289,10 +282,10 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Your body is feeling $mood today',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: dark ? Colors.white70 : Colors.black54,
+              color: c.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -300,10 +293,10 @@ class _EmptyState extends StatelessWidget {
             'Ask anything about how you\'re doing — sleep, energy, '
             'heart rate, recovery, or just check in.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13,
               height: 1.5,
-              color: dark ? Colors.white30 : Colors.black38,
+              color: c.textFaint,
             ),
           ),
           const SizedBox(height: 28),
@@ -339,6 +332,7 @@ class _SuggestionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Material(
       color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
       borderRadius: BorderRadius.circular(6),
@@ -349,10 +343,10 @@ class _SuggestionChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Text(
             label,
-            style: GoogleFonts.inter(
+            style: AppTheme.geist(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: dark ? Colors.white70 : Colors.black54,
+              color: c.textSecondary,
             ),
           ),
         ),
@@ -374,6 +368,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     final userBg = dark ? const Color(0xFF0A84FF) : const Color(0xFF007AFF);
     final bodyBg = dark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7);
 
@@ -393,10 +388,7 @@ class _MessageBubble extends StatelessWidget {
                   : const Color(0xFFE5E5EA),
               child: Text(
                 '✦',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: dark ? Colors.white60 : Colors.black45,
-                ),
+                style: TextStyle(fontSize: 13, color: c.textMuted),
               ),
             ),
             const SizedBox(width: 8),
@@ -415,7 +407,7 @@ class _MessageBubble extends StatelessWidget {
               ),
               child: Text(
                 message.content,
-                style: GoogleFonts.inter(
+                style: AppTheme.geist(
                   fontSize: 14,
                   height: 1.45,
                   color: _isUser
@@ -467,6 +459,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.miruns;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -478,10 +471,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                 : const Color(0xFFE5E5EA),
             child: Text(
               '✦',
-              style: TextStyle(
-                fontSize: 13,
-                color: dark ? Colors.white60 : Colors.black45,
-              ),
+              style: TextStyle(fontSize: 13, color: c.textMuted),
             ),
           ),
           const SizedBox(width: 8),
@@ -551,15 +541,12 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.miruns;
     return Container(
       padding: EdgeInsets.fromLTRB(12, 8, 12, 12 + bottomInset),
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF1C1C1E) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-          ),
-        ),
+        border: Border(top: BorderSide(color: c.tintFaint)),
       ),
       child: Row(
         children: [
@@ -577,16 +564,10 @@ class _InputBar extends StatelessWidget {
                 enabled: !sending,
                 maxLines: 3,
                 minLines: 1,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: dark ? Colors.white : Colors.black87,
-                ),
+                style: AppTheme.geist(fontSize: 14, color: c.textStrong),
                 decoration: InputDecoration(
                   hintText: 'Ask your body something…',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: dark ? Colors.white24 : Colors.black26,
-                  ),
+                  hintStyle: AppTheme.geist(fontSize: 14, color: c.border),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,

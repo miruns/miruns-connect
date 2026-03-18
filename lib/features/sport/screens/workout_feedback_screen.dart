@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/service_providers.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../models/workout_session.dart';
 import '../services/workout_service.dart';
 import '../widgets/sport_widgets.dart';
@@ -138,7 +137,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                     const SizedBox(height: 8),
                     Text(
                       _submitted ? 'Analyzing...' : 'Great Work!',
-                      style: GoogleFonts.inter(
+                      style: AppTheme.geist(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.moonbeam,
@@ -380,7 +379,7 @@ class _WorkoutFeedbackScreenState extends ConsumerState<WorkoutFeedbackScreen> {
                       children: [
                         Text(
                           '${_analysis!.performanceScore}',
-                          style: GoogleFonts.inter(
+                          style: AppTheme.geist(
                             fontSize: 56,
                             fontWeight: FontWeight.w800,
                             color: AppTheme.glow,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/services/service_providers.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../../../../../../../../../core/theme/app_theme.dart';
 import '../shared/widgets/nav_menu_button.dart';
 import '../sport/widgets/active_workout_banner.dart';
 
