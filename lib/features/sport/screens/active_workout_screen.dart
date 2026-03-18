@@ -212,6 +212,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             // ── Layer 0: Animated ambient background ────────────────
             _CinematicBackground(
               zoneColor: zoneColor,
+              zoneNumber: zone.zone,
               breatheAnim: _breatheAnim!,
               particleAnim: _particleCtrl!,
               isPaused: state.isPaused,
@@ -485,7 +486,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
-  // ── Hero row: cinematic timer + glowing HR ring ───────────────────────
+  // ── Hero row: cinematic timer + BPM readout ──────────────────────────
   Widget _buildHeroRow(ActiveWorkoutState state, HrZone zone, Color zoneColor) {
     return AnimatedBuilder(
       animation: _pulseAnim!,
@@ -569,32 +570,38 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   ],
                 ),
               ),
-              // HR ring with outer glow halo
+              // Large BPM readout (no circle)
               if (state.currentHr > 0)
                 Transform.scale(
                   scale: _pulseAnim!.value,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: zoneColor.withValues(alpha: 0.25),
-                          blurRadius: 30,
-                          spreadRadius: -5,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${state.currentHr}',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 52,
+                          fontWeight: FontWeight.w300,
+                          color: zoneColor,
+                          height: 1.0,
+                          shadows: [
+                            Shadow(
+                              color: zoneColor.withValues(alpha: 0.4),
+                              blurRadius: 30,
+                            ),
+                          ],
                         ),
-                        BoxShadow(
-                          color: zoneColor.withValues(alpha: 0.08),
-                          blurRadius: 60,
-                          spreadRadius: 5,
+                      ),
+                      Text(
+                        'bpm',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: zoneColor.withValues(alpha: 0.6),
+                          letterSpacing: 2,
                         ),
-                      ],
-                    ),
-                    child: HrZoneRing(
-                      currentHr: state.currentHr,
-                      zone: zone,
-                      maxHr: state.profile.estimatedMaxHr,
-                      size: 110,
-                    ),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -836,12 +843,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
 class _CinematicBackground extends StatelessWidget {
   final Color zoneColor;
+  final int zoneNumber;
   final Animation<double> breatheAnim;
   final AnimationController particleAnim;
   final bool isPaused;
 
   const _CinematicBackground({
     required this.zoneColor,
+    required this.zoneNumber,
     required this.breatheAnim,
     required this.particleAnim,
     required this.isPaused,
@@ -857,6 +866,7 @@ class _CinematicBackground extends StatelessWidget {
           child: CustomPaint(
             painter: _AmbientPainter(
               zoneColor: zoneColor,
+              zoneNumber: zoneNumber,
               breathe: t,
               particlePhase: particleAnim.value,
               isPaused: isPaused,
@@ -870,12 +880,14 @@ class _CinematicBackground extends StatelessWidget {
 
 class _AmbientPainter extends CustomPainter {
   final Color zoneColor;
+  final int zoneNumber;
   final double breathe;
   final double particlePhase;
   final bool isPaused;
 
   _AmbientPainter({
     required this.zoneColor,
+    required this.zoneNumber,
     required this.breathe,
     required this.particlePhase,
     required this.isPaused,
@@ -883,56 +895,96 @@ class _AmbientPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // ── 1. Deep radial gradient that breathes ──
-    final glowAlpha = isPaused ? 0.04 : 0.06 + breathe * 0.05;
-    final gradient = RadialGradient(
-      center: const Alignment(0.3, -0.4),
-      radius: 1.2 + breathe * 0.15,
-      colors: [
-        zoneColor.withValues(alpha: glowAlpha),
-        zoneColor.withValues(alpha: glowAlpha * 0.3),
-        Colors.transparent,
-      ],
-      stops: const [0.0, 0.4, 1.0],
-    );
     final rect = Offset.zero & size;
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
 
-    // ── 2. Secondary ambient bloom (bottom left) ──
-    final gradient2 = RadialGradient(
-      center: const Alignment(-0.6, 0.8),
-      radius: 0.8 + breathe * 0.1,
+    // Zone-aware intensity — higher zones = more dramatic
+    final zoneIntensity = zoneNumber / 5.0; // 0.2 … 1.0
+    final baseAlpha = isPaused ? 0.03 : 0.04 + zoneIntensity * 0.06;
+    final glowAlpha = baseAlpha + breathe * 0.04 * zoneIntensity;
+
+    // ── 1. Primary bloom — rises from bottom as zone increases ──
+    // Z1: sits at very bottom, soft & wide
+    // Z5: climbs to center, intense & tight
+    final primaryY = 1.0 - (zoneNumber - 1) * 0.25; // 1.0 → 0.0
+    final primaryRadius = 1.4 - zoneIntensity * 0.4 + breathe * 0.15;
+    final primary = RadialGradient(
+      center: Alignment(0.0, primaryY.clamp(-0.2, 1.0)),
+      radius: primaryRadius,
       colors: [
-        zoneColor.withValues(alpha: glowAlpha * 0.4),
+        zoneColor.withValues(alpha: glowAlpha * 1.5),
+        zoneColor.withValues(alpha: glowAlpha * 0.5),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.35, 1.0],
+    );
+    canvas.drawRect(rect, Paint()..shader = primary.createShader(rect));
+
+    // ── 2. Secondary accent bloom (opposite corner, subtle) ──
+    final secY = -0.6 + zoneIntensity * 0.4;
+    final secondary = RadialGradient(
+      center: Alignment(-0.5, secY),
+      radius: 0.9 + breathe * 0.1,
+      colors: [
+        zoneColor.withValues(alpha: glowAlpha * 0.35),
         Colors.transparent,
       ],
     );
-    canvas.drawRect(rect, Paint()..shader = gradient2.createShader(rect));
+    canvas.drawRect(rect, Paint()..shader = secondary.createShader(rect));
 
-    // ── 3. Floating particles ──
+    // ── 3. Hot-edge vignette for Z4/Z5 — cinematic tension ──
+    if (zoneNumber >= 4) {
+      final edgeAlpha = (zoneNumber == 5 ? 0.08 : 0.04) + breathe * 0.03;
+      // Bottom edge glow
+      final edgeGrad = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.center,
+        colors: [
+          zoneColor.withValues(alpha: edgeAlpha),
+          Colors.transparent,
+        ],
+      );
+      canvas.drawRect(rect, Paint()..shader = edgeGrad.createShader(rect));
+      // Side vignettes for Z5
+      if (zoneNumber == 5) {
+        for (final side in [-1.0, 1.0]) {
+          final sideGrad = RadialGradient(
+            center: Alignment(side, 0.3),
+            radius: 0.8,
+            colors: [
+              zoneColor.withValues(alpha: edgeAlpha * 0.5),
+              Colors.transparent,
+            ],
+          );
+          canvas.drawRect(rect, Paint()..shader = sideGrad.createShader(rect));
+        }
+      }
+    }
+
+    // ── 4. Floating particles — density scales with zone ──
     if (!isPaused) {
-      _drawParticles(canvas, size);
+      _drawParticles(canvas, size, zoneIntensity);
     }
   }
 
-  void _drawParticles(Canvas canvas, Size size) {
-    final rng = math.Random(42); // deterministic seed for stable layout
-    const count = 25;
+  void _drawParticles(Canvas canvas, Size size, double zoneIntensity) {
+    final rng = math.Random(42);
+    final count = 15 + (zoneIntensity * 20).round(); // 17…35 particles
     final paint = Paint()..style = PaintingStyle.fill;
+    final speed0 = 0.15 + zoneIntensity * 0.3; // faster at high zones
 
     for (var i = 0; i < count; i++) {
       final baseX = rng.nextDouble();
       final baseY = rng.nextDouble();
-      final speed = 0.2 + rng.nextDouble() * 0.8;
-      final radius = 1.0 + rng.nextDouble() * 2.0;
+      final speed = speed0 + rng.nextDouble() * 0.6;
+      final radius = 0.8 + rng.nextDouble() * (1.5 + zoneIntensity);
 
-      // Drift upward slowly, wrap around
       final phase = (particlePhase * speed + baseY) % 1.0;
+      final sway = 12.0 + zoneIntensity * 10;
       final x =
-          baseX * size.width + math.sin((particlePhase + i) * math.pi * 2) * 15;
+          baseX * size.width +
+          math.sin((particlePhase + i) * math.pi * 2) * sway;
       final y = size.height * (1.0 - phase);
 
-      // Fade at edges
       final edgeFade =
           (phase < 0.1
                   ? phase / 0.1
@@ -942,7 +994,7 @@ class _AmbientPainter extends CustomPainter {
               .clamp(0.0, 1.0);
 
       paint.color = zoneColor.withValues(
-        alpha: (0.08 + breathe * 0.06) * edgeFade,
+        alpha: (0.06 + breathe * 0.05 + zoneIntensity * 0.04) * edgeFade,
       );
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
