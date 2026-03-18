@@ -276,7 +276,7 @@ class _BodyBlogScreenState extends ConsumerState<BodyBlogScreen> {
           child: Column(
             children: [
               AppHeader(
-                title: 'Miruns',
+                title: 'miruns',
                 primaryAction: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -21,6 +21,7 @@ import '../../features/sport/screens/sport_home_screen.dart';
 import '../../features/sport/screens/sport_profile_screen.dart';
 import '../../features/sport/screens/workout_feedback_screen.dart';
 import '../../features/sport/screens/workout_history_screen.dart';
+import '../../features/welcome/screens/welcome_screen.dart';
 
 class AppRouter {
   static late final GoRouter router;
@@ -28,8 +29,20 @@ class AppRouter {
   /// Call once before [runApp] to set the initial route based on user prefs.
   static void init({bool skipOnboarding = false}) {
     router = GoRouter(
-      initialLocation: '/sport',
+      initialLocation: '/welcome',
       routes: [
+        // ── Welcome / splash screen ──────────────────────────────────────
+        GoRoute(
+          path: '/welcome',
+          name: 'welcome',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const WelcomeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(opacity: animation, child: child),
+          ),
+        ),
         // ── EEG onboarding (kept for headset pairing flow) ──────────────
         GoRoute(
           path: '/eeg-onboarding',

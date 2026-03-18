@@ -167,7 +167,7 @@ class SocialCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Miruns',
+                        'miruns',
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,

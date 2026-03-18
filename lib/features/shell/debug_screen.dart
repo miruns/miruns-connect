@@ -821,7 +821,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Miruns',
+                'miruns',
                 style: GoogleFonts.spaceMono(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

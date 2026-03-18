@@ -454,22 +454,22 @@ class _WelcomePage extends StatelessWidget {
 
           // ── branding ──
           Text(
-            'Miruns',
+            'miruns',
             style: GoogleFonts.inter(
-              fontSize: 44,
-              fontWeight: FontWeight.w700,
+              fontSize: 48,
+              fontWeight: FontWeight.w200,
               color: dark ? Colors.white : Colors.black87,
-              letterSpacing: -0.5,
+              letterSpacing: -1.0,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Your mindful body companion',
+            'Neuroscience meets sport.',
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w300,
               color: Colors.grey[500],
-              letterSpacing: 0.8,
+              letterSpacing: 0.5,
             ),
           ),
 
@@ -1559,7 +1559,7 @@ class _CompletePage extends StatelessWidget {
           const Spacer(flex: 3),
 
           _PillButton(
-            label: 'Enter Miruns',
+            label: 'Enter miruns',
             color: primary,
             onPressed: onEnter,
           ),

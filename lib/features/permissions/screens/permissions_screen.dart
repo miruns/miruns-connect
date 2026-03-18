@@ -94,9 +94,9 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                 ),
               ),
               Text(
-                'Miruns',
+                'miruns',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w200,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
