@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,20 +15,11 @@ import '../services/active_workout_notifier.dart';
 import '../widgets/sport_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Active Workout — full-screen real-time training interface
+// Active Workout — cinematic full-screen real-time training interface
 //
 // All recording state lives in [ActiveWorkoutNotifier] so the workout
 // keeps running even when the user navigates to another tab. This screen
 // is a pure UI layer that reads from the notifier.
-//
-// Shows:
-//   · Elapsed timer (large, always visible) with phase sub-timer
-//   · HR zone ring (center hero with glow)
-//   · Phase progress strip (warmup → active → cooldown)
-//   · Live metrics grid (pace, distance, speed, altitude)
-//   · EEG spectral bands (δ θ α β γ with derived indices)
-//   · AI coaching insights
-//   · Phase controls (warmup → active → cooldown → finish)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
@@ -38,17 +32,76 @@ class ActiveWorkoutScreen extends ConsumerStatefulWidget {
       _ActiveWorkoutScreenState();
 }
 
-class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
+class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
+    with TickerProviderStateMixin {
+  // ── Animation controllers ──
+  AnimationController? _breatheCtrl;
+  AnimationController? _particleCtrl;
+  AnimationController? _entranceCtrl;
+  AnimationController? _pulseCtrl;
+
+  Animation<double>? _breatheAnim;
+  Animation<double>? _entranceAnim;
+  Animation<double>? _pulseAnim;
+
+  bool _animsReady = false;
+
   @override
   void initState() {
     super.initState();
 
-    // Start a new workout if one isn't already running (user may be
-    // returning to this screen via the banner while the workout is live).
+    // Slow breathing ambient glow (6s cycle)
+    _breatheCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
+    _breatheAnim = CurvedAnimation(
+      parent: _breatheCtrl!,
+      curve: Curves.easeInOut,
+    );
+
+    // Continuous particle drift
+    _particleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    // Entrance stagger
+    _entranceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+    _entranceAnim = CurvedAnimation(
+      parent: _entranceCtrl!,
+      curve: Curves.easeOutCubic,
+    );
+
+    // HR pulse (fast heartbeat feel)
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulseCtrl!, curve: Curves.easeInOut));
+
+    _animsReady = true;
+
+    // Start workout if needed
     final notifier = ref.read(activeWorkoutProvider);
     if (!notifier.isActive) {
       notifier.startWorkout(widget.workoutType);
     }
+  }
+
+  @override
+  void dispose() {
+    _breatheCtrl?.dispose();
+    _particleCtrl?.dispose();
+    _entranceCtrl?.dispose();
+    _pulseCtrl?.dispose();
+    super.dispose();
   }
 
   void _advancePhase() {
@@ -56,7 +109,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     final notifier = ref.read(activeWorkoutProvider);
     notifier.advancePhase();
 
-    // If workout just finished, navigate to feedback.
     final finished = notifier.consumeFinishedSession();
     if (finished != null && mounted) {
       context.pushReplacement('/sport/feedback', extra: finished);
@@ -106,7 +158,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     }
   }
 
-  /// Navigate back to the home screen while keeping the workout alive.
   void _minimise() {
     if (context.canPop()) {
       context.pop();
@@ -117,6 +168,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_animsReady) {
+      return const Scaffold(
+        backgroundColor: AppTheme.void_,
+        body: SizedBox.shrink(),
+      );
+    }
+
     final notifier = ref.watch(activeWorkoutProvider);
     final state = notifier.state;
 
@@ -149,105 +207,173 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       canPop: true,
       child: Scaffold(
         backgroundColor: AppTheme.void_,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // ── Top bar ────────────────────────────────────────────
-              _buildTopBar(state, zoneColor),
-              _buildPhaseStrip(state, zoneColor),
+        body: Stack(
+          children: [
+            // ── Layer 0: Animated ambient background ────────────────
+            _CinematicBackground(
+              zoneColor: zoneColor,
+              breatheAnim: _breatheAnim!,
+              particleAnim: _particleCtrl!,
+              isPaused: state.isPaused,
+            ),
 
-              // ── Hero: timer + HR ring side by side ─────────────────
-              _buildHeroRow(state, zone, zoneColor),
-
-              // ── All data scrollable ────────────────────────────────
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: Column(
-                    children: [
-                      // ── Metrics strip ──────────────────────────────
-                      _buildMetricsGrid(state, pace),
-
-                      // ── EEG Spectral ───────────────────────────────
-                      if (state.latestEeg != null) ...[
-                        const SizedBox(height: 10),
-                        EegBandsIndicator(eeg: state.latestEeg!),
-                      ],
-
-                      // ── AI Insights ────────────────────────────────
-                      if (state.recentInsights.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        ...state.recentInsights
-                            .take(3)
-                            .map(
-                              (insight) => Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: InsightCard(
-                                  message: insight.message,
-                                  label: insight.type.label,
-                                ),
-                              ),
-                            ),
-                      ],
-
-                      // ── No HR prompt (only when no other data) ─────
-                      if (state.currentHr <= 0 &&
-                          state.latestEeg == null &&
-                          state.gpsMetrics.totalDistanceKm <= 0)
-                        _buildConnectHrPrompt(),
-
-                      const SizedBox(height: 16),
-                    ],
+            // ── Layer 1: Content ────────────────────────────────────
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(state, zoneColor),
+                  _buildPhaseStrip(state, zoneColor),
+                  _buildHeroRow(state, zone, zoneColor),
+                  Expanded(
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.white,
+                          Colors.white,
+                          Colors.transparent,
+                        ],
+                        stops: const [0, 0.02, 0.95, 1],
+                      ).createShader(bounds),
+                      blendMode: BlendMode.dstIn,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        child: _buildScrollContent(state, pace, zoneColor),
+                      ),
+                    ),
                   ),
-                ),
+                  _buildBottomControls(state, zoneColor),
+                ],
               ),
-
-              // ── Bottom controls ────────────────────────────────────
-              _buildBottomControls(state, zoneColor),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ── Top bar ──────────────────────────────────────────────────────────────
+  // ── Scroll content with staggered entrance ────────────────────────────
+  Widget _buildScrollContent(
+    ActiveWorkoutState state,
+    double? pace,
+    Color zoneColor,
+  ) {
+    return AnimatedBuilder(
+      animation: _entranceAnim!,
+      builder: (context, _) {
+        return Column(
+          children: [
+            // Metrics
+            _staggerChild(0, child: _buildMetricsGrid(state, pace)),
+
+            // EEG
+            if (state.latestEeg != null) ...[
+              const SizedBox(height: 10),
+              _staggerChild(1, child: EegBandsIndicator(eeg: state.latestEeg!)),
+            ],
+
+            // Insights
+            if (state.recentInsights.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ...state.recentInsights
+                  .take(3)
+                  .toList()
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => _staggerChild(
+                      2 + e.key,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: InsightCard(
+                          message: e.value.message,
+                          label: e.value.type.label,
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
+
+            // No-HR prompt
+            if (state.currentHr <= 0 &&
+                state.latestEeg == null &&
+                state.gpsMetrics.totalDistanceKm <= 0)
+              _staggerChild(2, child: _buildConnectHrPrompt()),
+
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Staggered entrance: each child slides up & fades in with a delay offset.
+  Widget _staggerChild(int index, {required Widget child}) {
+    final delay = (index * 0.15).clamp(0.0, 0.6);
+    final end = (delay + 0.4).clamp(0.0, 1.0);
+    final progress = Interval(delay, end, curve: Curves.easeOutCubic);
+    final t = progress.transform(_entranceAnim!.value);
+    return Opacity(
+      opacity: t,
+      child: Transform.translate(offset: Offset(0, 20 * (1 - t)), child: child),
+    );
+  }
+
+  // ── Top bar with glass effect ────────────────────────────────────────────
   Widget _buildTopBar(ActiveWorkoutState state, Color zoneColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Minimise
+          // Minimise — glass circle
           GestureDetector(
             onTap: _minimise,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppTheme.shimmer.withValues(alpha: 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 22,
-                color: AppTheme.fog,
+            child: ClipOval(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 22,
+                    color: AppTheme.fog,
+                  ),
+                ),
               ),
             ),
           ),
-          // Phase + Activity
+          // Phase badge + Activity label
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Glowing phase badge
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+                  horizontal: 12,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: zoneColor.withValues(alpha: 0.15),
+                  color: zoneColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: zoneColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: zoneColor.withValues(alpha: 0.25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: zoneColor.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      spreadRadius: -2,
+                    ),
+                  ],
                 ),
                 child: Text(
                   state.session.phase.label.toUpperCase(),
@@ -255,12 +381,16 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: zoneColor,
-                    letterSpacing: 1,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(widget.workoutType.icon, size: 18, color: AppTheme.fog),
+              const SizedBox(width: 10),
+              Icon(
+                widget.workoutType.icon,
+                size: 18,
+                color: AppTheme.fog.withValues(alpha: 0.8),
+              ),
               const SizedBox(width: 4),
               Text(
                 widget.workoutType.label,
@@ -272,18 +402,25 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               ),
             ],
           ),
-          // Stop
+          // Stop — crimson glass with glow
           GestureDetector(
             onTap: _confirmStop,
             child: Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: AppTheme.crimson.withValues(alpha: 0.15),
+                color: AppTheme.crimson.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.crimson.withValues(alpha: 0.3),
+                  color: AppTheme.crimson.withValues(alpha: 0.25),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.crimson.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
               child: const Icon(
                 Icons.stop_rounded,
@@ -297,7 +434,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     );
   }
 
-  // ── Phase progress strip ─────────────────────────────────────────────────
+  // ── Phase strip with animated glow on active segment ─────────────────────
   Widget _buildPhaseStrip(ActiveWorkoutState state, Color zoneColor) {
     const phases = [
       WorkoutPhase.warmup,
@@ -306,108 +443,174 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     ];
     final currentIdx = phases.indexOf(state.session.phase);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          for (var i = 0; i < phases.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Expanded(
-              flex: i == 1 ? 3 : 1, // active phase gets more space
-              child: Container(
-                height: 3,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2),
-                  color: i <= currentIdx
-                      ? zoneColor
-                      : AppTheme.shimmer.withValues(alpha: 0.3),
+    return AnimatedBuilder(
+      animation: _breatheAnim!,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              for (var i = 0; i < phases.length; i++) ...[
+                if (i > 0) const SizedBox(width: 4),
+                Expanded(
+                  flex: i == 1 ? 3 : 1,
+                  child: Container(
+                    height: i == currentIdx ? 4 : 3,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: i < currentIdx
+                          ? zoneColor.withValues(alpha: 0.6)
+                          : i == currentIdx
+                          ? zoneColor
+                          : AppTheme.shimmer.withValues(alpha: 0.2),
+                      boxShadow: i == currentIdx
+                          ? [
+                              BoxShadow(
+                                color: zoneColor.withValues(
+                                  alpha: 0.3 + _breatheAnim!.value * 0.3,
+                                ),
+                                blurRadius: 8 + _breatheAnim!.value * 4,
+                                spreadRadius: -1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Hero row: cinematic timer + glowing HR ring ───────────────────────
+  Widget _buildHeroRow(ActiveWorkoutState state, HrZone zone, Color zoneColor) {
+    return AnimatedBuilder(
+      animation: _pulseAnim!,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 16, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Timer with ambient glow
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Giant timer with zone-color glow
+                    Text(
+                      _formatDuration(state.elapsed),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 44,
+                        fontWeight: FontWeight.w200,
+                        color: AppTheme.moonbeam,
+                        letterSpacing: 2,
+                        height: 1.0,
+                        shadows: state.currentHr > 0
+                            ? [
+                                Shadow(
+                                  color: zoneColor.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    if (state.isPaused)
+                      // Pulsing PAUSED label
+                      Opacity(
+                        opacity: 0.5 + _pulseAnim!.value * 0.5,
+                        child: Text(
+                          'PAUSED',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.amber,
+                            letterSpacing: 4,
+                          ),
+                        ),
+                      )
+                    else if (state.currentHr > 0)
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: zoneColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Z${zone.zone}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: zoneColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            zone.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: zoneColor.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ── Hero row: timer left, HR ring right ───────────────────────────────
-  Widget _buildHeroRow(ActiveWorkoutState state, HrZone zone, Color zoneColor) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Timer + paused label
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatDuration(state.elapsed),
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w200,
-                    color: AppTheme.moonbeam,
-                    letterSpacing: 2,
-                    height: 1.0,
+              // HR ring with outer glow halo
+              if (state.currentHr > 0)
+                Transform.scale(
+                  scale: _pulseAnim!.value,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: zoneColor.withValues(alpha: 0.25),
+                          blurRadius: 30,
+                          spreadRadius: -5,
+                        ),
+                        BoxShadow(
+                          color: zoneColor.withValues(alpha: 0.08),
+                          blurRadius: 60,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: HrZoneRing(
+                      currentHr: state.currentHr,
+                      zone: zone,
+                      maxHr: state.profile.estimatedMaxHr,
+                      size: 110,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                if (state.isPaused)
-                  Text(
-                    'PAUSED',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.amber,
-                      letterSpacing: 3,
-                    ),
-                  )
-                else if (state.currentHr > 0)
-                  Row(
-                    children: [
-                      Text(
-                        'Z${zone.zone}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: zoneColor,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        zone.name,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: zoneColor.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+            ],
           ),
-          // Compact HR ring
-          if (state.currentHr > 0)
-            HrZoneRing(
-              currentHr: state.currentHr,
-              zone: zone,
-              maxHr: state.profile.estimatedMaxHr,
-              size: 100,
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  // ── Metrics grid (3-column, compact) ─────────────────────────────────────
+  // ── Metrics grid — glass morphism tiles ──────────────────────────────────
   Widget _buildMetricsGrid(ActiveWorkoutState state, double? pace) {
-    final tiles = <_MiniMetric>[];
+    final tiles = <_CinematicMetric>[];
 
     if (state.gpsMetrics.totalDistanceKm > 0) {
       tiles.add(
-        _MiniMetric(
+        _CinematicMetric(
           label: 'Distance',
           value: state.gpsMetrics.totalDistanceKm.toStringAsFixed(2),
           unit: 'km',
@@ -417,13 +620,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     if (pace != null && pace < 30) {
       tiles.add(
-        _MiniMetric(label: 'Pace', value: _formatPace(pace), unit: '/km'),
+        _CinematicMetric(label: 'Pace', value: _formatPace(pace), unit: '/km'),
       );
     }
 
     if (state.gpsMetrics.currentSpeedKmh > 0) {
       tiles.add(
-        _MiniMetric(
+        _CinematicMetric(
           label: 'Speed',
           value: state.gpsMetrics.currentSpeedKmh.toStringAsFixed(1),
           unit: 'km/h',
@@ -433,7 +636,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     if (state.gpsMetrics.altitudeM > 0) {
       tiles.add(
-        _MiniMetric(
+        _CinematicMetric(
           label: 'Altitude',
           value: state.gpsMetrics.altitudeM.toStringAsFixed(0),
           unit: 'm',
@@ -443,7 +646,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     if (tiles.isEmpty) return const SizedBox.shrink();
 
-    // 3-col grid
     final colWidth = (MediaQuery.of(context).size.width - 48) / 3;
     return Wrap(
       spacing: 6,
@@ -453,36 +655,42 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 
   Widget _buildConnectHrPrompt() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.favorite_border_rounded,
-            size: 20,
-            color: AppTheme.fog.withValues(alpha: 0.5),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Pair a Bluetooth HR sensor for zone tracking',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.fog.withValues(alpha: 0.6),
+          child: Row(
+            children: [
+              Icon(
+                Icons.favorite_border_rounded,
+                size: 20,
+                color: AppTheme.fog.withValues(alpha: 0.4),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Pair a Bluetooth HR sensor for zone tracking',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.fog.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // ── Bottom controls bar ──────────────────────────────────────────────────
+  // ── Bottom controls — glass bar with glowing action button ───────────────
   Widget _buildBottomControls(ActiveWorkoutState state, Color zoneColor) {
     final nextLabel = switch (state.session.phase) {
       WorkoutPhase.warmup => 'Go Active',
@@ -491,90 +699,119 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       WorkoutPhase.finished => 'Done',
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.deepSea,
-        border: Border(
-          top: BorderSide(color: AppTheme.shimmer.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Pause / Resume
-          Expanded(
-            child: GestureDetector(
-              onTap: _togglePause,
-              child: Container(
-                height: 46,
-                decoration: BoxDecoration(
-                  color: AppTheme.shimmer.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      state.isPaused
-                          ? Icons.play_arrow_rounded
-                          : Icons.pause_rounded,
-                      size: 22,
-                      color: AppTheme.moonbeam,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      state.isPaused ? 'Resume' : 'Pause',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.moonbeam,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.deepSea.withValues(alpha: 0.7),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
             ),
           ),
-          if (state.session.phase != WorkoutPhase.finished) ...[
-            const SizedBox(width: 10),
-            Expanded(
-              child: GestureDetector(
-                onTap: _advancePhase,
-                child: Container(
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: zoneColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: zoneColor.withValues(alpha: 0.35),
+          child: Row(
+            children: [
+              // Pause / Resume — subtle glass
+              Expanded(
+                child: GestureDetector(
+                  onTap: _togglePause,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        state.session.phase == WorkoutPhase.cooldown
-                            ? Icons.flag_rounded
-                            : Icons.skip_next_rounded,
-                        size: 20,
-                        color: zoneColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        nextLabel,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: zoneColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          state.isPaused
+                              ? Icons.play_arrow_rounded
+                              : Icons.pause_rounded,
+                          size: 22,
+                          color: AppTheme.moonbeam,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Text(
+                          state.isPaused ? 'Resume' : 'Pause',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.moonbeam,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ],
+              if (state.session.phase != WorkoutPhase.finished) ...[
+                const SizedBox(width: 10),
+                // Advance — glowing accent button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _advancePhase,
+                    child: AnimatedBuilder(
+                      animation: _breatheAnim!,
+                      builder: (context, child) => Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              zoneColor.withValues(alpha: 0.15),
+                              zoneColor.withValues(alpha: 0.08),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: zoneColor.withValues(
+                              alpha: 0.2 + _breatheAnim!.value * 0.15,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: zoneColor.withValues(
+                                alpha: 0.1 + _breatheAnim!.value * 0.1,
+                              ),
+                              blurRadius: 15,
+                              spreadRadius: -3,
+                            ),
+                          ],
+                        ),
+                        child: child,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            state.session.phase == WorkoutPhase.cooldown
+                                ? Icons.flag_rounded
+                                : Icons.skip_next_rounded,
+                            size: 20,
+                            color: zoneColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            nextLabel,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: zoneColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -593,13 +830,139 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
   }
 }
 
-class _MiniMetric extends StatelessWidget {
+// ═══════════════════════════════════════════════════════════════════════════
+// Cinematic Background — animated gradient + floating particles
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _CinematicBackground extends StatelessWidget {
+  final Color zoneColor;
+  final Animation<double> breatheAnim;
+  final AnimationController particleAnim;
+  final bool isPaused;
+
+  const _CinematicBackground({
+    required this.zoneColor,
+    required this.breatheAnim,
+    required this.particleAnim,
+    required this.isPaused,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([breatheAnim, particleAnim]),
+      builder: (context, _) {
+        final t = breatheAnim.value;
+        return SizedBox.expand(
+          child: CustomPaint(
+            painter: _AmbientPainter(
+              zoneColor: zoneColor,
+              breathe: t,
+              particlePhase: particleAnim.value,
+              isPaused: isPaused,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AmbientPainter extends CustomPainter {
+  final Color zoneColor;
+  final double breathe;
+  final double particlePhase;
+  final bool isPaused;
+
+  _AmbientPainter({
+    required this.zoneColor,
+    required this.breathe,
+    required this.particlePhase,
+    required this.isPaused,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // ── 1. Deep radial gradient that breathes ──
+    final glowAlpha = isPaused ? 0.04 : 0.06 + breathe * 0.05;
+    final gradient = RadialGradient(
+      center: const Alignment(0.3, -0.4),
+      radius: 1.2 + breathe * 0.15,
+      colors: [
+        zoneColor.withValues(alpha: glowAlpha),
+        zoneColor.withValues(alpha: glowAlpha * 0.3),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.4, 1.0],
+    );
+    final rect = Offset.zero & size;
+    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
+
+    // ── 2. Secondary ambient bloom (bottom left) ──
+    final gradient2 = RadialGradient(
+      center: const Alignment(-0.6, 0.8),
+      radius: 0.8 + breathe * 0.1,
+      colors: [
+        zoneColor.withValues(alpha: glowAlpha * 0.4),
+        Colors.transparent,
+      ],
+    );
+    canvas.drawRect(rect, Paint()..shader = gradient2.createShader(rect));
+
+    // ── 3. Floating particles ──
+    if (!isPaused) {
+      _drawParticles(canvas, size);
+    }
+  }
+
+  void _drawParticles(Canvas canvas, Size size) {
+    final rng = math.Random(42); // deterministic seed for stable layout
+    const count = 25;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (var i = 0; i < count; i++) {
+      final baseX = rng.nextDouble();
+      final baseY = rng.nextDouble();
+      final speed = 0.2 + rng.nextDouble() * 0.8;
+      final radius = 1.0 + rng.nextDouble() * 2.0;
+
+      // Drift upward slowly, wrap around
+      final phase = (particlePhase * speed + baseY) % 1.0;
+      final x =
+          baseX * size.width + math.sin((particlePhase + i) * math.pi * 2) * 15;
+      final y = size.height * (1.0 - phase);
+
+      // Fade at edges
+      final edgeFade =
+          (phase < 0.1
+                  ? phase / 0.1
+                  : phase > 0.9
+                  ? (1 - phase) / 0.1
+                  : 1.0)
+              .clamp(0.0, 1.0);
+
+      paint.color = zoneColor.withValues(
+        alpha: (0.08 + breathe * 0.06) * edgeFade,
+      );
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AmbientPainter old) => true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Glass-morphism metric tile
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _CinematicMetric extends StatelessWidget {
   final String label;
   final String value;
   final String? unit;
   final Color? accentColor;
 
-  const _MiniMetric({
+  const _CinematicMetric({
     required this.label,
     required this.value,
     this.unit,
@@ -610,53 +973,59 @@ class _MiniMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = accentColor ?? AppTheme.moonbeam;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.tidePool,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.shimmer.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.fog.withValues(alpha: 0.7),
-              letterSpacing: 0.5,
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
-          const SizedBox(height: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                value,
+                label.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 9,
                   fontWeight: FontWeight.w500,
-                  color: accent,
+                  color: AppTheme.fog.withValues(alpha: 0.6),
+                  letterSpacing: 0.8,
                 ),
               ),
-              if (unit != null) ...[
-                const SizedBox(width: 2),
-                Text(
-                  unit!,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppTheme.fog.withValues(alpha: 0.6),
+              const SizedBox(height: 3),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: accent,
+                    ),
                   ),
-                ),
-              ],
+                  if (unit != null) ...[
+                    const SizedBox(width: 2),
+                    Text(
+                      unit!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppTheme.fog.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
