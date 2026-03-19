@@ -77,5 +77,10 @@ void main() {
 
     // The MaterialApp.router should have mounted successfully.
     expect(find.byType(MaterialApp), findsOneWidget);
+
+    // Drain lingering timers (e.g. WelcomeScreen animation sequence) so the
+    // test framework doesn't complain about pending timers.
+    // Can't use pumpAndSettle — the breathing animation repeats forever.
+    await tester.pump(const Duration(seconds: 3));
   });
 }
