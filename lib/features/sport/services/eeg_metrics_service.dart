@@ -31,7 +31,7 @@ class EegMetricsService {
   /// Per-channel ring buffer (only channel 0 is used for metrics by default,
   /// but we keep all channels in case of multi-channel averaging later).
   final _buffer = ListQueue<double>();
-  int _windowCount = 0;
+  int _sampleCount = 0;
 
   StreamSubscription<SignalSample>? _sub;
 
@@ -59,8 +59,8 @@ class EegMetricsService {
     // Wait until we have a full window.
     if (_buffer.length < _fftSize) return;
 
-    _windowCount++;
-    if (_windowCount % _emitEveryNWindows != 0) return;
+    _sampleCount++;
+    if (_sampleCount % (_fftSize * _emitEveryNWindows) != 0) return;
 
     final result = _fft.analyse(_buffer.toList());
     final bp = result.bandPowers;
