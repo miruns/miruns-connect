@@ -198,12 +198,18 @@ class _SportHomeScreenState extends ConsumerState<SportHomeScreen>
   }
 
   /// Scan for the paired headset and auto-connect if found.
+  /// Falls through to the headset scanner if no device is paired.
   Future<void> _tryAutoConnect() async {
-    // Skip if already connected, in demo mode, or no paired device.
+    // Skip if already connected or in demo mode.
     final bleService = ref.read(bleSourceServiceProvider);
     if (bleService.isStreaming) return;
     if (ref.read(demoModeProvider)) return;
-    if (_pairedDeviceId == null && _pairedDeviceName == null) return;
+
+    // No paired device → open scanner so user can discover one.
+    if (_pairedDeviceId == null && _pairedDeviceName == null) {
+      _openHeadsetScanner();
+      return;
+    }
 
     final registry = ref.read(bleSourceRegistryProvider);
     final eegProvider = registry.getById('ads1299');
