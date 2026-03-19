@@ -1,4 +1,4 @@
-name: CI — Test & Build APK
+name: CI — Test
 
 on:
   push:
