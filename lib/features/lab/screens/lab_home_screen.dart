@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/demo_mode_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shared/widgets/nav_menu_button.dart';
@@ -69,7 +70,50 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
 
   void _startSession() {
     HapticFeedback.mediumImpact();
-    context.push('/sources/ads1299');
+    context.push('/sources/ads1299').then((_) => _loadSessions());
+  }
+
+  Future<bool> _confirmDeleteSession(CaptureEntry entry) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.deepSea,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
+        title: Text(
+          'Delete session?',
+          style: AppTheme.geist(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.moonbeam,
+          ),
+        ),
+        content: Text(
+          'This recording will be permanently removed.',
+          style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: AppTheme.geist(color: AppTheme.fog)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Delete',
+              style: AppTheme.geist(color: AppTheme.crimson),
+            ),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _deleteSession(CaptureEntry entry) async {
+    await ref.read(localDbServiceProvider).deleteCapture(entry.id);
+    _loadSessions();
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -100,8 +144,48 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _StatusDot(connected: _isConnected),
+                  _StatusDot(
+                    connected: _isConnected,
+                    isDemoMode: ref.watch(demoModeProvider),
+                  ),
                   const Spacer(),
+                  // Demo toggle
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(demoModeProvider.notifier).toggle();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ref.watch(demoModeProvider)
+                            ? AppTheme.aurora.withValues(alpha: 0.12)
+                            : AppTheme.tidePool,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        border: Border.all(
+                          color: ref.watch(demoModeProvider)
+                              ? AppTheme.aurora.withValues(alpha: 0.4)
+                              : AppTheme.shimmer,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        ref.watch(demoModeProvider) ? 'DEMO ON' : 'DEMO',
+                        style: AppTheme.geist(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: ref.watch(demoModeProvider)
+                              ? AppTheme.aurora
+                              : AppTheme.mist,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   const NavMenuButton(),
                 ],
               ),
@@ -111,6 +195,7 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
               // ── Start session button ──────────────────────────────────
               _StartSessionButton(
                 isConnected: _isConnected,
+                isDemoMode: ref.watch(demoModeProvider),
                 onTap: _startSession,
               ),
 
@@ -193,9 +278,30 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final entry = sessions[index];
-          return SessionCard(
-            entry: entry,
-            onTap: () => context.push('/lab/session/${entry.id}', extra: entry),
+          return Dismissible(
+            key: ValueKey(entry.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              decoration: BoxDecoration(
+                color: AppTheme.crimson.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppTheme.crimson,
+                size: 22,
+              ),
+            ),
+            confirmDismiss: (_) => _confirmDeleteSession(entry),
+            onDismissed: (_) => _deleteSession(entry),
+            child: SessionCard(
+              entry: entry,
+              onTap: () => context
+                  .push('/lab/session/${entry.id}', extra: entry)
+                  .then((_) => _loadSessions()),
+            ),
           );
         },
       ),
@@ -209,17 +315,24 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
 
 class _StatusDot extends StatelessWidget {
   final bool connected;
-  const _StatusDot({required this.connected});
+  final bool isDemoMode;
+  const _StatusDot({required this.connected, this.isDemoMode = false});
 
   @override
   Widget build(BuildContext context) {
+    final Color color;
+    if (isDemoMode && connected) {
+      color = AppTheme.aurora;
+    } else if (connected) {
+      color = AppTheme.seaGreen;
+    } else {
+      color = AppTheme.shimmer;
+    }
+
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: connected ? AppTheme.seaGreen : AppTheme.shimmer,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 }
@@ -230,9 +343,14 @@ class _StatusDot extends StatelessWidget {
 
 class _StartSessionButton extends StatelessWidget {
   final bool isConnected;
+  final bool isDemoMode;
   final VoidCallback onTap;
 
-  const _StartSessionButton({required this.isConnected, required this.onTap});
+  const _StartSessionButton({
+    required this.isConnected,
+    this.isDemoMode = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +373,11 @@ class _StartSessionButton extends StatelessWidget {
             Icon(Icons.sensors_rounded, size: 20, color: AppTheme.glow),
             const SizedBox(width: 10),
             Text(
-              isConnected ? 'Continue Session' : 'Start Session',
+              isDemoMode
+                  ? 'Demo Session'
+                  : isConnected
+                  ? 'Continue Session'
+                  : 'Start Session',
               style: AppTheme.geist(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,

@@ -3,11 +3,14 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/research_export_sheet.dart';
 
 /// Per-channel colour palette (same as live_signal_chart).
 const _channelColors = [
@@ -31,16 +34,17 @@ const _channelColors = [
 //   · Band power : delta/theta/alpha/beta/gamma bars
 // ─────────────────────────────────────────────────────────────────────────────
 
-class SessionDetailScreen extends StatefulWidget {
+class SessionDetailScreen extends ConsumerStatefulWidget {
   final CaptureEntry entry;
 
   const SessionDetailScreen({super.key, required this.entry});
 
   @override
-  State<SessionDetailScreen> createState() => _SessionDetailScreenState();
+  ConsumerState<SessionDetailScreen> createState() =>
+      _SessionDetailScreenState();
 }
 
-class _SessionDetailScreenState extends State<SessionDetailScreen> {
+class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   late final SignalSession _session;
 
   /// Current scrubber position as fraction 0..1
@@ -120,6 +124,48 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     }).toList();
   }
 
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.deepSea,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
+        title: Text(
+          'Delete session?',
+          style: AppTheme.geist(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.moonbeam,
+          ),
+        ),
+        content: Text(
+          'This recording will be permanently removed.',
+          style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: AppTheme.geist(color: AppTheme.fog)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Delete',
+              style: AppTheme.geist(color: AppTheme.crimson),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await ref.read(localDbServiceProvider).deleteCapture(widget.entry.id);
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
@@ -135,7 +181,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           children: [
             // ── Top bar ─────────────────────────────────────────────────
             Padding(
-              padding: EdgeInsets.fromLTRB(8, top + 8, 20, 0),
+              padding: EdgeInsets.fromLTRB(8, top + 8, 8, 0),
               child: Row(
                 children: [
                   IconButton(
@@ -157,6 +203,27 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  IconButton(
+                    onPressed: () => ResearchExportSheet.showForCapture(
+                      context,
+                      widget.entry,
+                    ),
+                    icon: const Icon(
+                      Icons.ios_share_rounded,
+                      color: AppTheme.fog,
+                      size: 20,
+                    ),
+                    tooltip: 'Export & share',
+                  ),
+                  IconButton(
+                    onPressed: _confirmDelete,
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppTheme.fog,
+                      size: 20,
+                    ),
+                    tooltip: 'Delete session',
                   ),
                 ],
               ),

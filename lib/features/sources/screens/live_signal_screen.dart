@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/widgets/bci_decoding_view.dart';
@@ -70,6 +71,9 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _service = ref.read(bleSourceServiceProvider);
     _provider = ref.read(bleSourceRegistryProvider).getById(widget.sourceId);
 
+    // Pick up current state (may already be streaming in demo mode).
+    _state = _service.state;
+
     _stateSub = _service.stateStream.listen((s) {
       if (mounted) setState(() => _state = s);
     });
@@ -77,8 +81,8 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
       if (mounted) setState(() => _devices = d);
     });
 
-    // Auto-start scan if we have a provider.
-    if (_provider != null) {
+    // Auto-start scan only if not already streaming (e.g. demo mode).
+    if (_provider != null && _state != BleSourceState.streaming) {
       Future.microtask(() => _startScan());
     }
   }
@@ -135,6 +139,42 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   void _stopRecording() {
     _recordSub?.cancel();
     _recordSub = null;
+
+    if (_recordedSamples.isNotEmpty && _provider != null) {
+      final session = SignalSession(
+        sourceId: _provider!.id,
+        sourceName: _provider!.displayName,
+        deviceName: _service.connectedDevice?.platformName,
+        channels: _provider!.channelDescriptors,
+        samples: List.of(_recordedSamples),
+        sampleRateHz: _provider!.sampleRateHz,
+      );
+
+      final capture = CaptureEntry(
+        id: 'sig_${DateTime.now().millisecondsSinceEpoch}',
+        timestamp: DateTime.now(),
+        source: CaptureSource.manual,
+        signalSession: session,
+      );
+
+      ref.read(localDbServiceProvider).saveCapture(capture);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Session saved — ${session.samples.length} samples '
+              '(${session.duration.inSeconds}s)',
+            ),
+            backgroundColor: AppTheme.seaGreen,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+
+    _recordedSamples.clear();
     setState(() => _isRecording = false);
   }
 
@@ -202,8 +242,8 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
             size: 20,
           ),
           onPressed: () {
-            if (_isDemoMode) _stopDemo();
-            _disconnect();
+            if (!_isDemoMode) _disconnect();
+            _stopRecording();
             context.pop();
           },
         ),
@@ -227,7 +267,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               ),
             ),
           if (_state == BleSourceState.streaming) _buildModeSwitcher(),
-          if (_state == BleSourceState.streaming && !_isDemoMode)
+          if (_state == BleSourceState.streaming)
             IconButton(
               icon: Icon(
                 _isRecording
