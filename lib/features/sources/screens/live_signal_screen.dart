@@ -352,22 +352,55 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   }
 
   Widget _buildScanButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton.icon(
-        onPressed: _startScan,
-        icon: const Icon(Icons.bluetooth_searching_rounded, size: 18),
-        label: Text(
-          'Scan for devices',
-          style: AppTheme.geist(fontSize: 14, fontWeight: FontWeight.w600),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: _startScan,
+            onLongPress: _showDiagnosticScan,
+            icon: const Icon(Icons.bluetooth_searching_rounded, size: 18),
+            label: Text(
+              'Scan for devices',
+              style: AppTheme.geist(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
+              foregroundColor: AppTheme.glow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
-          foregroundColor: AppTheme.glow,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _showDiagnosticScan,
+          child: Text(
+            'Long-press for BLE diagnostic',
+            style: AppTheme.geist(
+              fontSize: 11,
+              color: AppTheme.fog.withValues(alpha: 0.35),
+            ),
+          ),
         ),
+      ],
+    );
+  }
+
+  // ── Diagnostic scan (long-press on Scan button) ─────────────────────
+
+  void _showDiagnosticScan() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.deepSea,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
+      builder: (_) => _DiagnosticSheet(service: _service, provider: _provider!),
     );
   }
 
@@ -688,5 +721,251 @@ class _DeviceTile extends StatelessWidget {
     if (rssi >= -60) return AppTheme.seaGreen;
     if (rssi >= -80) return AppTheme.amber;
     return AppTheme.crimson;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Diagnostic bottom sheet — unfiltered BLE scan for remote debugging.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DiagnosticSheet extends StatefulWidget {
+  final BleSourceService service;
+  final BleSourceProvider provider;
+
+  const _DiagnosticSheet({required this.service, required this.provider});
+
+  @override
+  State<_DiagnosticSheet> createState() => _DiagnosticSheetState();
+}
+
+class _DiagnosticSheetState extends State<_DiagnosticSheet> {
+  List<DiagnosticDevice>? _results;
+  bool _scanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _runScan();
+  }
+
+  Future<void> _runScan() async {
+    setState(() {
+      _scanning = true;
+      _results = null;
+    });
+    final devices = await widget.service.runDiagnosticScan(timeoutSeconds: 10);
+    if (mounted)
+      setState(() {
+        _scanning = false;
+        _results = devices;
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final targetUuid = widget.provider.serviceUuid.toLowerCase();
+    final targetNames = widget.provider.advertisedNames
+        .map((n) => n.toUpperCase())
+        .toList();
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollCtrl) => Column(
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.fog.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.bug_report_rounded,
+                  color: AppTheme.amber,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'BLE Diagnostic Scan',
+                    style: AppTheme.geist(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.moonbeam,
+                    ),
+                  ),
+                ),
+                if (!_scanning)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: AppTheme.glow,
+                      size: 20,
+                    ),
+                    onPressed: _runScan,
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Shows ALL nearby BLE devices (no filters). '
+              'Looking for service ${widget.provider.serviceUuid} '
+              'or name "${widget.provider.advertisedNames.join(', ')}".',
+              style: AppTheme.geist(
+                fontSize: 11,
+                color: AppTheme.fog.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_scanning)
+            const Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: AppTheme.glow),
+                    SizedBox(height: 12),
+                    Text(
+                      'Scanning all BLE devices…',
+                      style: TextStyle(color: AppTheme.fog, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (_results == null || _results!.isEmpty)
+            Expanded(
+              child: Center(
+                child: Text(
+                  'No BLE devices found at all.\n'
+                  'Check Bluetooth & location are enabled.',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                controller: scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                itemCount: _results!.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (_, i) {
+                  final d = _results![i];
+                  final nameMatch = targetNames.any(
+                    (n) => d.name.toUpperCase().contains(n),
+                  );
+                  final uuidMatch = d.serviceUuids.any(
+                    (u) => u.toLowerCase() == targetUuid,
+                  );
+                  final isMatch = nameMatch || uuidMatch;
+
+                  return Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isMatch
+                          ? AppTheme.glow.withValues(alpha: 0.08)
+                          : AppTheme.tidePool,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: isMatch
+                            ? AppTheme.glow.withValues(alpha: 0.5)
+                            : AppTheme.shimmer.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (isMatch)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 6),
+                                child: Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppTheme.glow,
+                                  size: 16,
+                                ),
+                              ),
+                            Expanded(
+                              child: Text(
+                                d.name,
+                                style: AppTheme.geist(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isMatch
+                                      ? AppTheme.glow
+                                      : AppTheme.moonbeam,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${d.rssi} dBm',
+                              style: AppTheme.geistMono(
+                                fontSize: 10,
+                                color: AppTheme.fog,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'ID: ${d.remoteId}',
+                          style: AppTheme.geistMono(
+                            fontSize: 9,
+                            color: AppTheme.fog.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        if (d.localName.isNotEmpty)
+                          Text(
+                            'advName: "${d.localName}"',
+                            style: AppTheme.geistMono(
+                              fontSize: 9,
+                              color: nameMatch
+                                  ? AppTheme.glow
+                                  : AppTheme.fog.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        if (d.serviceUuids.isNotEmpty)
+                          Text(
+                            'services: ${d.serviceUuids.join(', ')}',
+                            style: AppTheme.geistMono(
+                              fontSize: 9,
+                              color: uuidMatch
+                                  ? AppTheme.glow
+                                  : AppTheme.fog.withValues(alpha: 0.5),
+                            ),
+                          )
+                        else
+                          Text(
+                            'services: (none advertised)',
+                            style: AppTheme.geistMono(
+                              fontSize: 9,
+                              color: AppTheme.fog.withValues(alpha: 0.35),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
