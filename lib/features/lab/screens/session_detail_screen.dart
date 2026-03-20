@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
+import '../../../core/services/fft_engine.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/research_export_sheet.dart';
@@ -53,6 +53,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   /// Visible time window in seconds
   double _windowSeconds = 4.0;
 
+  /// Selected channel for band power display
+  int _selectedChannel = 0;
+
+  /// Lazily created FFT engine (created on first use with correct size).
+  FftEngine? _fft;
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +79,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     return '${s}s';
   }
 
-  /// Compute band power from visible window samples for a single channel.
+  /// Compute band power from visible window samples for a single channel
+  /// using a real Cooley-Tukey FFT via [FftEngine].
   Map<String, double> _computeBandPower(
     List<SignalSample> windowSamples,
     int channelIndex,
@@ -89,20 +96,29 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         )
         .toList();
 
-    // Simplified energy estimation per band using zero-crossing rate & variance
-    final mean = values.reduce((a, b) => a + b) / values.length;
-    final centered = values.map((v) => v - mean).toList();
-    final variance =
-        centered.map((v) => v * v).reduce((a, b) => a + b) / centered.length;
+    // Need power-of-2 window for FFT. Pick largest that fits.
+    int fftSize = 1;
+    while (fftSize * 2 <= values.length) {
+      fftSize *= 2;
+    }
+    if (fftSize < 8) {
+      // Too few samples for meaningful FFT — fall back to zero.
+      return {'Delta': 0, 'Theta': 0, 'Alpha': 0, 'Beta': 0, 'Gamma': 0};
+    }
 
-    // Use total variance as proxy—distribute to bands by typical EEG ratios
-    final total = math.sqrt(variance).clamp(0.001, double.infinity);
+    // Re-create engine only when size changes.
+    if (_fft == null || _fft!.n != fftSize) {
+      _fft = FftEngine(n: fftSize, sampleRateHz: _session.sampleRateHz);
+    }
+
+    final result = _fft!.analyse(values.sublist(values.length - fftSize));
+
     return {
-      'Delta': total * 0.35,
-      'Theta': total * 0.25,
-      'Alpha': total * 0.20,
-      'Beta': total * 0.12,
-      'Gamma': total * 0.08,
+      'Delta': result.bandPowers[FrequencyBand.delta] ?? 0,
+      'Theta': result.bandPowers[FrequencyBand.theta] ?? 0,
+      'Alpha': result.bandPowers[FrequencyBand.alpha] ?? 0,
+      'Beta': result.bandPowers[FrequencyBand.beta] ?? 0,
+      'Gamma': result.bandPowers[FrequencyBand.gamma] ?? 0,
     };
   }
 
@@ -349,13 +365,58 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             // ── Band power bars ─────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Band Power (ch 1)',
-                style: AppTheme.geist(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.fog,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    'Band Power',
+                    style: AppTheme.geist(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.fog,
+                    ),
+                  ),
+                  const Spacer(),
+                  // Channel selector chips
+                  if (_session.channelCount > 1)
+                    ...List.generate(_session.channelCount, (i) {
+                      final isActive = _selectedChannel == i;
+                      final color = _channelColors[i % _channelColors.length];
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedChannel = i),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? color.withValues(alpha: 0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: isActive
+                                    ? color.withValues(alpha: 0.6)
+                                    : AppTheme.shimmer,
+                                width: isActive ? 1.2 : 0.7,
+                              ),
+                            ),
+                            child: Text(
+                              _session.channels[i].label,
+                              style: AppTheme.geistMono(
+                                fontSize: 9,
+                                fontWeight: isActive
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
+                                color: isActive ? color : AppTheme.mist,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                ],
               ),
             ),
             const SizedBox(height: 8),
@@ -364,7 +425,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: _BandPowerBars(
-                  bandPower: _computeBandPower(windowSamples, 0),
+                  bandPower: _computeBandPower(windowSamples, _selectedChannel),
                 ),
               ),
             ),

@@ -140,6 +140,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
       if (mounted) setState(() {});
     });
     setState(() => _isRecording = true);
+    ref.read(isRecordingSignalProvider.notifier).state = true;
   }
 
   void _stopRecording() {
@@ -184,6 +185,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
 
     _recordedSamples.clear();
     setState(() => _isRecording = false);
+    ref.read(isRecordingSignalProvider.notifier).state = false;
   }
 
   // ── Demo mode ───────────────────────────────────────────────────────

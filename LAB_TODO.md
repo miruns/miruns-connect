@@ -19,7 +19,7 @@
 - [x] **All `/eeg-home` references updated** — Onboarding, permissions, capture screens all route to `/lab`
 - [x] **BLE scan skip when streaming** — LiveSignalScreen skips auto-scan if already in streaming state (demo or reconnect)
 - [x] **Save recording to DB** — `_stopRecording()` constructs `SignalSession`, wraps in `CaptureEntry`, calls `db.saveCapture()`. Snackbar confirmation with sample count and duration.
-- [x] **Refresh session list on return** — `_startSession()` uses `context.push().then(() => _loadSessions())` to auto-reload when popping back from live signal screen.
+- [x] **Refresh session list on return** — `SessionCard.onTap` and `_startSession()` use `context.push().then(() => _loadSessions())` to auto-reload when popping back.
 - [x] **Session deletion** — Swipe-to-delete on SessionCard with confirmation dialog. Delete button in session detail screen. Calls `db.deleteCapture(id)`.
 - [x] **Session export** — Share button in session detail top bar opens `ResearchExportSheet` (CSV / EDF+ / JSON format picker, stream toggles, native share sheet).
 
@@ -27,10 +27,10 @@
 
 ## High Priority — This Release
 
-- [ ] **Recording indicator on Lab** — Show a red dot or pulse when actively recording in the live signal screen, visible even on the Lab tab.
-- [ ] **Real FFT for band power** — SessionDetailScreen uses a variance-based proxy for band power. Integrate the real `CooleyTukeyFFT` from `spectral_engine.dart` for accurate frequency decomposition.
-- [ ] **Channel selector in session detail** — Band power bars are hardcoded to channel 0. Add a chip row to select which channel's spectral data to display.
-- [ ] **Empty state CTA** — "No recordings yet" empty state should have a direct "Start Demo" button for first-time users.
+- [x] **Recording indicator on Lab** — Pulsing red dot on Lab tab via `isRecordingSignalProvider` when actively recording in live signal screen.
+- [x] **Real FFT for band power** — SessionDetailScreen now uses `FftEngine` (Cooley-Tukey radix-2) from `fft_engine.dart` for accurate frequency decomposition. Replaced variance-based proxy.
+- [x] **Channel selector in session detail** — Chip row above band power bars to select which channel's spectral data to display. Defaults to channel 0.
+- [x] **Empty state CTA** — "No recordings yet" empty state now has a "Start Demo" button that enables demo mode and navigates to the live signal screen.
 
 ---
 
@@ -66,4 +66,4 @@
 ## Dead Code Cleanup
 
 - [ ] **Remove EegHomeScreen** — `lib/features/eeg/screens/eeg_home_screen.dart` is no longer routed. Only `EegOnboardingScreen` is still used (from `/eeg-onboarding`). Can delete the file.
-- [ ] **Remove MSignalLogo import** — Was only used by EegHomeScreen. Check if used elsewhere before removing.
+- [ ] **Remove MSignalLogo import from EegHomeScreen** — Also used by `WelcomeScreen` and `EegOnboardingScreen`. Only the EegHomeScreen reference is dead code.

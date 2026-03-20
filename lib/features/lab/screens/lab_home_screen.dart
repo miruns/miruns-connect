@@ -147,6 +147,7 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                   _StatusDot(
                     connected: _isConnected,
                     isDemoMode: ref.watch(demoModeProvider),
+                    isRecording: ref.watch(isRecordingSignalProvider),
                   ),
                   const Spacer(),
                   // Demo toggle
@@ -300,6 +301,48 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
               'Start a session to record EEG signals',
               style: AppTheme.geist(fontSize: 13, color: AppTheme.mist),
             ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                if (!ref.read(demoModeProvider)) {
+                  ref.read(demoModeProvider.notifier).toggle();
+                }
+                _startSession();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.aurora.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(
+                    color: AppTheme.aurora.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.play_circle_outline_rounded,
+                      size: 18,
+                      color: AppTheme.aurora,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Start Demo',
+                      style: AppTheme.geist(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.aurora,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -353,10 +396,19 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
 class _StatusDot extends StatelessWidget {
   final bool connected;
   final bool isDemoMode;
-  const _StatusDot({required this.connected, this.isDemoMode = false});
+  final bool isRecording;
+  const _StatusDot({
+    required this.connected,
+    this.isDemoMode = false,
+    this.isRecording = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (isRecording) {
+      return _PulsingDot(color: AppTheme.crimson);
+    }
+
     final Color color;
     if (isDemoMode && connected) {
       color = AppTheme.aurora;
@@ -370,6 +422,56 @@ class _StatusDot extends StatelessWidget {
       width: 8,
       height: 8,
       decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    );
+  }
+}
+
+/// Animated pulsing red dot for active recording.
+class _PulsingDot extends StatefulWidget {
+  final Color color;
+  const _PulsingDot({required this.color});
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withValues(alpha: 0.5 + _ctrl.value * 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withValues(alpha: 0.3 * _ctrl.value),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
