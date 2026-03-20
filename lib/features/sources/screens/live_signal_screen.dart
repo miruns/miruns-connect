@@ -61,6 +61,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   final List<SignalSample> _recordedSamples = [];
   StreamSubscription<SignalSample>? _recordSub;
   bool _isRecording = false;
+  Timer? _recordingUiTimer;
 
   // Active visualisation mode.
   SignalViewMode _viewMode = SignalViewMode.timeDomain;
@@ -92,6 +93,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _stateSub?.cancel();
     _devicesSub?.cancel();
     _recordSub?.cancel();
+    _recordingUiTimer?.cancel();
     // Don't dispose the service — it's owned by the provider.
     super.dispose();
   }
@@ -133,12 +135,18 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _recordSub = _service.signalStream.listen((s) {
       _recordedSamples.add(s);
     });
+    // Refresh the recording indicator every 500ms.
+    _recordingUiTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted) setState(() {});
+    });
     setState(() => _isRecording = true);
   }
 
   void _stopRecording() {
     _recordSub?.cancel();
     _recordSub = null;
+    _recordingUiTimer?.cancel();
+    _recordingUiTimer = null;
 
     if (_recordedSamples.isNotEmpty && _provider != null) {
       final session = SignalSession(
