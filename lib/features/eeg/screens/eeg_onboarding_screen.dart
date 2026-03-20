@@ -289,7 +289,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
     HapticFeedback.heavyImpact();
     final db = ref.read(localDbServiceProvider);
     await db.setSetting('eeg_onboarding_done', 'true');
-    if (mounted) context.go('/eeg-home');
+    if (mounted) context.go('/lab');
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ class _EegOnboardingScreenState extends ConsumerState<EegOnboardingScreen>
             top: MediaQuery.paddingOf(context).top + 12,
             right: 16,
             child: TextButton(
-              onPressed: () => context.go('/eeg-home'),
+              onPressed: () => context.go('/lab'),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.fog,
                 padding: const EdgeInsets.symmetric(

@@ -666,6 +666,28 @@ class LocalDbService {
     await db.delete(_tableCaptures, where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Load captures that have a signal session (EEG recordings).
+  /// Results are ordered by timestamp descending (newest first).
+  Future<List<CaptureEntry>> loadSignalSessions({int? limit}) async {
+    final db = await _database;
+    final rows = await db.query(
+      _tableCaptures,
+      where: 'signal_session IS NOT NULL',
+      orderBy: 'timestamp DESC',
+      limit: limit,
+    );
+    return rows.map((row) => CaptureEntry.fromJson(row)).toList();
+  }
+
+  /// Get count of captures that have signal sessions.
+  Future<int> countSignalSessions() async {
+    final db = await _database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM $_tableCaptures WHERE signal_session IS NOT NULL',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   /// Get count of captures, optionally filtered by processed status.
   Future<int> countCaptures({bool? isProcessed}) async {
     final db = await _database;

@@ -3,10 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/ai_settings/screens/ai_settings_screen.dart';
 import '../../features/capture/screens/capture_screen.dart';
-import '../../features/eeg/screens/eeg_home_screen.dart';
 import '../../features/eeg/screens/eeg_onboarding_screen.dart';
 import '../../features/environment/screens/environment_screen.dart';
 import '../../features/journal/screens/journal_screen.dart';
+import '../../features/lab/screens/lab_home_screen.dart';
+import '../../features/lab/screens/session_detail_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/patterns/screens/patterns_screen.dart';
 import '../../features/sensors/screens/sensors_screen.dart';
@@ -22,6 +23,7 @@ import '../../features/sport/screens/sport_profile_screen.dart';
 import '../../features/sport/screens/workout_feedback_screen.dart';
 import '../../features/sport/screens/workout_history_screen.dart';
 import '../../features/welcome/screens/welcome_screen.dart';
+import '../models/capture_entry.dart';
 
 class AppRouter {
   static late final GoRouter router;
@@ -84,14 +86,14 @@ class AppRouter {
                 ),
               ],
             ),
-            // Tab 1 — EEG Home
+            // Tab 1 — Lab (session library)
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/eeg-home',
-                  name: 'eeg-home',
+                  path: '/lab',
+                  name: 'lab-home',
                   pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: EegHomeScreen()),
+                      const NoTransitionPage(child: LabHomeScreen()),
                 ),
               ],
             ),
@@ -324,6 +326,34 @@ class AppRouter {
                       child: child,
                     ),
           ),
+        ),
+
+        // ── Lab session detail ────────────────────────────────────────
+        GoRoute(
+          path: '/lab/session/:id',
+          name: 'session-detail',
+          pageBuilder: (context, state) {
+            final entry = state.extra as CaptureEntry;
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: SessionDetailScreen(entry: entry),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) =>
+                      SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(1, 0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                        child: child,
+                      ),
+            );
+          },
         ),
 
         // ── Signal sources ──────────────────────────────────────────────

@@ -61,7 +61,7 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
 
       // Navigate to home screen
       if (mounted) {
-        context.go('/eeg-home');
+        context.go('/lab');
       }
     } catch (e) {
       debugPrint('Error requesting permissions: $e');
