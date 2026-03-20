@@ -298,7 +298,11 @@ class BleSourceService {
 
   // ── Scanning ──────────────────────────────────────────────────────────
 
-  /// Scan for devices matching [provider]'s service UUID.
+  /// Scan for devices matching [provider]'s advertised name.
+  ///
+  /// Does NOT filter by service UUID — many custom BLE boards don't
+  /// include it in their advertisement packet. Name matching via
+  /// [BleSourceProvider.advertisedNames] is sufficient and more reliable.
   Future<void> startScan(
     BleSourceProvider provider, {
     int timeoutSeconds = 12,
@@ -310,22 +314,27 @@ class BleSourceService {
     final found = <String, BleSourceDevice>{};
 
     try {
+      debugPrint(
+        '[BleSource] Scanning for ${provider.advertisedNames} '
+        'for ${timeoutSeconds}s…',
+      );
       await FlutterBluePlus.startScan(
-        withServices: [Guid(provider.serviceUuid)],
         timeout: Duration(seconds: timeoutSeconds),
       );
 
       final scanSub = FlutterBluePlus.scanResults.listen((results) {
         for (final r in results) {
-          // Optional name filter if the provider specifies advertised names.
+          // Name filter — skip devices that don't match.
           if (provider.advertisedNames.isNotEmpty) {
             final devName = r.device.platformName;
+            if (devName.isEmpty) continue;
             if (!provider.advertisedNames.any(
               (n) => devName.toUpperCase().contains(n.toUpperCase()),
             )) {
               continue;
             }
           }
+          _logScanResult(r);
           found[r.device.remoteId.str] = BleSourceDevice(
             scanResult: r,
             sourceId: provider.id,
@@ -344,14 +353,79 @@ class BleSourceService {
       await scanSub.cancel();
     } catch (e) {
       debugPrint('[BleSource] Scan error: $e');
-    } finally {
-      if (_state == BleSourceState.scanning) {
-        _setState(BleSourceState.idle);
-      }
+    }
+
+    if (_state == BleSourceState.scanning) {
+      _setState(BleSourceState.idle);
     }
   }
 
   Future<void> stopScan() => FlutterBluePlus.stopScan();
+
+  // ── Diagnostic scan ───────────────────────────────────────────────────
+
+  /// Raw BLE scan with NO filters — returns ALL nearby devices.
+  ///
+  /// Used for remote debugging: the tester can see every BLE device in
+  /// range, including their advertised names and service UUIDs, to verify
+  /// whether the target device is broadcasting correctly.
+  Future<List<DiagnosticDevice>> runDiagnosticScan({
+    int timeoutSeconds = 10,
+  }) async {
+    final found = <String, DiagnosticDevice>{};
+    debugPrint('[BleSource] Diagnostic scan — no filters, ${timeoutSeconds}s…');
+
+    try {
+      await FlutterBluePlus.startScan(
+        timeout: Duration(seconds: timeoutSeconds),
+      );
+
+      final sub = FlutterBluePlus.scanResults.listen((results) {
+        for (final r in results) {
+          found[r.device.remoteId.str] = DiagnosticDevice(
+            name: r.device.platformName.isNotEmpty
+                ? r.device.platformName
+                : '(no name)',
+            remoteId: r.device.remoteId.str,
+            rssi: r.rssi,
+            serviceUuids: r.advertisementData.serviceUuids
+                .map((g) => g.str128)
+                .toList(),
+            localName: r.advertisementData.advName,
+          );
+        }
+      });
+
+      await FlutterBluePlus.isScanning
+          .where((s) => !s)
+          .first
+          .timeout(Duration(seconds: timeoutSeconds + 3));
+
+      await sub.cancel();
+    } catch (e) {
+      debugPrint('[BleSource] Diagnostic scan error: $e');
+    }
+
+    final sorted = found.values.toList()
+      ..sort((a, b) => b.rssi.compareTo(a.rssi));
+    debugPrint('[BleSource] Diagnostic: found ${sorted.length} devices');
+    for (final d in sorted) {
+      debugPrint(
+        '  ${d.name} (${d.remoteId}) rssi=${d.rssi} '
+        'services=${d.serviceUuids}',
+      );
+    }
+    return sorted;
+  }
+
+  void _logScanResult(ScanResult r) {
+    debugPrint(
+      '[BleSource] Seen: "${r.device.platformName}" '
+      '(${r.device.remoteId.str}) rssi=${r.rssi} '
+      'advName="${r.advertisementData.advName}" '
+      'services=${r.advertisementData.serviceUuids.map((g) => g.str128).toList()}',
+    );
+  }
 
   // ── Connection ────────────────────────────────────────────────────────
 
@@ -495,4 +569,25 @@ class BleSourceService {
     _signalController.close();
     _stateController.close();
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Diagnostic model — used by the diagnostic BLE scan.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Snapshot of a BLE device seen during a diagnostic (unfiltered) scan.
+class DiagnosticDevice {
+  final String name;
+  final String remoteId;
+  final int rssi;
+  final List<String> serviceUuids;
+  final String localName;
+
+  const DiagnosticDevice({
+    required this.name,
+    required this.remoteId,
+    required this.rssi,
+    required this.serviceUuids,
+    required this.localName,
+  });
 }
