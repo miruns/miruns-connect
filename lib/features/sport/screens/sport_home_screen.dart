@@ -1080,23 +1080,40 @@ class _DemoTogglePill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isActive ? AppTheme.amber : AppTheme.mist,
-              ),
-            ),
-            const SizedBox(width: 6),
             Text(
-              'TEST',
+              'DEMO',
               style: AppTheme.geistMono(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: isActive ? AppTheme.amber : AppTheme.mist,
                 letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Toggle track with sliding knob
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              width: 26,
+              height: 14,
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7),
+                color: isActive
+                    ? AppTheme.amber.withValues(alpha: 0.4)
+                    : AppTheme.mist.withValues(alpha: 0.2),
+              ),
+              alignment: isActive
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive ? AppTheme.amber : AppTheme.mist,
+                ),
               ),
             ),
           ],

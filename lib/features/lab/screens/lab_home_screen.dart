@@ -155,7 +155,9 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                       HapticFeedback.selectionClick();
                       ref.read(demoModeProvider.notifier).toggle();
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 5,
@@ -164,7 +166,9 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                         color: ref.watch(demoModeProvider)
                             ? AppTheme.aurora.withValues(alpha: 0.12)
                             : AppTheme.tidePool,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusFull,
+                        ),
                         border: Border.all(
                           color: ref.watch(demoModeProvider)
                               ? AppTheme.aurora.withValues(alpha: 0.4)
@@ -172,16 +176,49 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                           width: 1,
                         ),
                       ),
-                      child: Text(
-                        ref.watch(demoModeProvider) ? 'DEMO ON' : 'DEMO',
-                        style: AppTheme.geist(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: ref.watch(demoModeProvider)
-                              ? AppTheme.aurora
-                              : AppTheme.mist,
-                          letterSpacing: 1.0,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'DEMO',
+                            style: AppTheme.geistMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: ref.watch(demoModeProvider)
+                                  ? AppTheme.aurora
+                                  : AppTheme.mist,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            width: 26,
+                            height: 14,
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: ref.watch(demoModeProvider)
+                                  ? AppTheme.aurora.withValues(alpha: 0.4)
+                                  : AppTheme.mist.withValues(alpha: 0.2),
+                            ),
+                            alignment: ref.watch(demoModeProvider)
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: ref.watch(demoModeProvider)
+                                    ? AppTheme.aurora
+                                    : AppTheme.mist,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
