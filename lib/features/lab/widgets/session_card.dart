@@ -29,6 +29,11 @@ class SessionCard extends StatelessWidget {
     // Parse title from first line of userNote (if set).
     final title = _parseTitle(entry.userNote);
 
+    // User tags — plain strings (not system markers).
+    final userTags = entry.tags
+        .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
+        .toList();
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -72,6 +77,38 @@ class SessionCard extends StatelessWidget {
 
             // ── Sparkline preview ──────────────────────────────────────
             SizedBox(height: 32, child: _MiniSparkline(session: session)),
+
+            // ── Tags ───────────────────────────────────────────────────
+            if (userTags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: userTags.take(4).map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.glow.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                      border: Border.all(
+                        color: AppTheme.glow.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      tag,
+                      style: AppTheme.geist(
+                        fontSize: 10,
+                        color: AppTheme.glow.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
 
             const SizedBox(height: 8),
 

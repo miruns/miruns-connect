@@ -59,7 +59,7 @@
 - [ ] **Developer API** — Expose recorded sessions via a REST/GraphQL API from miruns-lab for third-party analysis tools.
 - [x] **EDF/BDF export** — Export to standard EEG file formats (European Data Format) for compatibility with MNE-Python, EEGLAB, BrainVision.
 - [ ] **Impedance check** — Pre-recording electrode impedance measurement (requires ADS1299 lead-off detection config).
-- [ ] **Session tagging + search** — Tags (e.g. "meditation", "focus", "sleep"), full-text search across session notes.
+- [x] **Session tagging + search** — Tags (e.g. "meditation", "focus", "sleep"), full-text search across session notes.
 
 ---
 

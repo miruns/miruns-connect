@@ -107,6 +107,27 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     return rest.isEmpty ? null : rest;
   }
 
+  /// User tags — plain strings (not artifact: or event: system markers).
+  List<String> get _userTags => _entry.tags
+      .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
+      .toList();
+
+  void _addTag(String tag) {
+    final normalized = tag.trim().toLowerCase();
+    if (normalized.isEmpty || _userTags.contains(normalized)) return;
+    final newTags = [..._entry.tags, normalized];
+    final updated = _entry.copyWith(tags: newTags);
+    ref.read(localDbServiceProvider).saveCapture(updated);
+    setState(() => _entry = updated);
+  }
+
+  void _removeTag(String tag) {
+    final newTags = _entry.tags.where((t) => t != tag).toList();
+    final updated = _entry.copyWith(tags: newTags);
+    ref.read(localDbServiceProvider).saveCapture(updated);
+    setState(() => _entry = updated);
+  }
+
   /// Show edit dialog for session title and notes.
   void _editTitleAndNotes() {
     final titleCtrl = TextEditingController(text: _sessionTitle ?? '');
@@ -732,6 +753,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+
+            // ── Tags ────────────────────────────────────────────────────
+            _TagSection(tags: _userTags, onAdd: _addTag, onRemove: _removeTag),
             const SizedBox(height: 20),
 
             // ── Waveform replay ─────────────────────────────────────────
@@ -1466,4 +1491,292 @@ class _ArtifactMarker {
   final int timeMs;
   final String type;
   const _ArtifactMarker({required this.timeMs, required this.type});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tag section — user-defined session tags with suggestions
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _suggestedTags = [
+  'meditation',
+  'focus',
+  'sleep',
+  'baseline',
+  'eyes closed',
+  'eyes open',
+  'relaxation',
+  'task',
+  'alpha training',
+  'ssvep',
+  'p300',
+];
+
+class _TagSection extends StatefulWidget {
+  final List<String> tags;
+  final ValueChanged<String> onAdd;
+  final ValueChanged<String> onRemove;
+  const _TagSection({
+    required this.tags,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  State<_TagSection> createState() => _TagSectionState();
+}
+
+class _TagSectionState extends State<_TagSection> {
+  bool _showInput = false;
+  final _ctrl = TextEditingController();
+  final _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final text = _ctrl.text.trim().toLowerCase();
+    if (text.isNotEmpty) {
+      widget.onAdd(text);
+      _ctrl.clear();
+    }
+    setState(() => _showInput = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Suggestions that haven't been added yet.
+    final available = _suggestedTags
+        .where((t) => !widget.tags.contains(t))
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.label_outline_rounded, size: 14, color: AppTheme.mist),
+              const SizedBox(width: 6),
+              Text(
+                'Tags',
+                style: AppTheme.geist(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.fog,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Existing tags + add button
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final tag in widget.tags)
+                _TagChip(label: tag, onDelete: () => widget.onRemove(tag)),
+              // Add button
+              GestureDetector(
+                onTap: () {
+                  setState(() => _showInput = true);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _focusNode.requestFocus();
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.tidePool,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    border: Border.all(color: AppTheme.shimmer, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded, size: 14, color: AppTheme.mist),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Add tag',
+                        style: AppTheme.geist(
+                          fontSize: 11,
+                          color: AppTheme.mist,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Inline text input
+          if (_showInput) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 34,
+                    child: TextField(
+                      controller: _ctrl,
+                      focusNode: _focusNode,
+                      style: AppTheme.geist(
+                        fontSize: 13,
+                        color: AppTheme.moonbeam,
+                      ),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. meditation',
+                        hintStyle: AppTheme.geist(
+                          fontSize: 13,
+                          color: AppTheme.mist,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.tidePool,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 0,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
+                          borderSide: BorderSide(color: AppTheme.shimmer),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
+                          borderSide: BorderSide(color: AppTheme.shimmer),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
+                          borderSide: BorderSide(color: AppTheme.glow),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _submit,
+                  child: Container(
+                    height: 34,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.glow.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Add',
+                      style: AppTheme.geist(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.glow,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Suggestions
+          if (_showInput && available.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: available.take(6).map((tag) {
+                return GestureDetector(
+                  onTap: () {
+                    widget.onAdd(tag);
+                    // Keep input open so user can add more.
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.glow.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                      border: Border.all(
+                        color: AppTheme.glow.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      tag,
+                      style: AppTheme.geist(
+                        fontSize: 11,
+                        color: AppTheme.glow.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onDelete;
+  const _TagChip({required this.label, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 8, right: 4, top: 4, bottom: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.glow.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        border: Border.all(
+          color: AppTheme.glow.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTheme.geist(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.glow,
+            ),
+          ),
+          const SizedBox(width: 2),
+          GestureDetector(
+            onTap: onDelete,
+            child: Icon(
+              Icons.close_rounded,
+              size: 14,
+              color: AppTheme.glow.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -37,6 +37,11 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
   BleSourceState _bleState = BleSourceState.idle;
   StreamSubscription<BleSourceState>? _bleSub;
 
+  // Search & filter
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+  String? _activeTagFilter;
+
   // Comparison mode
   bool _compareMode = false;
   final Set<String> _selectedIds = {};
@@ -56,7 +61,50 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
   @override
   void dispose() {
     _bleSub?.cancel();
+    _searchCtrl.dispose();
     super.dispose();
+  }
+
+  /// Extract user tags (not system markers) from a CaptureEntry.
+  static List<String> _userTags(CaptureEntry e) => e.tags
+      .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
+      .toList();
+
+  /// All unique user tags across loaded sessions.
+  List<String> get _allTags {
+    if (_sessions == null) return [];
+    final tagSet = <String>{};
+    for (final s in _sessions!) {
+      tagSet.addAll(_userTags(s));
+    }
+    final sorted = tagSet.toList()..sort();
+    return sorted;
+  }
+
+  /// Sessions filtered by search query and active tag.
+  List<CaptureEntry> get _filteredSessions {
+    if (_sessions == null) return [];
+    var result = _sessions!;
+
+    if (_activeTagFilter != null) {
+      result = result
+          .where((e) => _userTags(e).contains(_activeTagFilter))
+          .toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      result = result.where((e) {
+        final note = e.userNote?.toLowerCase() ?? '';
+        final source = e.signalSession?.sourceName.toLowerCase() ?? '';
+        final tags = _userTags(e);
+        return note.contains(q) ||
+            source.contains(q) ||
+            tags.any((t) => t.contains(q));
+      }).toList();
+    }
+
+    return result;
   }
 
   Future<void> _loadSessions() async {
@@ -313,7 +361,7 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
-                        '${_sessions!.length}',
+                        '${_filteredSessions.length}',
                         style: AppTheme.geist(
                           fontSize: 13,
                           color: AppTheme.mist,
@@ -322,7 +370,175 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+
+              // ── Search bar ────────────────────────────────────────────
+              if (_sessions != null && _sessions!.isNotEmpty)
+                SizedBox(
+                  height: 36,
+                  child: TextField(
+                    controller: _searchCtrl,
+                    style: AppTheme.geist(
+                      fontSize: 13,
+                      color: AppTheme.moonbeam,
+                    ),
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search recordings…',
+                      hintStyle: AppTheme.geist(
+                        fontSize: 13,
+                        color: AppTheme.mist,
+                      ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 6),
+                        child: Icon(
+                          Icons.search_rounded,
+                          size: 18,
+                          color: AppTheme.mist,
+                        ),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 0,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () => setState(() {
+                                _searchCtrl.clear();
+                                _searchQuery = '';
+                              }),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: AppTheme.mist,
+                              ),
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppTheme.tidePool,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide(color: AppTheme.shimmer),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide(color: AppTheme.shimmer),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide(color: AppTheme.glow),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ── Tag filter chips ──────────────────────────────────────
+              if (_allTags.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 28,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount:
+                        _allTags.length + (_activeTagFilter != null ? 1 : 0),
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (context, index) {
+                      // "Clear" chip when a filter is active
+                      if (_activeTagFilter != null && index == 0) {
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _activeTagFilter = null);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.crimson.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusFull,
+                              ),
+                              border: Border.all(
+                                color: AppTheme.crimson.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.close_rounded,
+                                  size: 12,
+                                  color: AppTheme.crimson,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'Clear',
+                                  style: AppTheme.geist(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.crimson,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      final tagIndex = _activeTagFilter != null
+                          ? index - 1
+                          : index;
+                      final tag = _allTags[tagIndex];
+                      final isActive = tag == _activeTagFilter;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _activeTagFilter = isActive ? null : tag;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? AppTheme.glow.withValues(alpha: 0.15)
+                                : AppTheme.tidePool,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusFull,
+                            ),
+                            border: Border.all(
+                              color: isActive
+                                  ? AppTheme.glow.withValues(alpha: 0.4)
+                                  : AppTheme.shimmer,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            tag,
+                            style: AppTheme.geist(
+                              fontSize: 11,
+                              fontWeight: isActive
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isActive ? AppTheme.glow : AppTheme.fog,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+              const SizedBox(height: 10),
 
               // ── Session list ──────────────────────────────────────────
               Expanded(child: _buildSessionList()),
@@ -411,6 +627,29 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
       );
     }
 
+    if (_filteredSessions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search_off_rounded, size: 32, color: AppTheme.shimmer),
+            const SizedBox(height: 10),
+            Text(
+              'No matching recordings',
+              style: AppTheme.geist(fontSize: 14, color: AppTheme.fog),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _activeTagFilter != null
+                  ? 'No sessions tagged "$_activeTagFilter"'
+                  : 'Try a different search term',
+              style: AppTheme.geist(fontSize: 12, color: AppTheme.mist),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       color: AppTheme.glow,
       backgroundColor: AppTheme.tidePool,
@@ -467,10 +706,10 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.only(bottom: 100),
-              itemCount: sessions.length,
+              itemCount: _filteredSessions.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final entry = sessions[index];
+                final entry = _filteredSessions[index];
                 final isSelected = _selectedIds.contains(entry.id);
 
                 if (_compareMode) {
