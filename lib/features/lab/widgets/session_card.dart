@@ -26,6 +26,9 @@ class SessionCard extends StatelessWidget {
     final channelStr =
         '${session.channelCount} ch · ${session.sampleRateHz.toInt()} Hz';
 
+    // Parse title from first line of userNote (if set).
+    final title = _parseTitle(entry.userNote);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -45,7 +48,7 @@ class SessionCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    session.sourceName,
+                    title ?? session.sourceName,
                     style: AppTheme.geist(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -99,6 +102,12 @@ class SessionCard extends StatelessWidget {
     if (h > 0) return '${h}h ${m}m';
     if (m > 0) return '${m}m ${s}s';
     return '${s}s';
+  }
+
+  String? _parseTitle(String? userNote) {
+    if (userNote == null || userNote.isEmpty) return null;
+    final firstLine = userNote.split('\n').first.trim();
+    return firstLine.isEmpty ? null : firstLine;
   }
 }
 

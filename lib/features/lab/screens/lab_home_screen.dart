@@ -37,6 +37,10 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
   BleSourceState _bleState = BleSourceState.idle;
   StreamSubscription<BleSourceState>? _bleSub;
 
+  // Comparison mode
+  bool _compareMode = false;
+  final Set<String> _selectedIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +74,7 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
 
   void _startSession() {
     HapticFeedback.mediumImpact();
-    context.push('/sources/ads1299').then((_) => _loadSessions());
+    context.push('/sources').then((_) => _loadSessions());
   }
 
   Future<bool> _confirmDeleteSession(CaptureEntry entry) async {
@@ -252,10 +256,69 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (_sessions != null)
-                    Text(
-                      '${_sessions!.length}',
-                      style: AppTheme.geist(fontSize: 13, color: AppTheme.mist),
+                  if (_sessions != null && _sessions!.length >= 2)
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _compareMode = !_compareMode;
+                          _selectedIds.clear();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _compareMode
+                              ? AppTheme.glow.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: _compareMode
+                                ? AppTheme.glow.withValues(alpha: 0.4)
+                                : AppTheme.shimmer,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.compare_arrows_rounded,
+                              size: 14,
+                              color: _compareMode
+                                  ? AppTheme.glow
+                                  : AppTheme.mist,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _compareMode ? 'Cancel' : 'Compare',
+                              style: AppTheme.geist(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: _compareMode
+                                    ? AppTheme.glow
+                                    : AppTheme.mist,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (_sessions != null && !_compareMode)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        '${_sessions!.length}',
+                        style: AppTheme.geist(
+                          fontSize: 13,
+                          color: AppTheme.mist,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -352,38 +415,120 @@ class _LabHomeScreenState extends ConsumerState<LabHomeScreen> {
       color: AppTheme.glow,
       backgroundColor: AppTheme.tidePool,
       onRefresh: _loadSessions,
-      child: ListView.separated(
-        padding: const EdgeInsets.only(bottom: 100),
-        itemCount: sessions.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final entry = sessions[index];
-          return Dismissible(
-            key: ValueKey(entry.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              decoration: BoxDecoration(
-                color: AppTheme.crimson.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
-              child: const Icon(
-                Icons.delete_outline_rounded,
-                color: AppTheme.crimson,
-                size: 22,
+      child: Column(
+        children: [
+          // Compare action bar
+          if (_compareMode && _selectedIds.length == 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final selected = sessions
+                        .where((e) => _selectedIds.contains(e.id))
+                        .toList();
+                    if (selected.length == 2) {
+                      context.push('/lab/compare', extra: selected).then((_) {
+                        setState(() {
+                          _compareMode = false;
+                          _selectedIds.clear();
+                        });
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+                  label: Text(
+                    'Compare selected',
+                    style: AppTheme.geist(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.glow.withValues(alpha: 0.15),
+                    foregroundColor: AppTheme.glow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                  ),
+                ),
               ),
             ),
-            confirmDismiss: (_) => _confirmDeleteSession(entry),
-            onDismissed: (_) => _deleteSession(entry),
-            child: SessionCard(
-              entry: entry,
-              onTap: () => context
-                  .push('/lab/session/${entry.id}', extra: entry)
-                  .then((_) => _loadSessions()),
+          if (_compareMode && _selectedIds.length < 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Select ${2 - _selectedIds.length} session${_selectedIds.isEmpty ? "s" : ""} to compare',
+                style: AppTheme.geist(fontSize: 12, color: AppTheme.mist),
+              ),
             ),
-          );
-        },
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.only(bottom: 100),
+              itemCount: sessions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final entry = sessions[index];
+                final isSelected = _selectedIds.contains(entry.id);
+
+                if (_compareMode) {
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        if (isSelected) {
+                          _selectedIds.remove(entry.id);
+                        } else if (_selectedIds.length < 2) {
+                          _selectedIds.add(entry.id);
+                        }
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: isSelected
+                            ? Border.all(
+                                color: AppTheme.glow.withValues(alpha: 0.6),
+                                width: 2,
+                              )
+                            : null,
+                      ),
+                      child: SessionCard(entry: entry),
+                    ),
+                  );
+                }
+
+                return Dismissible(
+                  key: ValueKey(entry.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.crimson.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppTheme.crimson,
+                      size: 22,
+                    ),
+                  ),
+                  confirmDismiss: (_) => _confirmDeleteSession(entry),
+                  onDismissed: (_) => _deleteSession(entry),
+                  child: SessionCard(
+                    entry: entry,
+                    onTap: () => context
+                        .push('/lab/session/${entry.id}', extra: entry)
+                        .then((_) => _loadSessions()),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

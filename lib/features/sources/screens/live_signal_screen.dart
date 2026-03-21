@@ -62,6 +62,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   StreamSubscription<SignalSample>? _recordSub;
   bool _isRecording = false;
   Timer? _recordingUiTimer;
+  DateTime? _recordingStartTime;
 
   // Active visualisation mode.
   SignalViewMode _viewMode = SignalViewMode.timeDomain;
@@ -76,7 +77,15 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _state = _service.state;
 
     _stateSub = _service.stateStream.listen((s) {
-      if (mounted) setState(() => _state = s);
+      if (mounted) {
+        // Auto-save on unexpected disconnect while recording.
+        if (_isRecording &&
+            s != BleSourceState.streaming &&
+            s != BleSourceState.connecting) {
+          _autoSaveOnDisconnect();
+        }
+        setState(() => _state = s);
+      }
     });
     _devicesSub = _service.devicesStream.listen((d) {
       if (mounted) setState(() => _devices = d);
@@ -132,6 +141,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
 
   void _startRecording() {
     _recordedSamples.clear();
+    _recordingStartTime = DateTime.now();
     _recordSub = _service.signalStream.listen((s) {
       _recordedSamples.add(s);
     });
@@ -192,7 +202,34 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
 
     _recordedSamples.clear();
     setState(() => _isRecording = false);
+    _recordingStartTime = null;
     ref.read(isRecordingSignalProvider.notifier).state = false;
+  }
+
+  /// Called automatically when BLE disconnects while recording.
+  void _autoSaveOnDisconnect() {
+    if (!_isRecording) return;
+    _stopRecording();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Connection lost — session auto-saved',
+            style: AppTheme.geist(fontSize: 13, color: Colors.white),
+          ),
+          backgroundColor: AppTheme.amber,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'VIEW',
+            textColor: Colors.white,
+            onPressed: () {
+              if (mounted) context.go('/lab');
+            },
+          ),
+        ),
+      );
+    }
   }
 
   // ── Demo mode ───────────────────────────────────────────────────────
@@ -211,6 +248,19 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   }
 
   bool get _isDemoMode => _service.isDemoMode;
+
+  /// Formatted recording elapsed time (mm:ss).
+  String get _recordingElapsedStr {
+    if (_recordingStartTime == null) return '00:00';
+    final elapsed = DateTime.now().difference(_recordingStartTime!);
+    final m = elapsed.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = elapsed.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (elapsed.inHours > 0) {
+      final h = elapsed.inHours.toString().padLeft(2, '0');
+      return '$h:$m:$s';
+    }
+    return '$m:$s';
+  }
 
   // ── Build ─────────────────────────────────────────────────────────────
 
@@ -536,7 +586,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Recording — ${_recordedSamples.length} samples',
+                    'Recording — $_recordingElapsedStr — ${_recordedSamples.length} samples',
                     style: AppTheme.geistMono(
                       fontSize: 11,
                       color: AppTheme.crimson,
@@ -811,11 +861,12 @@ class _DiagnosticSheetState extends State<_DiagnosticSheet> {
       _results = null;
     });
     final devices = await widget.service.runDiagnosticScan(timeoutSeconds: 10);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _scanning = false;
         _results = devices;
       });
+    }
   }
 
   @override

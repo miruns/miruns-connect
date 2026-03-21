@@ -7,6 +7,7 @@ import '../../features/eeg/screens/eeg_onboarding_screen.dart';
 import '../../features/environment/screens/environment_screen.dart';
 import '../../features/journal/screens/journal_screen.dart';
 import '../../features/lab/screens/lab_home_screen.dart';
+import '../../features/lab/screens/session_comparison_screen.dart';
 import '../../features/lab/screens/session_detail_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/patterns/screens/patterns_screen.dart';
@@ -337,6 +338,37 @@ class AppRouter {
             return CustomTransitionPage(
               key: state.pageKey,
               child: SessionDetailScreen(entry: entry),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) =>
+                      SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(1, 0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                        child: child,
+                      ),
+            );
+          },
+        ),
+
+        // ── Session comparison (expects List<CaptureEntry> via extra) ──
+        GoRoute(
+          path: '/lab/compare',
+          name: 'session-compare',
+          pageBuilder: (context, state) {
+            final entries = state.extra as List<CaptureEntry>;
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: SessionComparisonScreen(
+                entryA: entries[0],
+                entryB: entries[1],
+              ),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) =>
                       SlideTransition(

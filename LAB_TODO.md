@@ -36,13 +36,13 @@
 
 ## Medium Priority — Next Release
 
-- [ ] **Session rename / notes** — Let user add a title and notes to a session (stored in CaptureEntry `userNote` field).
-- [ ] **Recording duration counter** — Show elapsed time in the app bar while recording (mm:ss).
-- [ ] **Auto-save on disconnect** — If recording is active and BLE disconnects unexpectedly, auto-save whatever samples were collected.
-- [ ] **Source browser entry** — "Start Session" currently hardcodes `/sources/ads1299`. Should route to `/sources` (source browser) to support multiple source types.
-- [ ] **Session comparison** — Select 2 sessions, overlay their spectral profiles side by side.
-- [ ] **Waveform zoom/pan** — Pinch-to-zoom on the replay chart time axis. Pan within the zoomed window.
-- [ ] **Artifact marking** — Tap on the waveform to mark artifacts (blinks, jaw clench, movement) with timestamps.
+- [x] **Session rename / notes** — Let user add a title and notes to a session (stored in CaptureEntry `userNote` field).
+- [x] **Recording duration counter** — Show elapsed time in the app bar while recording (mm:ss).
+- [x] **Auto-save on disconnect** — If recording is active and BLE disconnects unexpectedly, auto-save whatever samples were collected.
+- [x] **Source browser entry** — "Start Session" currently hardcodes `/sources/ads1299`. Should route to `/sources` (source browser) to support multiple source types.
+- [x] **Session comparison** — Select 2 sessions, overlay their spectral profiles side by side.
+- [x] **Waveform zoom/pan** — Pinch-to-zoom on the replay chart time axis. Pan within the zoomed window.
+- [x] **Artifact marking** — Tap on the waveform to mark artifacts (blinks, jaw clench, movement) with timestamps.
 
 ---
 
