@@ -6,7 +6,6 @@ import 'package:miruns_flutter/core/models/body_blog_version.dart';
 void main() {
   // ── Fixtures ───────────────────────────────────────────────────────────
 
-  final fixedDate = DateTime.utc(2026, 3, 18);
   final generatedTime = DateTime.utc(2026, 3, 18, 14, 30, 45);
 
   Map<String, dynamic> fullJson() => {

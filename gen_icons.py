@@ -104,6 +104,44 @@ def make_icon(px):
     return base.convert("RGB")
 
 
+def make_adaptive_foreground(px):
+    """Adaptive icon foreground: M-wave logo on transparent, centered in 108dp grid.
+
+    The 108dp canvas has a 72dp safe zone (inner 66.7%), so the logo is inset
+    to stay within that safe zone.
+    """
+    # padding=0.25 keeps the logo inside the 72/108 safe zone
+    pixel_pts, global_ts, stroke_w = _layout(px, padding=0.25)
+
+    base = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+
+    # 1. Glow
+    glow = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    gd   = ImageDraw.Draw(glow)
+    gw   = max(int(stroke_w * 2.6), 4)
+    for i in range(1, len(pixel_pts)):
+        col = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i]) + (110,)
+        gd.line([pixel_pts[i-1], pixel_pts[i]], fill=col, width=gw)
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=max(stroke_w * 1.8, 4)))
+    base = Image.alpha_composite(base, glow)
+
+    # 2. Main gradient stroke
+    sl = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sl)
+    r  = max(stroke_w // 2, 1)
+    for i in range(1, len(pixel_pts)):
+        col = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i]) + (255,)
+        sd.line([pixel_pts[i-1], pixel_pts[i]], fill=col, width=stroke_w)
+        x, y = pixel_pts[i-1]
+        cap  = _lerp(GLOW_COLOR, AURORA_COLOR, global_ts[i-1]) + (255,)
+        sd.ellipse([(x-r, y-r), (x+r, y+r)], fill=cap)
+    x, y = pixel_pts[-1]
+    sd.ellipse([(x-r, y-r), (x+r, y+r)], fill=AURORA_COLOR + (255,))
+
+    base = Image.alpha_composite(base, sl)
+    return base
+
+
 def make_notification_icon(px):
     """Android notification small icon: white M-wave on transparent background.
 
@@ -133,6 +171,15 @@ ANDROID_ICONS = {
     r"android\app\src\main\res\mipmap-xhdpi\ic_launcher.png":   96,
     r"android\app\src\main\res\mipmap-xxhdpi\ic_launcher.png":  144,
     r"android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png": 192,
+}
+
+# Adaptive icon foreground (108dp with 72dp safe-zone centered)
+ANDROID_ADAPTIVE_FG = {
+    r"android\app\src\main\res\mipmap-mdpi\ic_launcher_foreground.png":    108,
+    r"android\app\src\main\res\mipmap-hdpi\ic_launcher_foreground.png":    162,
+    r"android\app\src\main\res\mipmap-xhdpi\ic_launcher_foreground.png":   216,
+    r"android\app\src\main\res\mipmap-xxhdpi\ic_launcher_foreground.png":  324,
+    r"android\app\src\main\res\mipmap-xxxhdpi\ic_launcher_foreground.png": 432,
 }
 
 ANDROID_NOTIFICATION_ICONS = {
@@ -169,6 +216,13 @@ def generate_all():
     for rel_path, size in all_icons.items():
         full_path = os.path.join(BASE_DIR, rel_path)
         img = make_icon(size)
+        img.save(full_path, "PNG")
+        print(f"  OK  {size:>4}px  {rel_path}")
+
+    for rel_path, size in ANDROID_ADAPTIVE_FG.items():
+        full_path = os.path.join(BASE_DIR, rel_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        img = make_adaptive_foreground(size)
         img.save(full_path, "PNG")
         print(f"  OK  {size:>4}px  {rel_path}")
 

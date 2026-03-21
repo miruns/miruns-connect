@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/widgets/bci_decoding_view.dart';
@@ -60,6 +62,11 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   final List<SignalSample> _recordedSamples = [];
   StreamSubscription<SignalSample>? _recordSub;
   bool _isRecording = false;
+  Timer? _recordingUiTimer;
+  DateTime? _recordingStartTime;
+
+  // Event markers placed during live recording.
+  final List<_LiveEventMarker> _eventMarkers = [];
 
   // Active visualisation mode.
   SignalViewMode _viewMode = SignalViewMode.timeDomain;
@@ -70,15 +77,26 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _service = ref.read(bleSourceServiceProvider);
     _provider = ref.read(bleSourceRegistryProvider).getById(widget.sourceId);
 
+    // Pick up current state (may already be streaming in demo mode).
+    _state = _service.state;
+
     _stateSub = _service.stateStream.listen((s) {
-      if (mounted) setState(() => _state = s);
+      if (mounted) {
+        // Auto-save on unexpected disconnect while recording.
+        if (_isRecording &&
+            s != BleSourceState.streaming &&
+            s != BleSourceState.connecting) {
+          _autoSaveOnDisconnect();
+        }
+        setState(() => _state = s);
+      }
     });
     _devicesSub = _service.devicesStream.listen((d) {
       if (mounted) setState(() => _devices = d);
     });
 
-    // Auto-start scan if we have a provider.
-    if (_provider != null) {
+    // Auto-start scan only if not already streaming (e.g. demo mode).
+    if (_provider != null && _state != BleSourceState.streaming) {
       Future.microtask(() => _startScan());
     }
   }
@@ -88,6 +106,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     _stateSub?.cancel();
     _devicesSub?.cancel();
     _recordSub?.cancel();
+    _recordingUiTimer?.cancel();
     // Don't dispose the service — it's owned by the provider.
     super.dispose();
   }
@@ -126,16 +145,102 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
 
   void _startRecording() {
     _recordedSamples.clear();
+    _eventMarkers.clear();
+    _recordingStartTime = DateTime.now();
     _recordSub = _service.signalStream.listen((s) {
       _recordedSamples.add(s);
     });
+    // Refresh the recording indicator every 500ms.
+    _recordingUiTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted) setState(() {});
+    });
     setState(() => _isRecording = true);
+    ref.read(isRecordingSignalProvider.notifier).state = true;
   }
 
   void _stopRecording() {
     _recordSub?.cancel();
     _recordSub = null;
+    _recordingUiTimer?.cancel();
+    _recordingUiTimer = null;
+
+    if (_recordedSamples.isNotEmpty && _provider != null) {
+      final session = SignalSession(
+        sourceId: _provider!.id,
+        sourceName: _provider!.displayName,
+        deviceName: _service.connectedDevice?.platformName,
+        channels: _provider!.channelDescriptors,
+        samples: List.of(_recordedSamples),
+        sampleRateHz: _provider!.sampleRateHz,
+      );
+
+      final eventTags = _eventMarkers
+          .map((m) => 'event:${m.timeMs}:${m.label}')
+          .toList();
+
+      final capture = CaptureEntry(
+        id: 'sig_${DateTime.now().millisecondsSinceEpoch}',
+        timestamp: DateTime.now(),
+        source: CaptureSource.manual,
+        signalSession: session,
+        tags: eventTags,
+      );
+
+      ref.read(localDbServiceProvider).saveCapture(capture);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Session saved to Lab · ${session.samples.length} samples '
+              '(${session.duration.inSeconds}s)',
+            ),
+            backgroundColor: AppTheme.seaGreen,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'VIEW',
+              textColor: Colors.white,
+              onPressed: () {
+                if (mounted) context.go('/lab');
+              },
+            ),
+          ),
+        );
+      }
+    }
+
+    _recordedSamples.clear();
+    _eventMarkers.clear();
     setState(() => _isRecording = false);
+    _recordingStartTime = null;
+    ref.read(isRecordingSignalProvider.notifier).state = false;
+  }
+
+  /// Called automatically when BLE disconnects while recording.
+  void _autoSaveOnDisconnect() {
+    if (!_isRecording) return;
+    _stopRecording();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Connection lost — session auto-saved',
+            style: AppTheme.geist(fontSize: 13, color: Colors.white),
+          ),
+          backgroundColor: AppTheme.amber,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'VIEW',
+            textColor: Colors.white,
+            onPressed: () {
+              if (mounted) context.go('/lab');
+            },
+          ),
+        ),
+      );
+    }
   }
 
   // ── Demo mode ───────────────────────────────────────────────────────
@@ -154,6 +259,127 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   }
 
   bool get _isDemoMode => _service.isDemoMode;
+
+  // ── Event markers ──────────────────────────────────────────────────
+
+  static const _eventTypes = [
+    ('Stimulus', Icons.flash_on_rounded),
+    ('Response', Icons.touch_app_rounded),
+    ('Eyes open', Icons.visibility_rounded),
+    ('Eyes closed', Icons.visibility_off_rounded),
+    ('Task start', Icons.play_arrow_rounded),
+    ('Task end', Icons.stop_rounded),
+    ('Custom', Icons.flag_rounded),
+  ];
+
+  void _addEventMarker() {
+    if (_recordingStartTime == null) return;
+    final elapsedMs = DateTime.now()
+        .difference(_recordingStartTime!)
+        .inMilliseconds;
+    HapticFeedback.mediumImpact();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.deepSea,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.fog.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Mark Event at ${_formatElapsed(elapsedMs)}',
+              style: AppTheme.geist(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.moonbeam,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _eventTypes.length,
+                itemBuilder: (_, i) {
+                  final (label, icon) = _eventTypes[i];
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      icon,
+                      color: const Color(0xFF00BCD4),
+                      size: 20,
+                    ),
+                    title: Text(
+                      label,
+                      style: AppTheme.geist(
+                        fontSize: 14,
+                        color: AppTheme.moonbeam,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _persistEventMarker(elapsedMs, label);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _persistEventMarker(int timeMs, String label) {
+    setState(() {
+      _eventMarkers.add(_LiveEventMarker(timeMs: timeMs, label: label));
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '⚡ $label at ${_formatElapsed(timeMs)}',
+          style: AppTheme.geist(fontSize: 13, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF00838F),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _formatElapsed(int ms) {
+    final s = (ms / 1000).toStringAsFixed(1);
+    return '${s}s';
+  }
+
+  /// Formatted recording elapsed time (mm:ss).
+  String get _recordingElapsedStr {
+    if (_recordingStartTime == null) return '00:00';
+    final elapsed = DateTime.now().difference(_recordingStartTime!);
+    final m = elapsed.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = elapsed.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (elapsed.inHours > 0) {
+      final h = elapsed.inHours.toString().padLeft(2, '0');
+      return '$h:$m:$s';
+    }
+    return '$m:$s';
+  }
 
   // ── Build ─────────────────────────────────────────────────────────────
 
@@ -202,8 +428,8 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
             size: 20,
           ),
           onPressed: () {
-            if (_isDemoMode) _stopDemo();
-            _disconnect();
+            if (!_isDemoMode) _disconnect();
+            _stopRecording();
             context.pop();
           },
         ),
@@ -227,7 +453,17 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               ),
             ),
           if (_state == BleSourceState.streaming) _buildModeSwitcher(),
-          if (_state == BleSourceState.streaming && !_isDemoMode)
+          if (_state == BleSourceState.streaming && _isRecording)
+            IconButton(
+              icon: const Icon(
+                Icons.flag_rounded,
+                color: Color(0xFF00BCD4),
+                size: 22,
+              ),
+              tooltip: 'Add event marker',
+              onPressed: _addEventMarker,
+            ),
+          if (_state == BleSourceState.streaming)
             IconButton(
               icon: Icon(
                 _isRecording
@@ -479,13 +715,34 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Recording — ${_recordedSamples.length} samples',
+                    'Recording — $_recordingElapsedStr — ${_recordedSamples.length} samples',
                     style: AppTheme.geistMono(
                       fontSize: 11,
                       color: AppTheme.crimson,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (_eventMarkers.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00BCD4).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${_eventMarkers.length} event${_eventMarkers.length == 1 ? '' : 's'}',
+                        style: AppTheme.geistMono(
+                          fontSize: 10,
+                          color: const Color(0xFF00BCD4),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -725,6 +982,16 @@ class _DeviceTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Event marker recorded during live signal capture.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LiveEventMarker {
+  final int timeMs;
+  final String label;
+  const _LiveEventMarker({required this.timeMs, required this.label});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Diagnostic bottom sheet — unfiltered BLE scan for remote debugging.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -754,11 +1021,12 @@ class _DiagnosticSheetState extends State<_DiagnosticSheet> {
       _results = null;
     });
     final devices = await widget.service.runDiagnosticScan(timeoutSeconds: 10);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _scanning = false;
         _results = devices;
       });
+    }
   }
 
   @override

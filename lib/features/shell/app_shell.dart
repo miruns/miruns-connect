@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/services/service_providers.dart';
 import '../../../../../../../../../../../core/theme/app_theme.dart';
+import '../../core/services/service_providers.dart';
 import '../shared/widgets/nav_menu_button.dart';
 import '../sport/widgets/active_workout_banner.dart';
 
@@ -82,9 +82,9 @@ const List<_NavItem> _navItems = [
     numeral: 'I',
   ),
   _NavItem(
-    icon: Icons.sensors_outlined,
-    activeIcon: Icons.sensors_rounded,
-    label: 'EEG',
+    icon: Icons.science_outlined,
+    activeIcon: Icons.science_rounded,
+    label: 'Lab',
     numeral: 'II',
   ),
   _NavItem(

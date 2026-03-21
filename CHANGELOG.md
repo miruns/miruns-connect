@@ -5,6 +5,18 @@ All notable changes to Miruns Flutter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.26] - 2026-03-21
+
+### Added
+
+- **Session rename / notes** — edit title and notes on any session via bottom sheet; stored in `userNote` field (line 1 = title, rest = notes). Title shown on session cards
+- **Recording duration counter** — live elapsed time (mm:ss) in the recording indicator while capturing signal
+- **Auto-save on disconnect** — if BLE disconnects mid-recording, samples are automatically saved with an amber snackbar notification
+- **Source browser entry** — "Start Session" now routes to `/sources` (source browser) instead of hardcoded `/sources/ads1299`
+- **Session comparison** — select two sessions from the library, compare their spectral profiles side by side with dual band power bars and per-channel selector
+- **Waveform zoom / pan** — pinch-to-zoom on the replay chart time axis; pan within the zoomed window; zoom indicator with reset button
+- **Artifact marking** — tap anywhere on the waveform to mark artifacts (Blink, Jaw clench, Movement, Other) with timestamps; markers render as amber vertical lines with diamond icons and type labels; deletable chip row below the chart; persisted in `tags` field
+
 ## [1.0.21] - 2026-03-10
 
 ### Fixed

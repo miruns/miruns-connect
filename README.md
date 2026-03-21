@@ -9,7 +9,7 @@
 > **AI-assisted development.** Portions of this codebase, including data-processing logic and application code were developed with the assistance of AI tools. Outputs have been reviewed by human developers, but no guarantee of correctness or completeness is implied at this stage.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
-![Version](https://img.shields.io/badge/version-1.0.21-informational)
+![Version](https://img.shields.io/badge/version-1.0.28-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
@@ -91,7 +91,7 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 ## Features
 
 | Feature                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----------------------- | ---------------------------------------------- |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **AI Journal**           | Daily narrative generated from real sensor data — headline, mood, summary, full body text. Written in first-person ("your body speaking to you").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Smart Refresh**        | Persisted entries return instantly. AI runs only when new unprocessed captures exist. No redundant sensor reads or API calls.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **Background Captures**  | WorkManager-based periodic data collection with quiet-hour and battery-awareness support.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -103,25 +103,28 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 | **Nutrition Scanner**    | Scan any food barcode from the Capture screen. Open Food Facts returns Nutri-Score, NOVA group, and full macros. AI prompt includes the food data and generates a nutrition Context analysis correlating nutrition to HRV/energy patterns.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **User Annotations**     | Free-text notes and mood emojis per day, persisted in SQLite alongside the AI-generated content.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Onboarding**           | Step-by-step permission flow with per-permission explanations and privacy notes. Every step is skippable.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **BCI Signal Analysis**  | Four visualisation modes on the Live Signal screen: time-domain waveforms, real-time FFT spectral analysis (spectrum / waterfall / EEG bands), neural-state decoding demo (5-state classifier with confidence ring), and signal quality monitoring demo (SNR, impedance, artifact detection). Switchable via a popup menu — works with real BLE hardware and demo mode.                                                                                                                                                                                                                                                                                                                                        |
-| **Sport & Workouts**     | Full workout lifecycle: choose activity → real-time training with live HR/GPS/EEG metrics → voice coaching through earphones → post-workout feedback (fatigue, energy, mood) → AI performance analysis → pre-workout readiness predictions. Supports 8 activity types, 3 user levels (beginner/intermediate/advanced), and HR zone tracking via Tanaka formula. **Background persistence** — workouts keep recording when you navigate away; a music-player-style mini banner on every tab shows elapsed time, HR, and distance so you never lose track. **Dual-engine TTS** — Kokoro neural voice (WAV streaming) with automatic platform TTS fallback and circuit breaker. See **Sport Workout Flow** below. |     | **Research Export** | One-click export of EEG, HR, and multi-sensor data in research-grade formats: **CSV** (pandas, R, MATLAB, Excel), **EDF+** (MNE-Python, EEGLAB, BrainVision Analyzer), and **JSON** (BrainFlow, custom scripts). Format picker bottom sheet with per-stream toggles (EEG channels, HR/RR intervals, GPS track, environment, metadata). Native share sheet integration for email, Drive, AirDrop. Available from Capture details and Workout history cards when exportable data exists. |     | **Dark & Light Themes** | Material 3 theming with system-mode detection. |
+| **BCI Signal Analysis**  | Four visualisation modes on the Live Signal screen: time-domain waveforms, real-time FFT spectral analysis (6 sub-views: spectrum, waterfall spectrogram, EEG band power, topographic scalp map, coherence matrix, connectivity circle), neural-state decoding demo (5-state classifier with confidence ring), and signal quality monitoring demo (SNR, impedance, artifact detection). Switchable via a popup menu — works with real BLE hardware and demo mode.                                                                                                                                                                                                                                              |
+| **Lab**                  | Session library for recorded EEG data. Record, replay, rename, tag, compare, and export sessions. Session detail with multi-channel waveform replay (pinch-to-zoom, pan), scrubber, window selector, channel-selectable band power analysis, event markers, and artifact marking. Session comparison overlays spectral profiles of two sessions side by side. Swipe-to-delete, search, and empty-state CTA for quick demo start.                                                                                                                                                                                                                                                                               |
+| **Sport & Workouts**     | Full workout lifecycle: choose activity → real-time training with live HR/GPS/EEG metrics → voice coaching through earphones → post-workout feedback (fatigue, energy, mood) → AI performance analysis → pre-workout readiness predictions. Supports 8 activity types, 3 user levels (beginner/intermediate/advanced), and HR zone tracking via Tanaka formula. **Background persistence** — workouts keep recording when you navigate away; a music-player-style mini banner on every tab shows elapsed time, HR, and distance so you never lose track. **Dual-engine TTS** — Kokoro neural voice (WAV streaming) with automatic platform TTS fallback and circuit breaker. See **Sport Workout Flow** below. |
+| **Research Export**      | One-click export of EEG, HR, and multi-sensor data in research-grade formats: **CSV** (pandas, R, MATLAB, Excel), **EDF+** (MNE-Python, EEGLAB, BrainVision Analyzer), and **JSON** (BrainFlow, custom scripts). Format picker bottom sheet with per-stream toggles (EEG channels, HR/RR intervals, GPS track, environment, metadata). Native share sheet integration for email, Drive, AirDrop. Available from Capture details and Workout history cards when exportable data exists.                                                                                                                                                                                                                         |
+| **Dark & Light Themes**  | Material 3 theming with system-mode detection.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ---
 
 ## Data Sources
 
-| Domain             | Sensor / API                        | What's read                                                                                                                                                       |
-| ------------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Movement**       | Health Connect / HealthKit          | Steps, distance, calories, workouts                                                                                                                               |
-| **Cardiovascular** | Optical HR sensor (OS health store) | Average HR, resting HR, HRV (SDNN)                                                                                                                                |
-| **Cardiovascular** | BLE HR strap (direct, 0x180D)       | Continuous BPM session + RR intervals → RMSSD / SDNN / mean-RR; full `BleHrSession` stored per capture                                                            |
-| **Signal sources** | BLE plugin system (ADS1299, …)      | Multi-channel streaming from community hardware — 4 view modes (waveform, spectral, decoding, monitoring). See [CONTRIBUTING_SOURCES.md](CONTRIBUTING_SOURCES.md) |
-| **Sleep**          | Device sleep tracking               | Duration, phases                                                                                                                                                  |
-| **Environment**    | GPS → ambient-scan API              | Temperature, humidity, AQI, UV, pressure, wind, conditions                                                                                                        |
-| **Schedule**       | Device calendar (CalDAV)            | Today's events                                                                                                                                                    |
-| **Location**       | GPS (Geolocator)                    | Coordinates — ephemeral, never stored                                                                                                                             |
-| **Nutrition**      | Barcode → Open Food Facts API v2    | Product name, Nutri-Score, NOVA group, macros per 100 g / per serving                                                                                             |
-| **Voice**          | Kokoro TTS Gateway (REST)           | Neural text-to-speech — streaming WAV via `POST /tts` with `X-API-Key` auth. Falls back to platform TTS (`flutter_tts`) on failure/timeout/no config.             |
+| Domain             | Sensor / API                        | What's read                                                                                                                                                                     |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Movement**       | Health Connect / HealthKit          | Steps, distance, calories, workouts                                                                                                                                             |
+| **Cardiovascular** | Optical HR sensor (OS health store) | Average HR, resting HR, HRV (SDNN)                                                                                                                                              |
+| **Cardiovascular** | BLE HR strap (direct, 0x180D)       | Continuous BPM session + RR intervals → RMSSD / SDNN / mean-RR; full `BleHrSession` stored per capture                                                                          |
+| **Signal sources** | BLE plugin system (ADS1299, …)      | Multi-channel streaming from community hardware — 4 view modes (waveform, spectral [6 sub-views], decoding, monitoring). See [CONTRIBUTING_SOURCES.md](CONTRIBUTING_SOURCES.md) |
+| **Sleep**          | Device sleep tracking               | Duration, phases                                                                                                                                                                |
+| **Environment**    | GPS → ambient-scan API              | Temperature, humidity, AQI, UV, pressure, wind, conditions                                                                                                                      |
+| **Schedule**       | Device calendar (CalDAV)            | Today's events                                                                                                                                                                  |
+| **Location**       | GPS (Geolocator)                    | Coordinates — ephemeral, never stored                                                                                                                                           |
+| **Nutrition**      | Barcode → Open Food Facts API v2    | Product name, Nutri-Score, NOVA group, macros per 100 g / per serving                                                                                                           |
+| **Voice**          | Kokoro TTS Gateway (REST)           | Neural text-to-speech — streaming WAV via `POST /tts` with `X-API-Key` auth. Falls back to platform TTS (`flutter_tts`) on failure/timeout/no config.                           |
 
 > **Privacy:** GPS is read once to fetch environmental data, then discarded. No location history is recorded or transmitted. Health data is read-only — the app never writes to HealthKit or Health Connect.
 
@@ -132,7 +135,7 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 | Concern          | Library                               | Role                                                                       |
 | ---------------- | ------------------------------------- | -------------------------------------------------------------------------- |
 | State management | `flutter_riverpod` ^2.6.1             | DI + reactive state                                                        |
-| Routing          | `go_router` ^14.6.2                   | Declarative navigation (3-tab shell + standalone routes)                   |
+| Routing          | `go_router` ^14.6.2                   | Declarative navigation (4-tab shell + standalone routes)                   |
 | Health           | `health` ^11.1.0                      | Cross-platform HealthKit / Health Connect (HR, resting HR, HRV, steps…)    |
 | BLE              | `flutter_blue_plus` ^1.35.3           | BLE scan / connect / notify — Heart Rate Profile 0x180D                    |
 | Location         | `geolocator` ^13.0.2                  | GPS coordinates                                                            |
@@ -231,7 +234,7 @@ lib/
 │   │   ├── ai_models         #   ChatMessage, request/response DTOs
 │   │   ├── ai_provider_config  # Provider presets & config model
 │   │   └── background_capture_config
-│   ├── router/               # GoRouter (3-tab shell + standalone routes)
+│   ├── router/               # GoRouter (4-tab shell + standalone routes)
 │   ├── services/             # All business logic
 │   │   ├── service_providers #   ★ Central Riverpod provider registry
 │   │   ├── body_blog_service #   Smart-refresh orchestrator
@@ -265,15 +268,21 @@ lib/
 │   ├── widgets/              # Shared low-level widgets
 │   │   ├── live_hr_waveform  #   60 fps ECG-style PQRST waveform (BLE HR)
 │   │   ├── live_signal_chart #   Multi-channel real-time signal chart (any source)
-│   │   ├── spectral_analysis_chart  # 3-view FFT spectrum / waterfall / band power
+│   │   ├── spectral_analysis_chart  # 6-view spectral: spectrum / waterfall / bands / topomap / coherence / connectivity
+│   │   ├── topomap_chart     #   2D scalp topographic map (IDW interpolation, 10-20 montage)
+│   │   ├── coherence_matrix_chart  # NxN cross-channel spectral coherence heatmap (real FFT)
+│   │   ├── connectivity_circle_chart  # Connectome ring with Bézier coherence arcs
 │   │   ├── research_export_sheet  # Research export bottom sheet (format picker + data stream toggles)
 │   │   ├── bci_decoding_view #   Demo neural state classifier
 │   │   └── bci_monitoring_view  # Demo signal quality dashboard
 │   └── theme/                # Material 3 (light + dark)
 ├── features/
 │   ├── onboarding/           # Step-by-step permission flow
-│   ├── eeg/                  # EEG home dashboard + onboarding setup
-│   │   └── screens/          #   EegHomeScreen, EegOnboardingScreen
+│   ├── eeg/                  # EEG onboarding setup
+│   │   └── screens/          #   EegOnboardingScreen
+│   ├── lab/                  # Session library + replay + comparison
+│   │   ├── screens/          #   LabHomeScreen, SessionDetailScreen, SessionComparisonScreen
+│   │   └── widgets/          #   SessionCard (sparkline, duration badge, metadata)
 │   ├── journal/              # Journal tab — paginated daily narrative
 │   ├── body_blog/            # Blog screen & widgets (detail, cards, AI badge)
 │   ├── patterns/             # AI-derived trends & insights
@@ -286,7 +295,7 @@ lib/
 │   │   │                     #   VoiceCoachService delegates to core TtsService (Kokoro + platform fallback)
 │   │   ├── screens/          #   SportHome, ActiveWorkout, Feedback, History, ProfileSetup
 │   │   └── widgets/          #   HrZoneRing, MetricTile, BrainStateIndicator, InsightCard, ActiveWorkoutBanner
-│   ├── shell/                # AppShell (4-tab nav + active workout banner) + DebugScreen
+│   ├── shell/                # AppShell (4-tab nav: Sport / Lab / Patterns / Capture + active workout banner) + DebugScreen
 │   ├── environment/          # Detailed environment view
 │   ├── permissions/          # Runtime permission management screen
 │   ├── shared/               # Reusable widgets
@@ -577,7 +586,10 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [x] `SignalSession` model with JSON persistence in `CaptureEntry` (schema v11)
 - [x] Community source contribution guide — [CONTRIBUTING_SOURCES.md](CONTRIBUTING_SOURCES.md)
 - [x] Pure-Dart FFT engine (`FftEngine`) — Cooley-Tukey radix-2, Hanning window, PSD, EEG band extraction (δ/θ/α/β/γ)
-- [x] Spectral analysis chart — live frequency spectrum, waterfall spectrogram, animated EEG band power meters
+- [x] Spectral analysis chart — 6 sub-views: live frequency spectrum, waterfall spectrogram, animated EEG band power meters, topographic scalp map, coherence matrix heatmap, connectivity circle
+- [x] Topographic scalp map (`TopomapChart`) — IDW-interpolated 10-20 montage with 7-colour gradient, electrode markers, nose/ear indicators, metric selector (per-band or total power)
+- [x] Coherence matrix (`CoherenceMatrixChart`) — NxN cross-channel spectral coherence heatmap with real Cooley-Tukey FFT, 5 frequency band selectors (Alpha/Beta/Theta/Gamma/Broadband)
+- [x] Connectivity circle (`ConnectivityCircleChart`) — connectome ring with Bézier arcs encoding coherence strength (thickness + opacity) and frequency band (colour), dual-pass glow rendering
 - [x] BCI decoding demo — 5-state neural classifier (Focus/Relax/Motor-L/Motor-R/Meditate) with confidence ring and timeline
 - [x] BCI monitoring demo — per-channel SNR, impedance, artifact detection, data-readiness gauge
 - [x] 4-mode visualisation system (`SignalViewMode`) with animated popup menu switcher
@@ -591,6 +603,18 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [x] Background workout persistence — `ActiveWorkoutNotifier` keeps all recording (HR, GPS, EEG, voice coach, AI insights) running independently of the UI; music-player-style `ActiveWorkoutBanner` on every tab via AppShell
 - [x] Cinematic Active Workout UI — zone-reactive animated background (radial blooms, floating particles, breathing glow), glass-morphism design (BackdropFilter controls & metric tiles), pulsing BPM readout, animated phase strip, staggered entrance animations, HR-zone-aware intensity scaling (Z1–Z5)
 - [x] Research Export — one-click export of EEG/HR/GPS data in CSV, EDF+ (European Data Format), and JSON. Format picker with per-stream toggles, native share sheet. Available from Capture details and Workout history cards.
+- [x] Lab tab (`/lab`) replaces EEG Home as Tab 1 — session library with recorded EEG sessions, demo toggle, recording indicator
+- [x] Session recording — save multi-channel EEG data to SQLite; snackbar confirmation with sample count and duration
+- [x] Session detail screen — multi-channel waveform replay with pinch-to-zoom/pan, scrubber, window selector (2s/4s/10s), channel-selectable band power (real FFT)
+- [x] Session comparison — side-by-side spectral profile overlay of two selected sessions
+- [x] Session card widget — source name, duration badge, mini sparkline, date, channel/rate metadata
+- [x] Session rename/notes, swipe-to-delete with confirmation, export via `ResearchExportSheet`
+- [x] Event markers — 7 built-in types (Stimulus, Response, Eyes open/closed, Task start/end, Custom), stored as tags, rendered as cyan dashed lines on replay
+- [x] Artifact marking — tap on waveform to mark artifacts with timestamps
+- [x] Recording indicator on Lab tab — pulsing red dot via `isRecordingSignalProvider`
+- [x] Auto-save on BLE disconnect during active recording
+- [x] Recording duration counter in app bar (mm:ss)
+- [x] Empty-state CTA on Lab — "Start Demo" button that enables demo mode and navigates to live signal screen
 
 ### Next — Sport & Brain Performance
 
@@ -609,6 +633,14 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [ ] BLE pulse oximeters (SpO₂) and smart scales
 - [ ] More community signal sources (OpenBCI Cyton, Muse S, Ganglion, …)
 
+### Next — Lab & Research
+
+- [ ] Protocol engine — define multi-step timed protocols (e.g. "Eyes open 2 min → Eyes closed 2 min → Task 3 min"), auto-segment recording
+- [ ] Protocol library — pre-built protocols: Alpha training, P300 oddball, SSVEP, relaxation baseline, meditation, focus task
+- [ ] Real-time neurofeedback — audio/visual feedback based on live band power targets
+- [ ] Multi-session analysis — aggregate metrics across sessions: trend lines, session-over-session changes
+- [ ] Impedance check — pre-recording electrode impedance measurement (ADS1299 lead-off detection)
+
 ### Next — Home Automation
 
 - [ ] Smart-home integration (Matter, HomeKit, MQTT)
@@ -621,7 +653,7 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [ ] Multi-user household awareness (BLE presence + individual profiles)
 - [ ] Wearable companion (Wear OS / watchOS)
 - [ ] Export to structured health records (FHIR-compatible)
-- [ ] Research session mode — protocol builder, event markers, participant management, batch export
+- [ ] Research session mode — protocol builder, participant management, batch export
 - [ ] Researcher portal (web dashboard) — dataset upload/sync, visualization, collaboration
 
 ---

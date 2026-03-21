@@ -81,6 +81,10 @@ final aiServiceProvider = Provider<AiService>((ref) {
 
 // ── Leaf services (no inter-service dependencies) ───────────────────────────
 
+/// Whether the live signal screen is currently recording samples.
+/// Written by [LiveSignalScreen], read by [LabHomeScreen] for the red dot.
+final isRecordingSignalProvider = StateProvider<bool>((_) => false);
+
 final healthServiceProvider = Provider<HealthService>((_) => HealthService());
 
 /// Open Food Facts barcode lookup service.
