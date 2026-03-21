@@ -72,12 +72,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   /// Artifact markers (stored as tags with prefix `artifact:`).
   List<_ArtifactMarker> _artifacts = [];
 
+  /// Event markers (stored as tags with prefix `event:`).
+  List<_ArtifactMarker> _events = [];
+
   @override
   void initState() {
     super.initState();
     _entry = widget.entry;
     _session = _entry.signalSession!;
-    _artifacts = _parseArtifacts(_entry.tags);
+    _artifacts = _parseMarkers(_entry.tags, 'artifact');
+    _events = _parseMarkers(_entry.tags, 'event');
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -349,9 +353,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
   static const _artifactTypes = ['Blink', 'Jaw clench', 'Movement', 'Other'];
 
-  List<_ArtifactMarker> _parseArtifacts(List<String> tags) {
+  List<_ArtifactMarker> _parseMarkers(List<String> tags, String prefix) {
     return tags
-        .where((t) => t.startsWith('artifact:'))
+        .where((t) => t.startsWith('$prefix:'))
         .map((t) {
           final parts = t.split(':');
           if (parts.length < 3) return null;
@@ -364,8 +368,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       ..sort((a, b) => a.timeMs.compareTo(b.timeMs));
   }
 
-  List<String> _serializeArtifacts(List<_ArtifactMarker> markers) {
-    return markers.map((m) => 'artifact:${m.timeMs}:${m.type}').toList();
+  List<String> _serializeMarkers(List<_ArtifactMarker> markers, String prefix) {
+    return markers.map((m) => '$prefix:${m.timeMs}:${m.type}').toList();
   }
 
   void _addArtifact(int timeMs) {
@@ -432,11 +436,15 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final updated = List<_ArtifactMarker>.from(_artifacts)..add(marker);
     updated.sort((a, b) => a.timeMs.compareTo(b.timeMs));
 
-    // Merge artifact tags with non-artifact tags.
-    final nonArtifactTags = _entry.tags
-        .where((t) => !t.startsWith('artifact:'))
+    // Merge artifact tags with non-artifact/non-event tags.
+    final otherTags = _entry.tags
+        .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
         .toList();
-    final allTags = [...nonArtifactTags, ..._serializeArtifacts(updated)];
+    final allTags = [
+      ...otherTags,
+      ..._serializeMarkers(updated, 'artifact'),
+      ..._serializeMarkers(_events, 'event'),
+    ];
 
     final newEntry = _entry.copyWith(tags: allTags);
     ref.read(localDbServiceProvider).saveCapture(newEntry);
@@ -450,10 +458,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final updated = List<_ArtifactMarker>.from(_artifacts)
       ..removeWhere((m) => m.timeMs == marker.timeMs && m.type == marker.type);
 
-    final nonArtifactTags = _entry.tags
-        .where((t) => !t.startsWith('artifact:'))
+    final otherTags = _entry.tags
+        .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
         .toList();
-    final allTags = [...nonArtifactTags, ..._serializeArtifacts(updated)];
+    final allTags = [
+      ...otherTags,
+      ..._serializeMarkers(updated, 'artifact'),
+      ..._serializeMarkers(_events, 'event'),
+    ];
 
     final newEntry = _entry.copyWith(tags: allTags);
     ref.read(localDbServiceProvider).saveCapture(newEntry);
@@ -498,6 +510,21 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         .toList();
   }
 
+  /// Filter event markers that fall within the current window.
+  List<_ArtifactMarker> _eventsInWindow(List<SignalSample> windowSamples) {
+    if (windowSamples.length < 2 || _events.isEmpty) return [];
+    final sessionStart = _session.samples.first.time;
+    final winStartMs = windowSamples.first.time
+        .difference(sessionStart)
+        .inMilliseconds;
+    final winEndMs = windowSamples.last.time
+        .difference(sessionStart)
+        .inMilliseconds;
+    return _events
+        .where((m) => m.timeMs >= winStartMs && m.timeMs <= winEndMs)
+        .toList();
+  }
+
   String _formatMs(int ms) {
     final s = (ms / 1000).toStringAsFixed(1);
     return '${s}s';
@@ -511,6 +538,25 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         return Icons.face_rounded;
       case 'Movement':
         return Icons.directions_walk_rounded;
+      default:
+        return Icons.flag_rounded;
+    }
+  }
+
+  IconData _eventIcon(String type) {
+    switch (type) {
+      case 'Stimulus':
+        return Icons.flash_on_rounded;
+      case 'Response':
+        return Icons.touch_app_rounded;
+      case 'Eyes open':
+        return Icons.visibility_rounded;
+      case 'Eyes closed':
+        return Icons.visibility_off_rounded;
+      case 'Task start':
+        return Icons.play_arrow_rounded;
+      case 'Task end':
+        return Icons.stop_rounded;
       default:
         return Icons.flag_rounded;
     }
@@ -744,7 +790,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     child: _ReplayChart(
                       samples: windowSamples,
                       channels: _session.channels,
+                      sessionStartTime: _session.samples.first.time,
                       artifacts: _artifactsInWindow(windowSamples),
+                      events: _eventsInWindow(windowSamples),
                       onRemoveArtifact: _removeArtifact,
                     ),
                   ),
@@ -785,6 +833,50 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                           ),
                         ),
                         onDeleted: () => _removeArtifact(m),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // ── Event marker chips ──────────────────────────────────────
+            if (_events.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                child: SizedBox(
+                  height: 28,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _events.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (ctx, i) {
+                      final m = _events[i];
+                      return Chip(
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        backgroundColor: const Color(
+                          0xFF00BCD4,
+                        ).withValues(alpha: 0.15),
+                        side: BorderSide(
+                          color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                        ),
+                        avatar: Icon(
+                          _eventIcon(m.type),
+                          size: 14,
+                          color: const Color(0xFF00BCD4),
+                        ),
+                        label: Text(
+                          '${m.type} ${_formatMs(m.timeMs)}',
+                          style: AppTheme.geist(
+                            fontSize: 10,
+                            color: const Color(0xFF00BCD4),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -1044,13 +1136,17 @@ class _WindowButton extends StatelessWidget {
 class _ReplayChart extends StatelessWidget {
   final List<SignalSample> samples;
   final List<ChannelDescriptor> channels;
+  final DateTime sessionStartTime;
   final List<_ArtifactMarker> artifacts;
+  final List<_ArtifactMarker> events;
   final ValueChanged<_ArtifactMarker>? onRemoveArtifact;
 
   const _ReplayChart({
     required this.samples,
     required this.channels,
+    required this.sessionStartTime,
     this.artifacts = const [],
+    this.events = const [],
     this.onRemoveArtifact,
   });
 
@@ -1077,7 +1173,9 @@ class _ReplayChart extends StatelessWidget {
         painter: _ReplayPainter(
           samples: samples,
           channels: channels,
+          sessionStartTime: sessionStartTime,
           artifacts: artifacts,
+          events: events,
           windowStartTime: samples.first.time,
           windowEndTime: samples.last.time,
         ),
@@ -1089,14 +1187,18 @@ class _ReplayChart extends StatelessWidget {
 class _ReplayPainter extends CustomPainter {
   final List<SignalSample> samples;
   final List<ChannelDescriptor> channels;
+  final DateTime sessionStartTime;
   final List<_ArtifactMarker> artifacts;
+  final List<_ArtifactMarker> events;
   final DateTime windowStartTime;
   final DateTime windowEndTime;
 
   _ReplayPainter({
     required this.samples,
     required this.channels,
+    required this.sessionStartTime,
     this.artifacts = const [],
+    this.events = const [],
     required this.windowStartTime,
     required this.windowEndTime,
   });
@@ -1176,13 +1278,12 @@ class _ReplayPainter extends CustomPainter {
 
     // ── Artifact markers (vertical lines + labels) ──────────────────────
     if (artifacts.isNotEmpty && samples.length >= 2) {
-      final sessionStart = samples.first.time;
       final windowDurMs = windowEndTime
           .difference(windowStartTime)
           .inMilliseconds;
       if (windowDurMs > 0) {
         final windowStartMs = windowStartTime
-            .difference(sessionStart)
+            .difference(sessionStartTime)
             .inMilliseconds;
 
         final markerPaint = Paint()
@@ -1221,6 +1322,66 @@ class _ReplayPainter extends CustomPainter {
             textDirection: ui.TextDirection.ltr,
           )..layout();
           tp.paint(canvas, Offset(x + 6, 2));
+        }
+      }
+    }
+
+    // ── Event markers (cyan vertical lines + labels) ────────────────────
+    if (events.isNotEmpty && samples.length >= 2) {
+      final windowDurMs = windowEndTime
+          .difference(windowStartTime)
+          .inMilliseconds;
+      if (windowDurMs > 0) {
+        final windowStartMs = windowStartTime
+            .difference(sessionStartTime)
+            .inMilliseconds;
+
+        const eventColor = Color(0xFF00BCD4);
+        final eventPaint = Paint()
+          ..color = eventColor.withValues(alpha: 0.8)
+          ..strokeWidth = 1.5;
+
+        final dashPaint = Paint()
+          ..color = eventColor.withValues(alpha: 0.5)
+          ..strokeWidth = 1.0;
+
+        for (final m in events) {
+          final relMs = m.timeMs - windowStartMs;
+          final frac = relMs / windowDurMs;
+          if (frac < 0 || frac > 1) continue;
+          final x = frac * size.width;
+
+          // Dashed vertical line (draw as short segments)
+          for (double y = 0; y < size.height; y += 6) {
+            canvas.drawLine(
+              Offset(x, y),
+              Offset(x, (y + 3).clamp(0, size.height)),
+              dashPaint,
+            );
+          }
+
+          // Triangle marker at top
+          final triPath = Path()
+            ..moveTo(x - 4, 0)
+            ..lineTo(x + 4, 0)
+            ..lineTo(x, 8)
+            ..close();
+          canvas.drawPath(triPath, eventPaint);
+
+          // Type label (below the triangle)
+          final tp = TextPainter(
+            text: TextSpan(
+              text: m.type,
+              style: const TextStyle(
+                fontSize: 9,
+                color: eventColor,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            textDirection: ui.TextDirection.ltr,
+          )..layout();
+          tp.paint(canvas, Offset(x + 6, 10));
         }
       }
     }

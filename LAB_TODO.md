@@ -52,12 +52,12 @@
 - [ ] **Protocol library** — Pre-built protocols: Alpha training, P300 oddball, SSVEP, relaxation baseline, meditation, focus task.
 - [ ] **Sharable session links** — Upload session to miruns-lab (Next.js), generate a public URL with embedded replay viewer.
 - [ ] **Topographic maps** — 2D head map with electrode positions, color-coded by band power or amplitude. Requires standard electrode montage.
-- [ ] **Event markers** — Hardware or software triggers that mark specific moments in the recording (e.g. stimulus onset, button press).
+- [x] **Event markers** — Software triggers that mark specific moments in the recording (e.g. stimulus onset, button press). Flag button in live signal app bar during recording, 7 built-in event types (Stimulus, Response, Eyes open/closed, Task start/end, Custom). Stored as `event:<ms>:<label>` tags, rendered as cyan dashed lines on replay waveform, displayed as chips in session detail.
 - [ ] **Real-time neurofeedback** — Audio/visual feedback based on live band power targets (e.g. "increase alpha at O1"). Requires threshold engine + feedback UI.
 - [ ] **Multi-session analysis** — Aggregate metrics across sessions: trend lines for band power ratios, session-over-session changes, sleep/wake patterns.
 - [ ] **Community protocols** — Share protocols with other users. Import from a protocol marketplace.
 - [ ] **Developer API** — Expose recorded sessions via a REST/GraphQL API from miruns-lab for third-party analysis tools.
-- [ ] **EDF/BDF export** — Export to standard EEG file formats (European Data Format) for compatibility with MNE-Python, EEGLAB, BrainVision.
+- [x] **EDF/BDF export** — Export to standard EEG file formats (European Data Format) for compatibility with MNE-Python, EEGLAB, BrainVision.
 - [ ] **Impedance check** — Pre-recording electrode impedance measurement (requires ADS1299 lead-off detection config).
 - [ ] **Session tagging + search** — Tags (e.g. "meditation", "focus", "sleep"), full-text search across session notes.
 
