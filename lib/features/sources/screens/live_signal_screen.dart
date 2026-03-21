@@ -172,12 +172,19 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Session saved — ${session.samples.length} samples '
+              'Session saved to Lab · ${session.samples.length} samples '
               '(${session.duration.inSeconds}s)',
             ),
             backgroundColor: AppTheme.seaGreen,
             behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'VIEW',
+              textColor: Colors.white,
+              onPressed: () {
+                if (mounted) context.go('/lab');
+              },
+            ),
           ),
         );
       }
