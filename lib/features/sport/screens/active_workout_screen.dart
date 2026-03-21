@@ -1012,18 +1012,12 @@ class _CinematicMetric extends StatelessWidget {
   final String label;
   final String value;
   final String? unit;
-  final Color? accentColor;
 
-  const _CinematicMetric({
-    required this.label,
-    required this.value,
-    this.unit,
-    this.accentColor,
-  });
+  const _CinematicMetric({required this.label, required this.value, this.unit});
 
   @override
   Widget build(BuildContext context) {
-    final accent = accentColor ?? AppTheme.moonbeam;
+    final accent = AppTheme.moonbeam;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
