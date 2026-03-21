@@ -75,6 +75,18 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   /// Event markers (stored as tags with prefix `event:`).
   List<_ArtifactMarker> _events = [];
 
+  /// Preview crosshair timestamp (session-relative ms) shown during marker placement.
+  int? _previewTimeMs;
+
+  /// Index of an existing artifact being dragged to reposition.
+  int? _draggingArtifactIndex;
+
+  /// Current timestamp while dragging an existing marker.
+  int? _dragTimeMs;
+
+  /// Cached constraints for coordinate mapping.
+  BoxConstraints? _chartConstraints;
+
   @override
   void initState() {
     super.initState();
@@ -394,62 +406,130 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 
   void _addArtifact(int timeMs) {
+    final totalDurationMs = _session.duration.inMilliseconds;
+    // Fine-tune range: ±500ms clamped to session bounds.
+    final minMs = (timeMs - 500).clamp(0, totalDurationMs);
+    final maxMs = (timeMs + 500).clamp(0, totalDurationMs);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.deepSea,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.fog.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final currentMs = _previewTimeMs ?? timeMs;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.fog.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Text(
+                  'Mark Artifact at ${_formatMs(currentMs)}',
+                  style: AppTheme.geist(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.moonbeam,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Fine-tune slider
+                Row(
+                  children: [
+                    Text(
+                      _formatMs(minMs),
+                      style: AppTheme.geistMono(
+                        fontSize: 10,
+                        color: AppTheme.mist,
+                      ),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: AppTheme.amber,
+                          inactiveTrackColor: AppTheme.amber.withValues(
+                            alpha: 0.15,
+                          ),
+                          thumbColor: AppTheme.amber,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 14,
+                          ),
+                          trackHeight: 3,
+                        ),
+                        child: Slider(
+                          value: currentMs.toDouble(),
+                          min: minMs.toDouble(),
+                          max: maxMs.toDouble(),
+                          onChanged: (v) {
+                            final newMs = v.round();
+                            setSheetState(() {});
+                            setState(() => _previewTimeMs = newMs);
+                          },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _formatMs(maxMs),
+                      style: AppTheme.geistMono(
+                        fontSize: 10,
+                        color: AppTheme.mist,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  'Drag to fine-tune position',
+                  style: AppTheme.geist(fontSize: 11, color: AppTheme.mist),
+                ),
+                const SizedBox(height: 8),
+                ...List.generate(_artifactTypes.length, (i) {
+                  final type = _artifactTypes[i];
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      _artifactIcon(type),
+                      color: AppTheme.amber,
+                      size: 20,
+                    ),
+                    title: Text(
+                      type,
+                      style: AppTheme.geist(
+                        fontSize: 14,
+                        color: AppTheme.moonbeam,
+                      ),
+                    ),
+                    onTap: () {
+                      final finalMs = _previewTimeMs ?? timeMs;
+                      Navigator.pop(ctx);
+                      _persistArtifact(finalMs, type);
+                    },
+                  );
+                }),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Mark Artifact at ${_formatMs(timeMs)}',
-              style: AppTheme.geist(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.moonbeam,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...List.generate(_artifactTypes.length, (i) {
-              final type = _artifactTypes[i];
-              return ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  _artifactIcon(type),
-                  color: AppTheme.amber,
-                  size: 20,
-                ),
-                title: Text(
-                  type,
-                  style: AppTheme.geist(fontSize: 14, color: AppTheme.moonbeam),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _persistArtifact(timeMs, type);
-                },
-              );
-            }),
-          ],
-        ),
+          );
+        },
       ),
-    );
+    ).whenComplete(() {
+      setState(() => _previewTimeMs = null);
+    });
   }
 
   void _persistArtifact(int timeMs, String type) {
@@ -513,7 +593,109 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         firstTime.difference(sessionStartTime).inMilliseconds + tapTimeMs;
 
     HapticFeedback.mediumImpact();
+    setState(() => _previewTimeMs = absoluteMs);
     _addArtifact(absoluteMs);
+  }
+
+  /// Convert an x pixel position to session-relative ms.
+  int? _xToSessionMs(double dx, BoxConstraints constraints) {
+    final windowSamples = _getWindowSamples();
+    if (windowSamples.length < 2) return null;
+    final frac = (dx / constraints.maxWidth).clamp(0.0, 1.0);
+    final firstTime = windowSamples.first.time;
+    final lastTime = windowSamples.last.time;
+    final windowDurMs = lastTime.difference(firstTime).inMilliseconds;
+    final sessionStart = _session.samples.first.time;
+    return firstTime.difference(sessionStart).inMilliseconds +
+        (frac * windowDurMs).toInt();
+  }
+
+  /// Find artifact index nearest to the given x position (within 24px).
+  int? _findNearestArtifact(double dx, BoxConstraints constraints) {
+    final windowSamples = _getWindowSamples();
+    if (windowSamples.length < 2 || _artifacts.isEmpty) return null;
+
+    final sessionStart = _session.samples.first.time;
+    final winStartMs = windowSamples.first.time
+        .difference(sessionStart)
+        .inMilliseconds;
+    final winEndMs = windowSamples.last.time
+        .difference(sessionStart)
+        .inMilliseconds;
+    final winDurMs = winEndMs - winStartMs;
+    if (winDurMs <= 0) return null;
+
+    int? bestIdx;
+    double bestDist = 24; // max pixel distance
+
+    for (int i = 0; i < _artifacts.length; i++) {
+      final m = _artifacts[i];
+      final frac = (m.timeMs - winStartMs) / winDurMs;
+      if (frac < 0 || frac > 1) continue;
+      final markerX = frac * constraints.maxWidth;
+      final dist = (dx - markerX).abs();
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }
+
+  void _onLongPressStart(LongPressStartDetails details) {
+    final c = _chartConstraints;
+    if (c == null) return;
+    final idx = _findNearestArtifact(details.localPosition.dx, c);
+    if (idx == null) return;
+    HapticFeedback.heavyImpact();
+    setState(() {
+      _draggingArtifactIndex = idx;
+      _dragTimeMs = _artifacts[idx].timeMs;
+    });
+  }
+
+  void _onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    final c = _chartConstraints;
+    if (_draggingArtifactIndex == null || c == null) return;
+    final ms = _xToSessionMs(details.localPosition.dx, c);
+    if (ms == null) return;
+    final clamped = ms.clamp(0, _session.duration.inMilliseconds);
+    setState(() => _dragTimeMs = clamped);
+  }
+
+  void _onLongPressEnd(LongPressEndDetails _) {
+    final idx = _draggingArtifactIndex;
+    if (idx == null || _dragTimeMs == null) {
+      setState(() {
+        _draggingArtifactIndex = null;
+        _dragTimeMs = null;
+      });
+      return;
+    }
+
+    // Persist the repositioned marker.
+    final old = _artifacts[idx];
+    final updated = List<_ArtifactMarker>.from(_artifacts);
+    updated[idx] = _ArtifactMarker(timeMs: _dragTimeMs!, type: old.type);
+    updated.sort((a, b) => a.timeMs.compareTo(b.timeMs));
+
+    final otherTags = _entry.tags
+        .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
+        .toList();
+    final allTags = [
+      ...otherTags,
+      ..._serializeMarkers(updated, 'artifact'),
+      ..._serializeMarkers(_events, 'event'),
+    ];
+    final newEntry = _entry.copyWith(tags: allTags);
+    ref.read(localDbServiceProvider).saveCapture(newEntry);
+
+    setState(() {
+      _artifacts = updated;
+      _entry = newEntry;
+      _draggingArtifactIndex = null;
+      _dragTimeMs = null;
+    });
   }
 
   /// Filter artifacts that fall within the current window of samples.
@@ -808,19 +990,32 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: LayoutBuilder(
-                  builder: (ctx, constraints) => GestureDetector(
-                    onScaleStart: _onScaleStart,
-                    onScaleUpdate: _onScaleUpdate,
-                    onTapUp: (d) => _onWaveformTap(d, constraints),
-                    child: _ReplayChart(
-                      samples: windowSamples,
-                      channels: _session.channels,
-                      sessionStartTime: _session.samples.first.time,
-                      artifacts: _artifactsInWindow(windowSamples),
-                      events: _eventsInWindow(windowSamples),
-                      onRemoveArtifact: _removeArtifact,
-                    ),
-                  ),
+                  builder: (ctx, constraints) {
+                    _chartConstraints = constraints;
+                    return GestureDetector(
+                      onScaleStart: _onScaleStart,
+                      onScaleUpdate: _onScaleUpdate,
+                      onTapUp: (d) => _onWaveformTap(d, constraints),
+                      onLongPressStart: _onLongPressStart,
+                      onLongPressMoveUpdate: _onLongPressMoveUpdate,
+                      onLongPressEnd: _onLongPressEnd,
+                      child: _ReplayChart(
+                        samples: windowSamples,
+                        channels: _session.channels,
+                        sessionStartTime: _session.samples.first.time,
+                        artifacts: _artifactsInWindow(windowSamples),
+                        events: _eventsInWindow(windowSamples),
+                        onRemoveArtifact: _removeArtifact,
+                        previewTimeMs: _previewTimeMs,
+                        dragTimeMs: _draggingArtifactIndex != null
+                            ? _dragTimeMs
+                            : null,
+                        draggingOriginalTimeMs: _draggingArtifactIndex != null
+                            ? _artifacts[_draggingArtifactIndex!].timeMs
+                            : null,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1165,6 +1360,9 @@ class _ReplayChart extends StatelessWidget {
   final List<_ArtifactMarker> artifacts;
   final List<_ArtifactMarker> events;
   final ValueChanged<_ArtifactMarker>? onRemoveArtifact;
+  final int? previewTimeMs;
+  final int? dragTimeMs;
+  final int? draggingOriginalTimeMs;
 
   const _ReplayChart({
     required this.samples,
@@ -1173,6 +1371,9 @@ class _ReplayChart extends StatelessWidget {
     this.artifacts = const [],
     this.events = const [],
     this.onRemoveArtifact,
+    this.previewTimeMs,
+    this.dragTimeMs,
+    this.draggingOriginalTimeMs,
   });
 
   @override
@@ -1203,6 +1404,9 @@ class _ReplayChart extends StatelessWidget {
           events: events,
           windowStartTime: samples.first.time,
           windowEndTime: samples.last.time,
+          previewTimeMs: previewTimeMs,
+          dragTimeMs: dragTimeMs,
+          draggingOriginalTimeMs: draggingOriginalTimeMs,
         ),
       ),
     );
@@ -1217,6 +1421,9 @@ class _ReplayPainter extends CustomPainter {
   final List<_ArtifactMarker> events;
   final DateTime windowStartTime;
   final DateTime windowEndTime;
+  final int? previewTimeMs;
+  final int? dragTimeMs;
+  final int? draggingOriginalTimeMs;
 
   _ReplayPainter({
     required this.samples,
@@ -1226,6 +1433,9 @@ class _ReplayPainter extends CustomPainter {
     this.events = const [],
     required this.windowStartTime,
     required this.windowEndTime,
+    this.previewTimeMs,
+    this.dragTimeMs,
+    this.draggingOriginalTimeMs,
   });
 
   @override
@@ -1311,15 +1521,19 @@ class _ReplayPainter extends CustomPainter {
             .difference(sessionStartTime)
             .inMilliseconds;
 
-        final markerPaint = Paint()
-          ..color = AppTheme.amber.withValues(alpha: 0.7)
-          ..strokeWidth = 1.5;
-
         for (final m in artifacts) {
           final relMs = m.timeMs - windowStartMs;
           final frac = relMs / windowDurMs;
           if (frac < 0 || frac > 1) continue;
           final x = frac * size.width;
+
+          // Dim the marker that is currently being dragged.
+          final isDragged = draggingOriginalTimeMs == m.timeMs;
+          final alpha = isDragged ? 0.25 : 0.7;
+
+          final markerPaint = Paint()
+            ..color = AppTheme.amber.withValues(alpha: alpha)
+            ..strokeWidth = 1.5;
 
           // Vertical line
           canvas.drawLine(Offset(x, 0), Offset(x, size.height), markerPaint);
@@ -1331,7 +1545,11 @@ class _ReplayPainter extends CustomPainter {
             ..lineTo(x, 12)
             ..lineTo(x - 4, 8)
             ..close();
-          canvas.drawPath(diamondPath, Paint()..color = AppTheme.amber);
+          canvas.drawPath(
+            diamondPath,
+            Paint()
+              ..color = AppTheme.amber.withValues(alpha: isDragged ? 0.3 : 1.0),
+          );
 
           // Type label
           final tp = TextPainter(
@@ -1410,6 +1628,73 @@ class _ReplayPainter extends CustomPainter {
         }
       }
     }
+
+    // ── Preview crosshair (shown while placing a new marker) ────────────
+    _drawCrosshair(canvas, size, previewTimeMs, AppTheme.amber, 'PLACE');
+
+    // ── Drag crosshair (shown while repositioning an existing marker) ───
+    _drawCrosshair(canvas, size, dragTimeMs, AppTheme.glow, 'MOVE');
+  }
+
+  /// Draw a bright crosshair line with timestamp tooltip at [timeMs].
+  void _drawCrosshair(
+    Canvas canvas,
+    Size size,
+    int? timeMs,
+    Color color,
+    String label,
+  ) {
+    if (timeMs == null) return;
+    final windowDurMs = windowEndTime
+        .difference(windowStartTime)
+        .inMilliseconds;
+    if (windowDurMs <= 0) return;
+    final windowStartMs = windowStartTime
+        .difference(sessionStartTime)
+        .inMilliseconds;
+    final relMs = timeMs - windowStartMs;
+    final frac = relMs / windowDurMs;
+    if (frac < -0.05 || frac > 1.05) return;
+    final x = (frac * size.width).clamp(0.0, size.width);
+
+    // Dashed crosshair line
+    final linePaint = Paint()
+      ..color = color.withValues(alpha: 0.9)
+      ..strokeWidth = 2.0;
+    for (double y = 0; y < size.height; y += 5) {
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x, (y + 3).clamp(0, size.height)),
+        linePaint,
+      );
+    }
+
+    // Timestamp pill at bottom
+    final secs = (timeMs / 1000).toStringAsFixed(2);
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '${secs}s',
+        style: const TextStyle(
+          fontSize: 10,
+          color: Colors.white,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    )..layout();
+
+    final pillW = tp.width + 10;
+    final pillH = tp.height + 6;
+    // Keep pill within canvas bounds
+    final pillX = (x - pillW / 2).clamp(0.0, size.width - pillW);
+    final pillY = size.height - pillH - 4;
+    final pillRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(pillX, pillY, pillW, pillH),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(pillRect, Paint()..color = color);
+    tp.paint(canvas, Offset(pillX + 5, pillY + 3));
   }
 
   @override
