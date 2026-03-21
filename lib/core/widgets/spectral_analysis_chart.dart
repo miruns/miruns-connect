@@ -10,6 +10,9 @@ import 'package:flutter/scheduler.dart';
 import '../services/ble_source_provider.dart';
 import '../services/fft_engine.dart';
 import '../theme/app_theme.dart';
+import 'coherence_matrix_chart.dart';
+import 'connectivity_circle_chart.dart';
+import 'topomap_chart.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bioluminescent Spectrum — real-time spectral analysis visualisation.
@@ -27,18 +30,27 @@ import '../theme/app_theme.dart';
 enum SpectralView {
   spectrum,
   waterfall,
-  bands;
+  bands,
+  topomap,
+  coherence,
+  connectivity;
 
   String get label => switch (this) {
     SpectralView.spectrum => 'SPECTRUM',
     SpectralView.waterfall => 'WATERFALL',
     SpectralView.bands => 'BANDS',
+    SpectralView.topomap => 'TOPOMAP',
+    SpectralView.coherence => 'COHERENCE',
+    SpectralView.connectivity => 'CONNECT',
   };
 
   IconData get icon => switch (this) {
     SpectralView.spectrum => Icons.equalizer_rounded,
     SpectralView.waterfall => Icons.waves_rounded,
     SpectralView.bands => Icons.bar_chart_rounded,
+    SpectralView.topomap => Icons.blur_on_rounded,
+    SpectralView.coherence => Icons.grid_on_rounded,
+    SpectralView.connectivity => Icons.hub_rounded,
   };
 }
 
@@ -105,6 +117,10 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
   SpectralView _view = SpectralView.spectrum;
   int _sampleCount = 0;
   bool _connected = false;
+
+  // ── Sub-view state for new visualisations ────────────────────────
+  TopomapMetric _topomapMetric = TopomapMetric.alpha;
+  CoherenceBand _coherenceBand = CoherenceBand.alpha;
 
   late final Ticker _ticker;
   StreamSubscription<SignalSample>? _sub;
@@ -373,18 +389,23 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
 
   Widget _buildViewTabs() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      child: Row(
-        children: SpectralView.values.map((v) {
-          final isActive = _view == v;
-          return Expanded(
-            child: GestureDetector(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: SizedBox(
+        height: 32,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: SpectralView.values.map((v) {
+            final isActive = _view == v;
+            return GestureDetector(
               onTap: () => setState(() => _view = v),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 6,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   gradient: isActive
                       ? LinearGradient(
@@ -432,9 +453,9 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
                   ],
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -478,6 +499,9 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
       SpectralView.spectrum => _buildSpectrumView(spectrum),
       SpectralView.waterfall => _buildWaterfallView(),
       SpectralView.bands => _buildBandsView(spectrum),
+      SpectralView.topomap => _buildTopomapView(),
+      SpectralView.coherence => _buildCoherenceView(),
+      SpectralView.connectivity => _buildConnectivityView(),
     };
   }
 
@@ -556,6 +580,46 @@ class _SpectralAnalysisChartState extends State<SpectralAnalysisChart>
           );
         }).toList(),
       ),
+    );
+  }
+
+  // ── TOPOMAP VIEW ──────────────────────────────────────────────────
+
+  Widget _buildTopomapView() {
+    // Topomap needs spectra for ALL channels simultaneously.
+    // Trigger a fresh compute if needed.
+    _computeSpectra();
+    return TopomapView(
+      spectra: _spectra,
+      channelDescriptors: widget.channelDescriptors,
+      metric: _topomapMetric,
+      onMetricChanged: (m) => setState(() => _topomapMetric = m),
+    );
+  }
+
+  // ── COHERENCE MATRIX VIEW ─────────────────────────────────────────
+
+  Widget _buildCoherenceView() {
+    return CoherenceMatrixView(
+      channelBuffers: _sampleBuffers.map((q) => q.toList()).toList(),
+      channelDescriptors: widget.channelDescriptors,
+      fftSize: widget.fftSize,
+      sampleRateHz: widget.sampleRateHz,
+      band: _coherenceBand,
+      onBandChanged: (b) => setState(() => _coherenceBand = b),
+    );
+  }
+
+  // ── CONNECTIVITY CIRCLE VIEW ──────────────────────────────────────
+
+  Widget _buildConnectivityView() {
+    return ConnectivityCircleView(
+      channelBuffers: _sampleBuffers.map((q) => q.toList()).toList(),
+      channelDescriptors: widget.channelDescriptors,
+      fftSize: widget.fftSize,
+      sampleRateHz: widget.sampleRateHz,
+      band: _coherenceBand,
+      onBandChanged: (b) => setState(() => _coherenceBand = b),
     );
   }
 
