@@ -46,8 +46,9 @@ class SessionDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
-  late final SignalSession _session;
+  late SignalSession _session;
   late CaptureEntry _entry;
+  bool _loadingSession = true;
 
   /// Current scrubber position as fraction 0..1
   double _scrubPosition = 0.0;
@@ -92,9 +93,22 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   void initState() {
     super.initState();
     _entry = widget.entry;
-    _session = _entry.signalSession!;
     _artifacts = _parseMarkers(_entry.tags, 'artifact');
     _events = _parseMarkers(_entry.tags, 'event');
+    _loadFullSession();
+  }
+
+  Future<void> _loadFullSession() async {
+    final db = ref.read(localDbServiceProvider);
+    final full = await db.loadSignalSessionFromFile(_entry.id);
+    if (mounted) {
+      final session = full ?? _entry.signalSession!;
+      setState(() {
+        _session = session;
+        _entry = _entry.copyWith(signalSession: session);
+        _loadingSession = false;
+      });
+    }
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -818,6 +832,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingSession) {
+      return Scaffold(
+        backgroundColor: AppTheme.void_,
+        body: const Center(
+          child: CircularProgressIndicator(color: AppTheme.glow),
+        ),
+      );
+    }
     final top = MediaQuery.paddingOf(context).top;
     final duration = _session.duration;
     final windowSamples = _getWindowSamples();

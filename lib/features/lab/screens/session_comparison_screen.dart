@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/fft_engine.dart';
+import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -29,18 +30,31 @@ class SessionComparisonScreen extends ConsumerStatefulWidget {
 
 class _SessionComparisonScreenState
     extends ConsumerState<SessionComparisonScreen> {
-  late final SignalSession _sessionA;
-  late final SignalSession _sessionB;
+  late SignalSession _sessionA;
+  late SignalSession _sessionB;
 
   int _selectedChannel = 0;
   FftEngine? _fftA;
   FftEngine? _fftB;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _sessionA = widget.entryA.signalSession!;
-    _sessionB = widget.entryB.signalSession!;
+    _loadFullSessions();
+  }
+
+  Future<void> _loadFullSessions() async {
+    final db = ref.read(localDbServiceProvider);
+    final fullA = await db.loadSignalSessionFromFile(widget.entryA.id);
+    final fullB = await db.loadSignalSessionFromFile(widget.entryB.id);
+    if (mounted) {
+      setState(() {
+        _sessionA = fullA ?? widget.entryA.signalSession!;
+        _sessionB = fullB ?? widget.entryB.signalSession!;
+        _loading = false;
+      });
+    }
   }
 
   String _label(CaptureEntry e) {
@@ -102,6 +116,14 @@ class _SessionComparisonScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: AppTheme.deepSea,
+        body: const Center(
+          child: CircularProgressIndicator(color: AppTheme.glow),
+        ),
+      );
+    }
     final top = MediaQuery.paddingOf(context).top;
 
     final powerA = _computeBandPower(

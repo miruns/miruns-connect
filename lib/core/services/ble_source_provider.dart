@@ -100,6 +100,30 @@ class SignalSession {
     'samples': samples.map((s) => s.toJson()).toList(),
   });
 
+  /// Encode only metadata + sparkline preview (< 1KB).
+  /// Used by the DB layer when offloading full sample data to a file.
+  String encodeMeta() {
+    final sparkline = <double>[];
+    if (samples.isNotEmpty) {
+      final step = (samples.length / 100).ceil().clamp(1, samples.length);
+      for (int i = 0; i < samples.length; i += step) {
+        final ch = samples[i].channels;
+        if (ch.isNotEmpty) sparkline.add(ch[0]);
+      }
+    }
+    return jsonEncode({
+      '_meta': true,
+      'source_id': sourceId,
+      'source_name': sourceName,
+      'device': deviceName,
+      'channels': channels.map((c) => c.toJson()).toList(),
+      'sample_rate_hz': sampleRateHz,
+      'sample_count': samples.length,
+      'duration_ms': duration.inMilliseconds,
+      'sparkline': sparkline,
+    });
+  }
+
   /// Encode in a background isolate to avoid jank / OOM on large sessions.
   Future<String> encodeAsync() => compute(_encodeIsolate, this);
   static String _encodeIsolate(SignalSession s) => s.encode();
@@ -108,6 +132,34 @@ class SignalSession {
     if (raw == null) return null;
     try {
       final m = jsonDecode(raw) as Map<String, dynamic>;
+      return _decodeMap(m);
+    } catch (_) {
+      // JSON parse failed — may be truncated old-format from SUBSTR.
+      return _decodeTruncated(raw);
+    }
+  }
+
+  /// Decode from a fully-parsed JSON map.
+  static SignalSession? _decodeMap(Map<String, dynamic> m) {
+    // Metadata-only format (full samples stored in external file).
+    if (m['_meta'] == true) {
+      final durationMs = m['duration_ms'] as int;
+      final sparkline = (m['sparkline'] as List)
+          .map((e) => (e as num).toDouble())
+          .toList();
+      final start = DateTime.fromMicrosecondsSinceEpoch(0);
+      final fakeSamples = <SignalSample>[];
+      for (int i = 0; i < sparkline.length; i++) {
+        final t = sparkline.length > 1
+            ? start.add(
+                Duration(
+                  milliseconds: (durationMs * i / (sparkline.length - 1))
+                      .round(),
+                ),
+              )
+            : start;
+        fakeSamples.add(SignalSample(time: t, channels: [sparkline[i]]));
+      }
       return SignalSession(
         sourceId: m['source_id'] as String,
         sourceName: m['source_name'] as String,
@@ -116,12 +168,54 @@ class SignalSession {
             .map((e) => ChannelDescriptor.fromJson(e as Map<String, dynamic>))
             .toList(),
         sampleRateHz: (m['sample_rate_hz'] as num?)?.toDouble() ?? 250,
-        samples: (m['samples'] as List)
-            .map((e) => SignalSample.fromJson(e as Map<String, dynamic>))
+        samples: fakeSamples,
+      );
+    }
+
+    // Full format with all samples.
+    return SignalSession(
+      sourceId: m['source_id'] as String,
+      sourceName: m['source_name'] as String,
+      deviceName: m['device'] as String?,
+      channels: (m['channels'] as List)
+          .map((e) => ChannelDescriptor.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      sampleRateHz: (m['sample_rate_hz'] as num?)?.toDouble() ?? 250,
+      samples: (m['samples'] as List)
+          .map((e) => SignalSample.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  /// Try to extract metadata from a truncated old-format JSON string
+  /// (e.g. from SUBSTR on a multi-MB signal_session column).
+  static SignalSession? _decodeTruncated(String raw) {
+    try {
+      // Old format: {"source_id":"...","source_name":"...","device":"...",
+      //   "channels":[...],"sample_rate_hz":250,"samples":[...
+      // Truncate at "samples" key and close the JSON object.
+      final samplesIdx = raw.indexOf('"samples"');
+      if (samplesIdx <= 0) return null;
+
+      var metaStr = raw.substring(0, samplesIdx).trimRight();
+      if (metaStr.endsWith(',')) {
+        metaStr = metaStr.substring(0, metaStr.length - 1);
+      }
+      metaStr += '}';
+
+      final m = jsonDecode(metaStr) as Map<String, dynamic>;
+      return SignalSession(
+        sourceId: m['source_id'] as String,
+        sourceName: m['source_name'] as String,
+        deviceName: m['device'] as String?,
+        channels: (m['channels'] as List)
+            .map((e) => ChannelDescriptor.fromJson(e as Map<String, dynamic>))
             .toList(),
+        sampleRateHz: (m['sample_rate_hz'] as num?)?.toDouble() ?? 250,
+        samples: const [], // no sample data available from truncated read
       );
     } catch (e) {
-      debugPrint('[SignalSession] decode error: $e');
+      debugPrint('[SignalSession] decodeTruncated error: $e');
       return null;
     }
   }

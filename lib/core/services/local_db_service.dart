@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/body_blog_entry.dart';
 import '../models/body_blog_version.dart';
 import '../models/capture_entry.dart';
 import '../models/nutrition_log.dart';
+import 'ble_source_provider.dart';
 
 /// Snapshot of database metadata for the debug panel.
 class DbInfo {
@@ -39,7 +43,32 @@ class LocalDbService {
   static const _tableCaptures = 'captures';
   static const _tableVersions = 'body_blog_versions';
   static const _tableNutritionLogs = 'nutrition_logs';
-  static const _schemaVersion = 11;
+  static const _schemaVersion = 12;
+
+  /// All capture columns EXCEPT signal_session.
+  /// Prevents Android CursorWindow overflow for rows with large signal data.
+  static const _captureColumnsLight = [
+    'id',
+    'timestamp',
+    'is_processed',
+    'user_note',
+    'user_mood',
+    'tags',
+    'health_data',
+    'environment_data',
+    'location_data',
+    'calendar_events',
+    'processed_at',
+    'ai_insights',
+    'source',
+    'trigger',
+    'execution_duration_ms',
+    'errors',
+    'battery_level',
+    'ai_metadata',
+    'ble_hr_session',
+    'nutrition_data',
+  ];
 
   Database? _db;
 
@@ -325,11 +354,125 @@ class LocalDbService {
         if (!e.toString().toLowerCase().contains('duplicate column')) rethrow;
       }
     }
+    if (oldVersion < 12) {
+      // v11 → v12: signal data now stored in external files.
+      // Actual data migration happens lazily on first DB access
+      // (see _migrateSignalDataLazily) to avoid CursorWindow issues
+      // inside the onUpgrade transaction.
+    }
   }
 
   Future<void> close() async {
     await _db?.close();
     _db = null;
+  }
+
+  // ── signal file helpers ───────────────────────────────────────────────────
+
+  /// Directory for signal session files, created lazily.
+  Future<Directory> _signalDir() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(appDir.path, 'signals'));
+    if (!await dir.exists()) await dir.create(recursive: true);
+    return dir;
+  }
+
+  /// Write signal session JSON to an external file.
+  Future<void> _writeSignalFile(String captureId, String json) async {
+    final dir = await _signalDir();
+    final file = File(p.join(dir.path, '$captureId.json'));
+    await file.writeAsString(json);
+  }
+
+  /// Delete the signal file for a capture (no-op if absent).
+  Future<void> _deleteSignalFile(String captureId) async {
+    final dir = await _signalDir();
+    final file = File(p.join(dir.path, '$captureId.json'));
+    if (await file.exists()) await file.delete();
+  }
+
+  /// Load the full signal session for a capture.
+  ///
+  /// Tries the external file first (new format). Falls back to reading the
+  /// DB column via SUBSTR chunks for pre-migration data, writing a file for
+  /// next time.
+  Future<SignalSession?> loadSignalSessionFromFile(String captureId) async {
+    // 1. Try external file.
+    final dir = await _signalDir();
+    final file = File(p.join(dir.path, '$captureId.json'));
+    if (await file.exists()) {
+      final raw = await file.readAsString();
+      return SignalSession.decode(raw);
+    }
+
+    // 2. Fallback: read from DB via SUBSTR chunks (CursorWindow-safe).
+    final db = await _database;
+    final lenResult = await db.rawQuery(
+      'SELECT LENGTH(signal_session) as len FROM $_tableCaptures WHERE id = ?',
+      [captureId],
+    );
+    final len = lenResult.firstOrNull?['len'] as int?;
+    if (len == null || len == 0) return null;
+
+    final buffer = StringBuffer();
+    int offset = 1; // SUBSTR is 1-indexed
+    const chunkSize = 900000;
+    while (true) {
+      final rows = await db.rawQuery(
+        'SELECT SUBSTR(signal_session, ?, ?) as chunk '
+        'FROM $_tableCaptures WHERE id = ?',
+        [offset, chunkSize, captureId],
+      );
+      final chunk = rows.first['chunk'] as String?;
+      if (chunk == null || chunk.isEmpty) break;
+      buffer.write(chunk);
+      if (chunk.length < chunkSize) break;
+      offset += chunkSize;
+    }
+
+    final fullJson = buffer.toString();
+    if (fullJson.isEmpty) return null;
+
+    final session = SignalSession.decode(fullJson);
+    if (session != null) {
+      // Write to file so next load is instant & update DB to compact meta.
+      try {
+        await file.writeAsString(fullJson);
+        await db.update(
+          _tableCaptures,
+          {'signal_session': session.encodeMeta()},
+          where: 'id = ?',
+          whereArgs: [captureId],
+        );
+      } catch (_) {}
+    }
+    return session;
+  }
+
+  /// Lazily migrate old signal_session data to external files.
+  ///
+  /// Call once after the DB is open (outside onUpgrade). Safe to call
+  /// multiple times — already-migrated rows are skipped.
+  Future<void> migrateSignalDataLazily() async {
+    final db = await _database;
+    // Find rows where signal_session is large (not yet migrated to meta).
+    // Meta format is < 2000 chars; full format is typically > 100 000.
+    final ids = await db.rawQuery(
+      'SELECT id FROM $_tableCaptures '
+      'WHERE signal_session IS NOT NULL AND LENGTH(signal_session) > 3000',
+    );
+    if (ids.isEmpty) return;
+    debugPrint('[DB] Lazy-migrating ${ids.length} signal sessions to files...');
+
+    for (final row in ids) {
+      final captureId = row['id'] as String;
+      try {
+        await loadSignalSessionFromFile(captureId);
+      } catch (e) {
+        debugPrint('[DB] Lazy-migrate failed for $captureId: $e');
+      }
+    }
+    debugPrint('[DB] Lazy migration complete.');
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────
@@ -579,29 +722,46 @@ class LocalDbService {
 
   /// Save a capture entry (insert or replace).
   ///
-  /// When the capture contains a [SignalSession], encoding is offloaded to a
-  /// background isolate to avoid jank / OOM on large recordings (100k+ samples).
+  /// When the capture contains a [SignalSession], the full sample data is
+  /// written to an external file and only compact metadata is stored in the
+  /// DB column to stay within Android's 2 MB CursorWindow limit.
   Future<void> saveCapture(CaptureEntry capture) async {
     final db = await _database;
     final row = capture.toJson();
 
-    // If there's a heavy signal session, encode it off the main isolate.
     if (capture.signalSession != null) {
-      row['signal_session'] = await capture.signalSession!.encodeAsync();
+      // Write full data to file and store only metadata in DB.
+      final fullJson = await capture.signalSession!.encodeAsync();
+      await _writeSignalFile(capture.id, fullJson);
+      row['signal_session'] = capture.signalSession!.encodeMeta();
+      await db.insert(
+        _tableCaptures,
+        row,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      // Use UPDATE to preserve existing signal_session column
+      // (ConflictAlgorithm.replace does DELETE+INSERT which would wipe it).
+      row.remove('signal_session');
+      final count = await db.update(
+        _tableCaptures,
+        row,
+        where: 'id = ?',
+        whereArgs: [capture.id],
+      );
+      if (count == 0) {
+        await db.insert(_tableCaptures, row);
+      }
     }
-
-    await db.insert(
-      _tableCaptures,
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
   }
 
-  /// Load a specific capture by ID.
+  /// Load a specific capture by ID (excludes signal_session to avoid
+  /// CursorWindow overflow — use [loadSignalSessionFromFile] for signal data).
   Future<CaptureEntry?> loadCapture(String id) async {
     final db = await _database;
     final rows = await db.query(
       _tableCaptures,
+      columns: _captureColumnsLight,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
@@ -628,6 +788,7 @@ class LocalDbService {
 
     final rows = await db.query(
       _tableCaptures,
+      columns: _captureColumnsLight,
       where: where,
       whereArgs: whereArgs,
       orderBy: 'timestamp DESC',
@@ -646,6 +807,7 @@ class LocalDbService {
     final dateStr = _dateKey(date);
     final rows = await db.query(
       _tableCaptures,
+      columns: _captureColumnsLight,
       where: "date(timestamp) = ?",
       whereArgs: [dateStr],
       orderBy: 'timestamp ASC',
@@ -670,22 +832,29 @@ class LocalDbService {
     );
   }
 
-  /// Delete a capture by ID.
+  /// Delete a capture by ID (also removes the external signal file).
   Future<void> deleteCapture(String id) async {
     final db = await _database;
     await db.delete(_tableCaptures, where: 'id = ?', whereArgs: [id]);
+    await _deleteSignalFile(id);
   }
 
   /// Load captures that have a signal session (EEG recordings).
   /// Results are ordered by timestamp descending (newest first).
+  ///
+  /// Uses SUBSTR to read only the first 2000 chars of signal_session,
+  /// which is enough for compact metadata and safely under the 2 MB
+  /// CursorWindow limit even for old un-migrated data.
   Future<List<CaptureEntry>> loadSignalSessions({int? limit}) async {
     final db = await _database;
-    final rows = await db.query(
-      _tableCaptures,
-      where: 'signal_session IS NOT NULL',
-      orderBy: 'timestamp DESC',
-      limit: limit,
-    );
+    final cols = _captureColumnsLight.join(', ');
+    final sql =
+        'SELECT $cols, SUBSTR(signal_session, 1, 2000) as signal_session '
+        'FROM $_tableCaptures '
+        'WHERE signal_session IS NOT NULL '
+        'ORDER BY timestamp DESC'
+        '${limit != null ? ' LIMIT $limit' : ''}';
+    final rows = await db.rawQuery(sql);
     return rows.map((row) => CaptureEntry.fromJson(row)).toList();
   }
 
@@ -728,6 +897,7 @@ class LocalDbService {
     final dateStr = _dateKey(date);
     final rows = await db.query(
       _tableCaptures,
+      columns: _captureColumnsLight,
       where: "date(timestamp) = ? AND is_processed = 0",
       whereArgs: [dateStr],
       orderBy: 'timestamp ASC',

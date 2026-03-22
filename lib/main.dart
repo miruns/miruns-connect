@@ -95,6 +95,16 @@ void main() async {
     }),
   );
 
+  // Lazily migrate large signal_session blobs to file-based storage
+  // (fire-and-forget, one row at a time to avoid CursorWindow overflow).
+  unawaited(
+    container.read(localDbServiceProvider).migrateSignalDataLazily().catchError(
+      (Object e) {
+        debugPrint('[main] Signal migration error: $e');
+      },
+    ),
+  );
+
   // Silently warm up AI metadata for any captures that were never analyzed
   // (fire-and-forget failure during capture save, or captures pre-dating
   // this feature). Runs in the background so Patterns data is ready before
