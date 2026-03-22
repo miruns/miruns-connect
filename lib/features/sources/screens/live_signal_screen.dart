@@ -158,13 +158,18 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
     ref.read(isRecordingSignalProvider.notifier).state = true;
   }
 
+  bool _isSaving = false;
+
   void _stopRecording() {
     _recordSub?.cancel();
     _recordSub = null;
     _recordingUiTimer?.cancel();
     _recordingUiTimer = null;
 
-    if (_recordedSamples.isNotEmpty && _provider != null) {
+    final hadSamples = _recordedSamples.isNotEmpty && _provider != null;
+
+    if (hadSamples) {
+      // Grab the samples and clear immediately so memory is freed.
       final session = SignalSession(
         sourceId: _provider!.id,
         sourceName: _provider!.displayName,
@@ -173,11 +178,32 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         samples: List.of(_recordedSamples),
         sampleRateHz: _provider!.sampleRateHz,
       );
-
       final eventTags = _eventMarkers
           .map((m) => 'event:${m.timeMs}:${m.label}')
           .toList();
 
+      _recordedSamples.clear();
+      _eventMarkers.clear();
+
+      // Save asynchronously with proper error handling.
+      _saveSession(session, eventTags);
+    } else {
+      _recordedSamples.clear();
+      _eventMarkers.clear();
+    }
+
+    setState(() => _isRecording = false);
+    _recordingStartTime = null;
+    ref.read(isRecordingSignalProvider.notifier).state = false;
+  }
+
+  Future<void> _saveSession(
+    SignalSession session,
+    List<String> eventTags,
+  ) async {
+    setState(() => _isSaving = true);
+
+    try {
       final capture = CaptureEntry(
         id: 'sig_${DateTime.now().millisecondsSinceEpoch}',
         timestamp: DateTime.now(),
@@ -186,7 +212,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         tags: eventTags,
       );
 
-      ref.read(localDbServiceProvider).saveCapture(capture);
+      await ref.read(localDbServiceProvider).saveCapture(capture);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -208,13 +234,24 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
           ),
         );
       }
+    } catch (e) {
+      debugPrint('[LiveSignal] Failed to save session: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to save session (${session.samples.length} samples). '
+              'Try a shorter recording.',
+            ),
+            backgroundColor: AppTheme.crimson,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
-
-    _recordedSamples.clear();
-    _eventMarkers.clear();
-    setState(() => _isRecording = false);
-    _recordingStartTime = null;
-    ref.read(isRecordingSignalProvider.notifier).state = false;
   }
 
   /// Called automatically when BLE disconnects while recording.
@@ -464,17 +501,31 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
               onPressed: _addEventMarker,
             ),
           if (_state == BleSourceState.streaming)
-            IconButton(
-              icon: Icon(
-                _isRecording
-                    ? Icons.stop_circle_rounded
-                    : Icons.fiber_manual_record_rounded,
-                color: _isRecording ? AppTheme.crimson : AppTheme.glow,
-                size: 22,
-              ),
-              tooltip: _isRecording ? 'Stop recording' : 'Start recording',
-              onPressed: _toggleRecording,
-            ),
+            _isSaving
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.glow,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      _isRecording
+                          ? Icons.stop_circle_rounded
+                          : Icons.fiber_manual_record_rounded,
+                      color: _isRecording ? AppTheme.crimson : AppTheme.glow,
+                      size: 22,
+                    ),
+                    tooltip: _isRecording
+                        ? 'Stop recording'
+                        : 'Start recording',
+                    onPressed: _toggleRecording,
+                  ),
         ],
       ),
       body: _buildBody(),

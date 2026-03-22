@@ -100,6 +100,10 @@ class SignalSession {
     'samples': samples.map((s) => s.toJson()).toList(),
   });
 
+  /// Encode in a background isolate to avoid jank / OOM on large sessions.
+  Future<String> encodeAsync() => compute(_encodeIsolate, this);
+  static String _encodeIsolate(SignalSession s) => s.encode();
+
   static SignalSession? decode(String? raw) {
     if (raw == null) return null;
     try {

@@ -578,11 +578,21 @@ class LocalDbService {
   // ── captures ──────────────────────────────────────────────────────────────
 
   /// Save a capture entry (insert or replace).
+  ///
+  /// When the capture contains a [SignalSession], encoding is offloaded to a
+  /// background isolate to avoid jank / OOM on large recordings (100k+ samples).
   Future<void> saveCapture(CaptureEntry capture) async {
     final db = await _database;
+    final row = capture.toJson();
+
+    // If there's a heavy signal session, encode it off the main isolate.
+    if (capture.signalSession != null) {
+      row['signal_session'] = await capture.signalSession!.encodeAsync();
+    }
+
     await db.insert(
       _tableCaptures,
-      capture.toJson(),
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
