@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../../../../../../../../../core/theme/app_theme.dart';
 import '../../eeg/widgets/m_signal_logo.dart';
@@ -284,13 +285,21 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     builder: (context, _) {
                       return Opacity(
                         opacity: _buttonOpacity.value * 0.5,
-                        child: Text(
-                          'v1.0',
-                          style: AppTheme.geist(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF444444),
-                          ),
+                        child: FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            final version = snapshot.hasData
+                                ? 'v${snapshot.data!.version}'
+                                : '';
+                            return Text(
+                              version,
+                              style: AppTheme.geist(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF444444),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },

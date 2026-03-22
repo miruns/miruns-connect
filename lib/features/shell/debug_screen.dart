@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../../../../../../../../core/theme/app_theme.dart';
@@ -101,9 +102,15 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
   // Theme — set at start of build(), used by all builder methods
   late _DebugTheme _t;
 
+  String _appVersion = '';
+
   @override
   void initState() {
     super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted)
+        setState(() => _appVersion = 'v${info.version}+${info.buildNumber}');
+    });
     _loadAll();
   }
 
@@ -776,7 +783,7 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
             children: [
               Text('miruns', style: _t.monoBold),
               const SizedBox(height: 2),
-              Text('v1.0.14+15', style: _t.mono),
+              Text(_appVersion, style: _t.mono),
               Text(fmt.format(now), style: _t.mono),
             ],
           ),
