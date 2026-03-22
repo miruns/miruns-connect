@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/capture_entry.dart';
@@ -807,6 +808,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/lab');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
@@ -815,433 +824,456 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: AppTheme.void_,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top bar ─────────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(8, top + 8, 8, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.arrow_back_rounded,
-                      color: AppTheme.moonbeam,
-                      size: 22,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _goBack();
+        },
+        child: Scaffold(
+          backgroundColor: AppTheme.void_,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Top bar ─────────────────────────────────────────────────
+              Padding(
+                padding: EdgeInsets.fromLTRB(8, top + 8, 8, 0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _goBack,
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: AppTheme.moonbeam,
+                        size: 22,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _editTitleAndNotes,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_sessionTitle != null)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _editTitleAndNotes,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_sessionTitle != null)
+                              Text(
+                                _sessionTitle!,
+                                style: AppTheme.geist(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.moonbeam,
+                                  letterSpacing: -0.3,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             Text(
-                              _sessionTitle!,
+                              _dateStr,
                               style: AppTheme.geist(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.moonbeam,
+                                fontSize: _sessionTitle != null ? 11 : 15,
+                                fontWeight: _sessionTitle != null
+                                    ? FontWeight.w400
+                                    : FontWeight.w500,
+                                color: _sessionTitle != null
+                                    ? AppTheme.fog
+                                    : AppTheme.moonbeam,
                                 letterSpacing: -0.3,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          Text(
-                            _dateStr,
-                            style: AppTheme.geist(
-                              fontSize: _sessionTitle != null ? 11 : 15,
-                              fontWeight: _sessionTitle != null
-                                  ? FontWeight.w400
-                                  : FontWeight.w500,
-                              color: _sessionTitle != null
-                                  ? AppTheme.fog
-                                  : AppTheme.moonbeam,
-                              letterSpacing: -0.3,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: _editTitleAndNotes,
-                    icon: const Icon(
-                      Icons.edit_outlined,
-                      color: AppTheme.fog,
-                      size: 18,
+                    IconButton(
+                      onPressed: _editTitleAndNotes,
+                      icon: const Icon(
+                        Icons.edit_outlined,
+                        color: AppTheme.fog,
+                        size: 18,
+                      ),
+                      tooltip: 'Edit title & notes',
                     ),
-                    tooltip: 'Edit title & notes',
-                  ),
-                  IconButton(
-                    onPressed: () =>
-                        ResearchExportSheet.showForCapture(context, _entry),
-                    icon: const Icon(
-                      Icons.ios_share_rounded,
-                      color: AppTheme.fog,
-                      size: 20,
+                    IconButton(
+                      onPressed: () =>
+                          ResearchExportSheet.showForCapture(context, _entry),
+                      icon: const Icon(
+                        Icons.ios_share_rounded,
+                        color: AppTheme.fog,
+                        size: 20,
+                      ),
+                      tooltip: 'Export & share',
                     ),
-                    tooltip: 'Export & share',
-                  ),
-                  IconButton(
-                    onPressed: _confirmDelete,
-                    icon: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppTheme.fog,
-                      size: 20,
+                    IconButton(
+                      onPressed: _confirmDelete,
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppTheme.fog,
+                        size: 20,
+                      ),
+                      tooltip: 'Delete session',
                     ),
-                    tooltip: 'Delete session',
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // ── Stats row ───────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _StatChip(
-                    label: 'Duration',
-                    value: _formatDuration(duration),
-                    icon: Icons.timer_outlined,
-                  ),
-                  const SizedBox(width: 10),
-                  _StatChip(
-                    label: 'Channels',
-                    value: '${_session.channelCount}',
-                    icon: Icons.graphic_eq_rounded,
-                  ),
-                  const SizedBox(width: 10),
-                  _StatChip(
-                    label: 'Rate',
-                    value: '${_session.sampleRateHz.toInt()} Hz',
-                    icon: Icons.speed_rounded,
-                  ),
-                  if (_session.deviceName != null) ...[
+              // ── Stats row ───────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    _StatChip(
+                      label: 'Duration',
+                      value: _formatDuration(duration),
+                      icon: Icons.timer_outlined,
+                    ),
                     const SizedBox(width: 10),
                     _StatChip(
-                      label: 'Device',
-                      value: _session.deviceName!,
-                      icon: Icons.bluetooth_rounded,
+                      label: 'Channels',
+                      value: '${_session.channelCount}',
+                      icon: Icons.graphic_eq_rounded,
                     ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Tags ────────────────────────────────────────────────────
-            _TagSection(tags: _userTags, onAdd: _addTag, onRemove: _removeTag),
-            const SizedBox(height: 20),
-
-            // ── Waveform replay ─────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Text(
-                    'Signal',
-                    style: AppTheme.geist(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.fog,
+                    const SizedBox(width: 10),
+                    _StatChip(
+                      label: 'Rate',
+                      value: '${_session.sampleRateHz.toInt()} Hz',
+                      icon: Icons.speed_rounded,
                     ),
-                  ),
-                  if (_zoomLevel > 1.0) ...[
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => setState(() {
-                        _zoomLevel = 1.0;
-                        _panOffset = 0.0;
-                      }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.glow.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '${_zoomLevel.toStringAsFixed(1)}× · Reset',
-                          style: AppTheme.geistMono(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.glow,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: LayoutBuilder(
-                  builder: (ctx, constraints) {
-                    _chartConstraints = constraints;
-                    return GestureDetector(
-                      onScaleStart: _onScaleStart,
-                      onScaleUpdate: _onScaleUpdate,
-                      onTapUp: (d) => _onWaveformTap(d, constraints),
-                      onLongPressStart: _onLongPressStart,
-                      onLongPressMoveUpdate: _onLongPressMoveUpdate,
-                      onLongPressEnd: _onLongPressEnd,
-                      child: _ReplayChart(
-                        samples: windowSamples,
-                        channels: _session.channels,
-                        sessionStartTime: _session.samples.first.time,
-                        artifacts: _artifactsInWindow(windowSamples),
-                        events: _eventsInWindow(windowSamples),
-                        onRemoveArtifact: _removeArtifact,
-                        previewTimeMs: _previewTimeMs,
-                        dragTimeMs: _draggingArtifactIndex != null
-                            ? _dragTimeMs
-                            : null,
-                        draggingOriginalTimeMs: _draggingArtifactIndex != null
-                            ? _artifacts[_draggingArtifactIndex!].timeMs
-                            : null,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            // ── Artifact chips ──────────────────────────────────────────
-            if (_artifacts.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                child: SizedBox(
-                  height: 28,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _artifacts.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 6),
-                    itemBuilder: (ctx, i) {
-                      final m = _artifacts[i];
-                      return Chip(
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                        backgroundColor: AppTheme.amber.withValues(alpha: 0.15),
-                        side: BorderSide(
-                          color: AppTheme.amber.withValues(alpha: 0.3),
-                        ),
-                        deleteIconColor: AppTheme.amber,
-                        label: Text(
-                          '${m.type} ${_formatMs(m.timeMs)}',
-                          style: AppTheme.geist(
-                            fontSize: 10,
-                            color: AppTheme.amber,
-                          ),
-                        ),
-                        onDeleted: () => _removeArtifact(m),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-            // ── Event marker chips ──────────────────────────────────────
-            if (_events.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                child: SizedBox(
-                  height: 28,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _events.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 6),
-                    itemBuilder: (ctx, i) {
-                      final m = _events[i];
-                      return Chip(
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                        backgroundColor: const Color(
-                          0xFF00BCD4,
-                        ).withValues(alpha: 0.15),
-                        side: BorderSide(
-                          color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
-                        ),
-                        avatar: Icon(
-                          _eventIcon(m.type),
-                          size: 14,
-                          color: const Color(0xFF00BCD4),
-                        ),
-                        label: Text(
-                          '${m.type} ${_formatMs(m.timeMs)}',
-                          style: AppTheme.geist(
-                            fontSize: 10,
-                            color: const Color(0xFF00BCD4),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-            // ── Scrubber ────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  SliderTheme(
-                    data: SliderThemeData(
-                      activeTrackColor: AppTheme.glow,
-                      inactiveTrackColor: AppTheme.shimmer,
-                      thumbColor: AppTheme.glow,
-                      overlayColor: AppTheme.glow.withValues(alpha: 0.12),
-                      trackHeight: 2,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 6,
-                      ),
-                    ),
-                    child: Slider(
-                      value: _scrubPosition,
-                      onChanged: (v) => setState(() => _scrubPosition = v),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Window: ${_windowSeconds.toStringAsFixed(0)}s',
-                        style: AppTheme.geist(
-                          fontSize: 11,
-                          color: AppTheme.mist,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          _WindowButton(
-                            label: '2s',
-                            active: _windowSeconds == 2,
-                            onTap: () => setState(() {
-                              _windowSeconds = 2;
-                              _zoomLevel = 1.0;
-                              _panOffset = 0.0;
-                            }),
-                          ),
-                          _WindowButton(
-                            label: '4s',
-                            active: _windowSeconds == 4,
-                            onTap: () => setState(() {
-                              _windowSeconds = 4;
-                              _zoomLevel = 1.0;
-                              _panOffset = 0.0;
-                            }),
-                          ),
-                          _WindowButton(
-                            label: '10s',
-                            active: _windowSeconds == 10,
-                            onTap: () => setState(() {
-                              _windowSeconds = 10;
-                              _zoomLevel = 1.0;
-                              _panOffset = 0.0;
-                            }),
-                          ),
-                        ],
+                    if (_session.deviceName != null) ...[
+                      const SizedBox(width: 10),
+                      _StatChip(
+                        label: 'Device',
+                        value: _session.deviceName!,
+                        icon: Icons.bluetooth_rounded,
                       ),
                     ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-            // ── Band power bars ─────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Text(
-                    'Band Power',
-                    style: AppTheme.geist(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.fog,
+              // ── Tags ────────────────────────────────────────────────────
+              _TagSection(
+                tags: _userTags,
+                onAdd: _addTag,
+                onRemove: _removeTag,
+              ),
+              const SizedBox(height: 20),
+
+              // ── Waveform replay ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Text(
+                      'Signal',
+                      style: AppTheme.geist(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  // Channel selector chips
-                  if (_session.channelCount > 1)
-                    ...List.generate(_session.channelCount, (i) {
-                      final isActive = _selectedChannel == i;
-                      final color = _channelColors[i % _channelColors.length];
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedChannel = i),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? color.withValues(alpha: 0.2)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: isActive
-                                    ? color.withValues(alpha: 0.6)
-                                    : AppTheme.shimmer,
-                                width: isActive ? 1.2 : 0.7,
-                              ),
-                            ),
-                            child: Text(
-                              _session.channels[i].label,
-                              style: AppTheme.geistMono(
-                                fontSize: 9,
-                                fontWeight: isActive
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
-                                color: isActive ? color : AppTheme.mist,
-                              ),
+                    if (_zoomLevel > 1.0) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _zoomLevel = 1.0;
+                          _panOffset = 0.0;
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.glow.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${_zoomLevel.toStringAsFixed(1)}× · Reset',
+                            style: AppTheme.geistMono(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.glow,
                             ),
                           ),
                         ),
-                      );
-                    }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: _BandPowerBars(
-                  bandPower: _computeBandPower(windowSamples, _selectedChannel),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: LayoutBuilder(
+                    builder: (ctx, constraints) {
+                      _chartConstraints = constraints;
+                      return GestureDetector(
+                        onScaleStart: _onScaleStart,
+                        onScaleUpdate: _onScaleUpdate,
+                        onTapUp: (d) => _onWaveformTap(d, constraints),
+                        onLongPressStart: _onLongPressStart,
+                        onLongPressMoveUpdate: _onLongPressMoveUpdate,
+                        onLongPressEnd: _onLongPressEnd,
+                        child: _ReplayChart(
+                          samples: windowSamples,
+                          channels: _session.channels,
+                          sessionStartTime: _session.samples.first.time,
+                          artifacts: _artifactsInWindow(windowSamples),
+                          events: _eventsInWindow(windowSamples),
+                          onRemoveArtifact: _removeArtifact,
+                          previewTimeMs: _previewTimeMs,
+                          dragTimeMs: _draggingArtifactIndex != null
+                              ? _dragTimeMs
+                              : null,
+                          draggingOriginalTimeMs: _draggingArtifactIndex != null
+                              ? _artifacts[_draggingArtifactIndex!].timeMs
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
 
-            SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
-          ],
+              // ── Artifact chips ──────────────────────────────────────────
+              if (_artifacts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  child: SizedBox(
+                    height: 28,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _artifacts.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 6),
+                      itemBuilder: (ctx, i) {
+                        final m = _artifacts[i];
+                        return Chip(
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero,
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                          ),
+                          backgroundColor: AppTheme.amber.withValues(
+                            alpha: 0.15,
+                          ),
+                          side: BorderSide(
+                            color: AppTheme.amber.withValues(alpha: 0.3),
+                          ),
+                          deleteIconColor: AppTheme.amber,
+                          label: Text(
+                            '${m.type} ${_formatMs(m.timeMs)}',
+                            style: AppTheme.geist(
+                              fontSize: 10,
+                              color: AppTheme.amber,
+                            ),
+                          ),
+                          onDeleted: () => _removeArtifact(m),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+              // ── Event marker chips ──────────────────────────────────────
+              if (_events.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  child: SizedBox(
+                    height: 28,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _events.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 6),
+                      itemBuilder: (ctx, i) {
+                        final m = _events[i];
+                        return Chip(
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero,
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                          ),
+                          backgroundColor: const Color(
+                            0xFF00BCD4,
+                          ).withValues(alpha: 0.15),
+                          side: BorderSide(
+                            color: const Color(
+                              0xFF00BCD4,
+                            ).withValues(alpha: 0.3),
+                          ),
+                          avatar: Icon(
+                            _eventIcon(m.type),
+                            size: 14,
+                            color: const Color(0xFF00BCD4),
+                          ),
+                          label: Text(
+                            '${m.type} ${_formatMs(m.timeMs)}',
+                            style: AppTheme.geist(
+                              fontSize: 10,
+                              color: const Color(0xFF00BCD4),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+              // ── Scrubber ────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    SliderTheme(
+                      data: SliderThemeData(
+                        activeTrackColor: AppTheme.glow,
+                        inactiveTrackColor: AppTheme.shimmer,
+                        thumbColor: AppTheme.glow,
+                        overlayColor: AppTheme.glow.withValues(alpha: 0.12),
+                        trackHeight: 2,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 6,
+                        ),
+                      ),
+                      child: Slider(
+                        value: _scrubPosition,
+                        onChanged: (v) => setState(() => _scrubPosition = v),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Window: ${_windowSeconds.toStringAsFixed(0)}s',
+                          style: AppTheme.geist(
+                            fontSize: 11,
+                            color: AppTheme.mist,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            _WindowButton(
+                              label: '2s',
+                              active: _windowSeconds == 2,
+                              onTap: () => setState(() {
+                                _windowSeconds = 2;
+                                _zoomLevel = 1.0;
+                                _panOffset = 0.0;
+                              }),
+                            ),
+                            _WindowButton(
+                              label: '4s',
+                              active: _windowSeconds == 4,
+                              onTap: () => setState(() {
+                                _windowSeconds = 4;
+                                _zoomLevel = 1.0;
+                                _panOffset = 0.0;
+                              }),
+                            ),
+                            _WindowButton(
+                              label: '10s',
+                              active: _windowSeconds == 10,
+                              onTap: () => setState(() {
+                                _windowSeconds = 10;
+                                _zoomLevel = 1.0;
+                                _panOffset = 0.0;
+                              }),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Band power bars ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Text(
+                      'Band Power',
+                      style: AppTheme.geist(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.fog,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Channel selector chips
+                    if (_session.channelCount > 1)
+                      ...List.generate(_session.channelCount, (i) {
+                        final isActive = _selectedChannel == i;
+                        final color = _channelColors[i % _channelColors.length];
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedChannel = i),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? color.withValues(alpha: 0.2)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isActive
+                                      ? color.withValues(alpha: 0.6)
+                                      : AppTheme.shimmer,
+                                  width: isActive ? 1.2 : 0.7,
+                                ),
+                              ),
+                              child: Text(
+                                _session.channels[i].label,
+                                style: AppTheme.geistMono(
+                                  fontSize: 9,
+                                  fontWeight: isActive
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  color: isActive ? color : AppTheme.mist,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  child: _BandPowerBars(
+                    bandPower: _computeBandPower(
+                      windowSamples,
+                      _selectedChannel,
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
+            ],
+          ),
         ),
       ),
     );

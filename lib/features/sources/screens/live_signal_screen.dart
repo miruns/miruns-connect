@@ -215,24 +215,7 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
       await ref.read(localDbServiceProvider).saveCapture(capture);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Session saved to Lab · ${session.samples.length} samples '
-              '(${session.duration.inSeconds}s)',
-            ),
-            backgroundColor: AppTheme.seaGreen,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'VIEW',
-              textColor: Colors.white,
-              onPressed: () {
-                if (mounted) context.go('/lab');
-              },
-            ),
-          ),
-        );
+        context.go('/lab/session/${capture.id}', extra: capture);
       }
     } catch (e) {
       debugPrint('[LiveSignal] Failed to save session: $e');
@@ -258,26 +241,6 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   void _autoSaveOnDisconnect() {
     if (!_isRecording) return;
     _stopRecording();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Connection lost — session auto-saved',
-            style: AppTheme.geist(fontSize: 13, color: Colors.white),
-          ),
-          backgroundColor: AppTheme.amber,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'VIEW',
-            textColor: Colors.white,
-            onPressed: () {
-              if (mounted) context.go('/lab');
-            },
-          ),
-        ),
-      );
-    }
   }
 
   // ── Demo mode ───────────────────────────────────────────────────────
