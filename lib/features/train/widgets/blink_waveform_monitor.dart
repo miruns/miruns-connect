@@ -20,6 +20,7 @@ class BlinkWaveformMonitor extends StatefulWidget {
     required this.threshold,
     this.height = 120,
     this.blinkMarkers = const [],
+    this.totalSamples = 0,
   });
 
   /// Ring buffer of recent Fp1 values (rectified, in µV).
@@ -34,17 +35,20 @@ class BlinkWaveformMonitor extends StatefulWidget {
   /// Widget height.
   final double height;
 
-  /// Recent blink events as fractional positions (0.0=left, 1.0=right).
+  /// Recent blink events (keyed by absolute sample index).
   final List<BlinkMarkerData> blinkMarkers;
+
+  /// Total number of samples added so far (for marker position calc).
+  final int totalSamples;
 
   @override
   State<BlinkWaveformMonitor> createState() => _BlinkWaveformMonitorState();
 }
 
 class BlinkMarkerData {
-  final double position; // 0.0 – 1.0
+  final int sampleIndex; // absolute sample count when blink occurred
   final BlinkType type;
-  const BlinkMarkerData(this.position, this.type);
+  const BlinkMarkerData(this.sampleIndex, this.type);
 }
 
 class _BlinkWaveformMonitorState extends State<BlinkWaveformMonitor> {
@@ -67,6 +71,7 @@ class _BlinkWaveformMonitorState extends State<BlinkWaveformMonitor> {
             fp2: widget.fp2Buffer,
             threshold: widget.threshold,
             markers: widget.blinkMarkers,
+            totalSamples: widget.totalSamples,
           ),
         ),
       ),
@@ -80,12 +85,14 @@ class _WaveformPainter extends CustomPainter {
     required this.fp2,
     required this.threshold,
     required this.markers,
+    required this.totalSamples,
   });
 
   final List<double> fp1;
   final List<double> fp2;
   final double threshold;
   final List<BlinkMarkerData> markers;
+  final int totalSamples;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,15 +148,21 @@ class _WaveformPainter extends CustomPainter {
       const Color(0xFFFF6B8A),
     ); // Fp2: pink
 
-    // Blink markers
-    for (final m in markers) {
-      final x = m.position * w;
-      final markerPaint = Paint()
-        ..color = AppTheme.seaGreen.withValues(alpha: 0.7)
-        ..strokeWidth = 2;
-      canvas.drawLine(Offset(x, 0), Offset(x, h), markerPaint);
-      // Small dot at top
-      canvas.drawCircle(Offset(x, 8), 4, Paint()..color = AppTheme.seaGreen);
+    // Blink markers — position computed from sample index
+    final bufLen = fp1.isNotEmpty ? fp1.length : fp2.length;
+    if (bufLen > 1) {
+      final dx = w / (bufLen - 1);
+      for (final m in markers) {
+        final age = totalSamples - m.sampleIndex;
+        final idx = bufLen - 1 - age;
+        if (idx < 0) continue; // scrolled off screen
+        final x = dx * idx;
+        final markerPaint = Paint()
+          ..color = AppTheme.seaGreen.withValues(alpha: 0.7)
+          ..strokeWidth = 2;
+        canvas.drawLine(Offset(x, 0), Offset(x, h), markerPaint);
+        canvas.drawCircle(Offset(x, 8), 4, Paint()..color = AppTheme.seaGreen);
+      }
     }
   }
 
@@ -223,20 +236,24 @@ class MiniWaveformChartState extends State<MiniWaveformChart> {
   final _fp2 = ListQueue<double>();
   double _threshold = 50.0;
   final _markers = <BlinkMarkerData>[];
+  int _totalSamples = 0;
 
   void addSample(double fp1, double fp2) {
     _fp1.addLast(fp1);
     _fp2.addLast(fp2);
     if (_fp1.length > widget.bufferSize) _fp1.removeFirst();
     if (_fp2.length > widget.bufferSize) _fp2.removeFirst();
+    _totalSamples++;
   }
 
   void setThreshold(double t) => _threshold = t;
 
   void addBlinkMarker(BlinkType type) {
     if (_fp1.isEmpty) return;
-    _markers.add(BlinkMarkerData(1.0, type)); // right edge = latest
-    if (_markers.length > 5) _markers.removeAt(0);
+    _markers.add(BlinkMarkerData(_totalSamples, type));
+    // Prune markers that have scrolled off screen
+    final oldest = _totalSamples - widget.bufferSize;
+    _markers.removeWhere((m) => m.sampleIndex < oldest);
   }
 
   @override
@@ -247,6 +264,7 @@ class MiniWaveformChartState extends State<MiniWaveformChart> {
       threshold: _threshold,
       height: widget.height,
       blinkMarkers: _markers,
+      totalSamples: _totalSamples,
     );
   }
 }
