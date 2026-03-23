@@ -102,7 +102,18 @@ class AppRouter {
                 ),
               ],
             ),
-            // Tab 2 — Patterns
+            // Tab 2 — Blink Control (BCI)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/train',
+                  name: 'train-home',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: TrainHomeScreen()),
+                ),
+              ],
+            ),
+            // Tab 3 — Patterns
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -444,29 +455,6 @@ class AppRouter {
         ),
 
         // ── Train (BCI blink control) ─────────────────────────────────
-        GoRoute(
-          path: '/train',
-          name: 'train',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            key: state.pageKey,
-            child: const TrainHomeScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    SlideTransition(
-                      position:
-                          Tween<Offset>(
-                            begin: const Offset(1, 0),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          ),
-                      child: child,
-                    ),
-          ),
-        ),
         GoRoute(
           path: '/train/calibrate',
           name: 'train-calibrate',

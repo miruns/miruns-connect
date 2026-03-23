@@ -88,16 +88,22 @@ const List<_NavItem> _navItems = [
     numeral: 'II',
   ),
   _NavItem(
+    icon: Icons.visibility_outlined,
+    activeIcon: Icons.visibility_rounded,
+    label: 'Blink',
+    numeral: 'III',
+  ),
+  _NavItem(
     icon: Icons.insights_outlined,
     activeIcon: Icons.insights,
     label: 'Patterns',
-    numeral: 'III',
+    numeral: 'IV',
   ),
   _NavItem(
     icon: Icons.edit_note_rounded,
     activeIcon: Icons.edit_note_rounded,
     label: 'Capture',
-    numeral: 'IV',
+    numeral: 'V',
   ),
   _NavItem(
     icon: Icons.grid_view_outlined,
@@ -132,12 +138,6 @@ const List<_MoreDestination> _moreDestinations = [
     label: 'Journal',
     route: '/journal',
     description: 'Body blog, daily entries',
-  ),
-  _MoreDestination(
-    icon: Icons.visibility_rounded,
-    label: 'Blink Control',
-    route: '/train',
-    description: 'Hands-free app control via eye blinks',
   ),
   _MoreDestination(
     icon: Icons.auto_awesome_rounded,
