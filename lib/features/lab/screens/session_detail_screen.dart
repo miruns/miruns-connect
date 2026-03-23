@@ -212,6 +212,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final updated = _entry.copyWith(tags: newTags);
     ref.read(localDbServiceProvider).saveCapture(updated);
     setState(() => _entry = updated);
+    _syncEntry();
   }
 
   void _removeTag(String tag) {
@@ -219,6 +220,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final updated = _entry.copyWith(tags: newTags);
     ref.read(localDbServiceProvider).saveCapture(updated);
     setState(() => _entry = updated);
+    _syncEntry();
   }
 
   /// Show edit dialog for session title and notes.
@@ -780,6 +782,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       _draggingArtifactIndex = null;
       _dragTimeMs = null;
     });
+    _syncEntry();
   }
 
   /// Filter artifacts that fall within the current window of samples.
