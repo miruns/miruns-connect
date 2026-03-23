@@ -120,6 +120,9 @@ class BlinkDetectorService {
   final _fp2Buffer = ListQueue<double>();
   int _adaptiveWindowSize = 1250; // 5 s × 250 Hz
   double _adaptiveThreshold = 50.0;
+
+  /// True once enough samples have been collected for a stable threshold.
+  bool get isPrimed => _fp1Buffer.length >= (_adaptiveWindowSize ~/ 2);
   double _fp1Rms = 0.0;
   double _fp2Rms = 0.0;
 

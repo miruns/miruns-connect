@@ -75,6 +75,8 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen>
   final _waveformKey = GlobalKey<MiniWaveformChartState>();
   StreamSubscription<SignalSample>? _signalSub;
   Timer? _waveformRefresh;
+  Timer? _primingTimer;
+  Timer? _primingTimeout;
 
   // ── Calibration data collection ───────────────────────────────────────────
   final _baselineAmplitudes = <double>[];
@@ -115,6 +117,8 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen>
     _phaseTimer?.cancel();
     _countdownTicker?.cancel();
     _waveformRefresh?.cancel();
+    _primingTimer?.cancel();
+    _primingTimeout?.cancel();
     _detector.dispose();
     _phaseTransition.dispose();
     super.dispose();
@@ -145,9 +149,26 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen>
       if (mounted) setState(() {});
     });
 
-    // Start with a short delay then move to baseline
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) _advanceToPhase(_CalibrationPhase.baseline);
+    // Advance to baseline once detector is primed, or after 5 s timeout
+    _primingTimer = Timer.periodic(const Duration(milliseconds: 100), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      if (_detector.isPrimed) {
+        t.cancel();
+        _primingTimer = null;
+        _advanceToPhase(_CalibrationPhase.baseline);
+      }
+    });
+    _primingTimeout = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      _primingTimer?.cancel();
+      _primingTimer = null;
+      _primingTimeout = null;
+      if (_phase == _CalibrationPhase.connecting) {
+        _advanceToPhase(_CalibrationPhase.baseline);
+      }
     });
   }
 
