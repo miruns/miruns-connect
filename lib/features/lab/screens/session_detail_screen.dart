@@ -165,13 +165,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   void _shareSession() {
     if (_shareCode == null) return;
     final url = MirunsLinkService.shareUrl(_shareCode!);
-    Share.share(url);
-  }
-
-  void _copyLink() {
-    if (_shareCode == null) return;
-    final url = MirunsLinkService.shareUrl(_shareCode!);
     Clipboard.setData(ClipboardData(text: url));
+    Share.share(url);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Link copied', style: AppTheme.geist(fontSize: 13)),
@@ -1005,16 +1000,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     ),
                     // ── Sync indicator ──────────────────────────────
                     _SyncIndicator(status: _syncStatus, onRetry: _syncEntry),
-                    if (_shareCode != null) ...[
-                      IconButton(
-                        onPressed: _copyLink,
-                        icon: const Icon(
-                          Icons.link_rounded,
-                          color: AppTheme.fog,
-                          size: 20,
-                        ),
-                        tooltip: 'Copy link',
-                      ),
+                    if (_shareCode != null)
                       IconButton(
                         onPressed: _shareSession,
                         icon: const Icon(
@@ -1022,9 +1008,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                           color: AppTheme.glow,
                           size: 20,
                         ),
-                        tooltip: 'Share link',
+                        tooltip: 'Share',
                       ),
-                    ],
                     IconButton(
                       onPressed: _confirmDelete,
                       icon: const Icon(
