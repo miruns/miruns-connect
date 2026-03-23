@@ -157,33 +157,42 @@ class BlinkCommandTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...BlinkAction.values.map(
-                  (a) => ListTile(
-                    leading: Icon(
-                      a == action
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color: a == action ? AppTheme.seaGreen : colors.textMuted,
-                      size: 20,
-                    ),
-                    title: Text(
-                      a.label,
-                      style: AppTheme.geist(
-                        fontSize: 14,
-                        color: colors.textStrong,
-                      ),
-                    ),
-                    subtitle: Text(
-                      a.description,
-                      style: AppTheme.geist(
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                    onTap: () {
-                      onActionChanged(a);
-                      Navigator.pop(ctx);
-                    },
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: BlinkAction.values
+                        .map(
+                          (a) => ListTile(
+                            leading: Icon(
+                              a == action
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              color: a == action
+                                  ? AppTheme.seaGreen
+                                  : colors.textMuted,
+                              size: 20,
+                            ),
+                            title: Text(
+                              a.label,
+                              style: AppTheme.geist(
+                                fontSize: 14,
+                                color: colors.textStrong,
+                              ),
+                            ),
+                            subtitle: Text(
+                              a.description,
+                              style: AppTheme.geist(
+                                fontSize: 12,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                            onTap: () {
+                              onActionChanged(a);
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
               ],
