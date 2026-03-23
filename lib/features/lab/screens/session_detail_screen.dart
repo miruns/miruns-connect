@@ -635,6 +635,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       _artifacts = updated;
       _entry = newEntry;
     });
+    _syncEntry();
   }
 
   void _removeArtifact(_ArtifactMarker marker) {
@@ -656,6 +657,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       _artifacts = updated;
       _entry = newEntry;
     });
+    _syncEntry();
   }
 
   /// Convert a tap on the waveform to a timestamp in ms relative to session start.
