@@ -113,18 +113,18 @@ Most health apps show dashboards of numbers. Miruns goes further: it presents yo
 
 ## Data Sources
 
-| Domain             | Sensor / API                        | What's read                                                                                                                                                                     |
-| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Movement**       | Health Connect / HealthKit          | Steps, distance, calories, workouts                                                                                                                                             |
-| **Cardiovascular** | Optical HR sensor (OS health store) | Average HR, resting HR, HRV (SDNN)                                                                                                                                              |
-| **Cardiovascular** | BLE HR strap (direct, 0x180D)       | Continuous BPM session + RR intervals → RMSSD / SDNN / mean-RR; full `BleHrSession` stored per capture                                                                          |
-| **Signal sources** | BLE plugin system (ADS1299, …)      | Multi-channel streaming from community hardware — 4 view modes (waveform, spectral [6 sub-views], decoding, monitoring). See [CONTRIBUTING_SOURCES.md](CONTRIBUTING_SOURCES.md) |
-| **Sleep**          | Device sleep tracking               | Duration, phases                                                                                                                                                                |
-| **Environment**    | GPS → ambient-scan API              | Temperature, humidity, AQI, UV, pressure, wind, conditions                                                                                                                      |
-| **Schedule**       | Device calendar (CalDAV)            | Today's events                                                                                                                                                                  |
-| **Location**       | GPS (Geolocator)                    | Coordinates — ephemeral, never stored                                                                                                                                           |
-| **Nutrition**      | Barcode → Open Food Facts API v2    | Product name, Nutri-Score, NOVA group, macros per 100 g / per serving                                                                                                           |
-| **Voice**          | Kokoro TTS Gateway (REST)           | Neural text-to-speech — streaming WAV via `POST /tts` with `X-API-Key` auth. Falls back to platform TTS (`flutter_tts`) on failure/timeout/no config.                           |
+| Domain             | Sensor / API                        | What's read                                                                                                                                                                                |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Movement**       | Health Connect / HealthKit          | Steps, distance, calories, workouts                                                                                                                                                        |
+| **Cardiovascular** | Optical HR sensor (OS health store) | Average HR, resting HR, HRV (SDNN)                                                                                                                                                         |
+| **Cardiovascular** | BLE HR strap (direct, 0x180D)       | Continuous BPM session + RR intervals → RMSSD / SDNN / mean-RR; full `BleHrSession` stored per capture                                                                                     |
+| **Signal sources** | BLE plugin system (ADS1299, …)      | Multi-channel streaming from community hardware — 4 view modes (waveform, spectral [6 sub-views], decoding, monitoring). See [Contributing a BLE Source](#contributing-a-ble-source) below |
+| **Sleep**          | Device sleep tracking               | Duration, phases                                                                                                                                                                           |
+| **Environment**    | GPS → ambient-scan API              | Temperature, humidity, AQI, UV, pressure, wind, conditions                                                                                                                                 |
+| **Schedule**       | Device calendar (CalDAV)            | Today's events                                                                                                                                                                             |
+| **Location**       | GPS (Geolocator)                    | Coordinates — ephemeral, never stored                                                                                                                                                      |
+| **Nutrition**      | Barcode → Open Food Facts API v2    | Product name, Nutri-Score, NOVA group, macros per 100 g / per serving                                                                                                                      |
+| **Voice**          | Kokoro TTS Gateway (REST)           | Neural text-to-speech — streaming WAV via `POST /tts` with `X-API-Key` auth. Falls back to platform TTS (`flutter_tts`) on failure/timeout/no config.                                      |
 
 > **Privacy:** GPS is read once to fetch environmental data, then discarded. No location history is recorded or transmitted. Health data is read-only — the app never writes to HealthKit or Health Connect.
 
@@ -526,7 +526,7 @@ Schema version lives in `local_db_service.dart` (`_schemaVersion`, currently **1
 | Environment      | Requires valid GPS to query ambient-scan API                                                                                                     |
 | BLE HR           | Physical BLE device required — Bluetooth is unavailable in Android Emulator & iOS Simulator. Use a Polar H10, Wahoo TICKR, or any 0x180D device. |
 
-All data fetches have 5–15 s timeouts. The app shows zero/empty states for unavailable sensors — never fake data (see `CODING_PRINCIPLES.md`).
+All data fetches have 5–15 s timeouts. The app shows zero/empty states for unavailable sensors — never fake data (see [Principles](#principles)).
 
 ### Pre-commit Checklist
 
@@ -548,7 +548,7 @@ All data fetches have 5–15 s timeouts. The app shows zero/empty states for una
 - **Read-only health access.** Never writes to HealthKit or Health Connect.
 - **Graceful degradation.** Every data fetch has a timeout. The app never freezes waiting for a sensor.
 
-These are enforced by `CODING_PRINCIPLES.md`.
+Mock data is only acceptable in unit tests or clearly labelled `kDebugMode` paths. Production code must never return plausible placeholder values — sensor unavailable means zero, null, or an empty-state UI.
 
 ---
 
@@ -584,7 +584,7 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [x] Multi-channel real-time signal chart (`LiveSignalChart`) — per-channel autoscale, toggle/solo, glow aesthetic
 - [x] Source Browser + Live Signal screens (`/sources`, `/sources/:sourceId`)
 - [x] `SignalSession` model with JSON persistence in `CaptureEntry` (schema v11)
-- [x] Community source contribution guide — [CONTRIBUTING_SOURCES.md](CONTRIBUTING_SOURCES.md)
+- [x] Community source contribution guide (see [Contributing a BLE Source](#contributing-a-ble-source))
 - [x] Pure-Dart FFT engine (`FftEngine`) — Cooley-Tukey radix-2, Hanning window, PSD, EEG band extraction (δ/θ/α/β/γ)
 - [x] Spectral analysis chart — 6 sub-views: live frequency spectrum, waterfall spectrogram, animated EEG band power meters, topographic scalp map, coherence matrix heatmap, connectivity circle
 - [x] Topographic scalp map (`TopomapChart`) — IDW-interpolated 10-20 montage with 7-colour gradient, electrode markers, nose/ear indicators, metric selector (per-band or total power)
@@ -655,6 +655,168 @@ These are enforced by `CODING_PRINCIPLES.md`.
 - [ ] Export to structured health records (FHIR-compatible)
 - [ ] Research session mode — protocol builder, participant management, batch export
 - [ ] Researcher portal (web dashboard) — dataset upload/sync, visualization, collaboration
+
+---
+
+## Contributing a BLE Source
+
+Miruns ships an **extensible plugin system** for BLE signal hardware. Adding a new source requires **one Dart file + one registration line** — no changes to the framework, database, or UI code.
+
+> **First source:** `Ads1299Source` (TI ADS1299 8-Ch EEG, EAREEG boards). Use it as a working reference.
+
+### Architecture
+
+```
+SourceBrowserScreen → LiveSignalScreen → BleSourceService → BleSourceProvider (YOUR CODE)
+```
+
+| File                                                  | Purpose                                                                                                              |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `lib/core/services/ble_source_provider.dart`          | Core abstractions: `BleSourceProvider`, `BleSourceRegistry`, `BleSourceService`, `SignalSample`, `ChannelDescriptor` |
+| `lib/core/services/sources/ads1299_source.dart`       | Reference implementation — ADS1299 8-Ch EEG                                                                          |
+| `lib/core/services/sources/source_registry_init.dart` | One-stop registration — add your source here                                                                         |
+
+### Step-by-step
+
+1. Create `lib/core/services/sources/my_device_source.dart`
+2. Extend `BleSourceProvider` — implement identity, BLE UUIDs, channel layout, and `parseNotification`
+3. Register in `source_registry_init.dart`:
+
+```dart
+import 'my_device_source.dart';
+
+void registerAllSources(BleSourceRegistry registry) {
+  registry.register(Ads1299Source());
+  registry.register(MyDeviceSource());   // ← add this
+}
+```
+
+4. Run `flutter analyze` — must stay at 0 errors
+
+Your source will appear in the **Source Browser** and the full scan → connect → stream flow works out of the box.
+
+### Required overrides
+
+| Member                              | Type                      | Purpose                                |
+| ----------------------------------- | ------------------------- | -------------------------------------- |
+| `id`                                | `String`                  | Unique machine key (e.g. `'ads1299'`)  |
+| `displayName`                       | `String`                  | Shown in the source browser            |
+| `serviceUuid`                       | `String`                  | BLE GATT service UUID                  |
+| `notifyCharacteristicUuid`          | `String`                  | BLE notify characteristic UUID         |
+| `channelDescriptors`                | `List<ChannelDescriptor>` | Label, unit, default scale per channel |
+| `sampleRateHz`                      | `double`                  | Hardware sample rate                   |
+| `parseNotification(List<int> data)` | `List<SignalSample>`      | Parse raw BLE bytes → channel values   |
+
+### Optional lifecycle hooks
+
+| Hook                            | When                 | Use case                             |
+| ------------------------------- | -------------------- | ------------------------------------ |
+| `onConnected(device, services)` | After GATT discovery | Send start/config BLE write commands |
+| `onDisconnecting(device)`       | Before disconnect    | Send stop commands                   |
+
+### PR checklist
+
+- [ ] Source file in `lib/core/services/sources/`
+- [ ] Registered in `source_registry_init.dart`
+- [ ] `flutter analyze` — 0 errors
+- [ ] `parseNotification` handles malformed data (returns empty list)
+- [ ] Unit tests for `parseNotification` (valid + edge cases)
+- [ ] Tested on real hardware (or documented emulator setup)
+- [ ] Header doc-comment with protocol summary
+
+---
+
+## Changelog
+
+<details>
+<summary>Full changelog</summary>
+
+### [1.0.26] - 2026-03-21
+
+**Added:** Session rename/notes, recording duration counter, auto-save on BLE disconnect, source browser entry point, session comparison, waveform zoom/pan, artifact marking.
+
+### [1.0.21] - 2026-03-10
+
+**Fixed:** ADS1299 multi-sample BLE packets — parser now handles 120-byte notifications (5 batched samples), 5× effective throughput at 250 SPS.
+**Changed:** `parseNotification` return type → `List<SignalSample>`.
+
+### [1.0.20] - 2026-03-09
+
+**Added:** Pure-Dart FFT engine, spectral analysis (6 sub-views), BCI decoding demo, BCI monitoring demo, 4-mode signal view system, topographic scalp map, coherence matrix, connectivity circle.
+
+### [1.0.18] - 2026-03-08
+
+**Added:** Barcode nutrition scanner (Open Food Facts API), NutritionLog/NutritionFacts models, nutrition context in AI metadata, DB schema v10.
+
+### [1.0.17] - 2026-03-08
+
+**Added:** Ask Your Body — conversational AI chat grounded in real biometric data.
+
+### [1.0.15] - 2026-03-08
+
+**Added:** Revamped journal landing page. **Changed:** AI strips health references when no data available.
+
+### [1.0.14] - 2026-03-08
+
+**Added:** In-app updates via Play Store flexible flow.
+
+### [1.0.13] - 2026-03-08
+
+**Added:** Your Body Story (AI narrative on Patterns page), PatternNarrativeService.
+
+### [1.0.12] - 2026-03-08
+
+**Added:** Patterns transparency (ⓘ info panels), theme-energy links, co-occurring themes, circadian rhythms, AI pattern insights, theme trends, energy dots.
+
+### [1.0.11] - 2026-03-08
+
+**Added:** Refresh journey overlay with pipeline stages and breathing animations.
+
+### [1.0.10] - 2026-03-07
+
+**Added:** Bring-Your-Own-AI, foreground service, tone selection, GeoIP fallback, sensor health indicator, shimmer AI icon, auto-refresh on app start.
+
+### [1.0.9] - 2026-03-07
+
+**Added:** Resting HR permissions, lifecycle observer for Health Connect, permission probing.
+
+### [1.0.8] - 2026-03-06
+
+**Added:** Hardcoded daily reminders.
+
+### [1.0.7] - 2026-03-03
+
+**Added:** Insight reflection card, vitality wave, weekly self portrait, interval filtering.
+
+### [1.0.6] - 2026-03-02
+
+**Added:** Sensors screen, share FAB improvements.
+
+### [1.0.5] - 2026-03-02
+
+**Added:** BLE heart rate monitoring, HR chip on capture screen, HRV metrics.
+
+### [1.0.4] - 2026-03-02
+
+**Added:** Social sharing, background AI metadata processing, version history, full-screen camera.
+
+### [1.0.3] - 2026-03-02
+
+**Added:** Raw data badge, sensor status, date nav, AppHeader, retry with backoff, onboarding logic.
+
+### [1.0.2] - 2026-03-01
+
+**Added:** Init with timeout, zen loader. **Changed:** Removed HomeScreen.
+
+### [1.0.1] - 2026-03-01
+
+**Added:** AI metadata generation, capture processing pipeline, release signing.
+
+### [1.0.0] - 2026-02-26
+
+**Added:** Full initial release — onboarding, body blog/journal, AI integration, capture system, notifications, SQLite persistence, Material 3 theming, CI/CD, Riverpod + GoRouter architecture. Android 5.0+ / iOS 14.0+.
+
+</details>
 
 ---
 
