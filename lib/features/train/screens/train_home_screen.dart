@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../shared/widgets/nav_menu_button.dart';
 import '../models/blink_profile.dart';
 import '../services/blink_command_service.dart';
 import '../widgets/blink_command_tile.dart';
@@ -105,6 +106,8 @@ class _TrainHomeScreenState extends ConsumerState<TrainHomeScreen> {
                     ),
                     // BLE status chip
                     _BleStatusChip(state: _bleState),
+                    const SizedBox(width: 10),
+                    const NavMenuButton(),
                   ],
                 ),
               ),
