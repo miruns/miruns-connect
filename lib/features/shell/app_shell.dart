@@ -152,6 +152,12 @@ const List<_MoreDestination> _moreDestinations = [
     description: 'BLE signal hardware (EEG, EMG)',
   ),
   _MoreDestination(
+    icon: Icons.psychology_rounded,
+    label: 'Train',
+    route: '/train',
+    description: 'BCI blink detection training',
+  ),
+  _MoreDestination(
     icon: Icons.tune_rounded,
     label: 'Environment',
     route: '/environment',
