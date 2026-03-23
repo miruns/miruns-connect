@@ -123,32 +123,44 @@ class BlinkDetectorService {
   double _fp1Rms = 0.0;
   double _fp2Rms = 0.0;
 
+  // Running accumulators — O(1) per sample instead of O(N)
+  double _runSum1 = 0.0, _runSqSum1 = 0.0;
+  double _runSum2 = 0.0, _runSqSum2 = 0.0;
+
   void _updateAdaptiveThreshold(double fp1Abs, double fp2Abs) {
+    // Add new values to accumulators
+    _runSum1 += fp1Abs;
+    _runSqSum1 += fp1Abs * fp1Abs;
+    _runSum2 += fp2Abs;
+    _runSqSum2 += fp2Abs * fp2Abs;
+
     _fp1Buffer.addLast(fp1Abs);
     _fp2Buffer.addLast(fp2Abs);
-    if (_fp1Buffer.length > _adaptiveWindowSize) _fp1Buffer.removeFirst();
-    if (_fp2Buffer.length > _adaptiveWindowSize) _fp2Buffer.removeFirst();
+
+    // Subtract dropped values from accumulators
+    if (_fp1Buffer.length > _adaptiveWindowSize) {
+      final old = _fp1Buffer.removeFirst();
+      _runSum1 -= old;
+      _runSqSum1 -= old * old;
+    }
+    if (_fp2Buffer.length > _adaptiveWindowSize) {
+      final old = _fp2Buffer.removeFirst();
+      _runSum2 -= old;
+      _runSqSum2 -= old * old;
+    }
 
     if (_fp1Buffer.length < 50) return; // Need minimum data
 
-    // Compute mean + 3σ over the rolling window
-    double sum1 = 0, sum2 = 0, sqSum1 = 0, sqSum2 = 0;
-    for (final v in _fp1Buffer) {
-      sum1 += v;
-      sqSum1 += v * v;
-    }
-    for (final v in _fp2Buffer) {
-      sum2 += v;
-      sqSum2 += v * v;
-    }
-
+    // Compute mean + 3σ from running sums (O(1))
     final n1 = _fp1Buffer.length.toDouble();
-    final mean1 = sum1 / n1;
-    final std1 = math.sqrt((sqSum1 / n1) - mean1 * mean1).clamp(1.0, 200.0);
+    final mean1 = _runSum1 / n1;
+    final variance1 = (_runSqSum1 / n1) - mean1 * mean1;
+    final std1 = math.sqrt(math.max(0.0, variance1)).clamp(1.0, 200.0);
 
     final n2 = _fp2Buffer.length.toDouble();
-    final mean2 = sum2 / n2;
-    final std2 = math.sqrt((sqSum2 / n2) - mean2 * mean2).clamp(1.0, 200.0);
+    final mean2 = _runSum2 / n2;
+    final variance2 = (_runSqSum2 / n2) - mean2 * mean2;
+    final std2 = math.sqrt(math.max(0.0, variance2)).clamp(1.0, 200.0);
 
     // Use the lower threshold of the two channels (more sensitive)
     final th1 = mean1 + 3.0 * std1;
@@ -161,8 +173,8 @@ class BlinkDetectorService {
     );
 
     // Update RMS for UI display
-    _fp1Rms = math.sqrt(sqSum1 / n1);
-    _fp2Rms = math.sqrt(sqSum2 / n2);
+    _fp1Rms = math.sqrt(_runSqSum1 / n1);
+    _fp2Rms = math.sqrt(_runSqSum2 / n2);
   }
 
   // ── Peak detection ────────────────────────────────────────────────────────
@@ -370,6 +382,10 @@ class BlinkDetectorService {
     _peakOnsetTime = null;
     _fp1Buffer.clear();
     _fp2Buffer.clear();
+    _runSum1 = 0.0;
+    _runSqSum1 = 0.0;
+    _runSum2 = 0.0;
+    _runSqSum2 = 0.0;
     _initFilters();
   }
 
