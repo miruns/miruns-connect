@@ -88,16 +88,22 @@ const List<_NavItem> _navItems = [
     numeral: 'II',
   ),
   _NavItem(
+    icon: Icons.visibility_outlined,
+    activeIcon: Icons.visibility_rounded,
+    label: 'Blink',
+    numeral: 'III',
+  ),
+  _NavItem(
     icon: Icons.insights_outlined,
     activeIcon: Icons.insights,
     label: 'Patterns',
-    numeral: 'III',
+    numeral: 'IV',
   ),
   _NavItem(
     icon: Icons.edit_note_rounded,
     activeIcon: Icons.edit_note_rounded,
     label: 'Capture',
-    numeral: 'IV',
+    numeral: 'V',
   ),
   _NavItem(
     icon: Icons.grid_view_outlined,

@@ -23,6 +23,10 @@ import '../../features/sport/screens/sport_home_screen.dart';
 import '../../features/sport/screens/sport_profile_screen.dart';
 import '../../features/sport/screens/workout_feedback_screen.dart';
 import '../../features/sport/screens/workout_history_screen.dart';
+import '../../features/train/screens/calibration_screen.dart';
+import '../../features/train/screens/command_map_screen.dart';
+import '../../features/train/screens/live_test_screen.dart';
+import '../../features/train/screens/train_home_screen.dart';
 import '../../features/welcome/screens/welcome_screen.dart';
 import '../models/capture_entry.dart';
 
@@ -98,7 +102,18 @@ class AppRouter {
                 ),
               ],
             ),
-            // Tab 2 — Patterns
+            // Tab 2 — Blink Control (BCI)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/train',
+                  name: 'train-home',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: TrainHomeScreen()),
+                ),
+              ],
+            ),
+            // Tab 3 — Patterns
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -437,6 +452,77 @@ class AppRouter {
                       ),
             );
           },
+        ),
+
+        // ── Train (BCI blink control) ─────────────────────────────────
+        GoRoute(
+          path: '/train/calibrate',
+          name: 'train-calibrate',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const CalibrationScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+        GoRoute(
+          path: '/train/commands',
+          name: 'train-commands',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const CommandMapScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+        GoRoute(
+          path: '/train/test',
+          name: 'train-test',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const LiveTestScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
         ),
       ],
     );
