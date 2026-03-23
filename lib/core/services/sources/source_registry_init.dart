@@ -1,5 +1,6 @@
 import '../ble_source_provider.dart';
 import 'ads1299_source.dart';
+import 'miruns_4ch_source.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Source registry initialisation
@@ -20,6 +21,7 @@ import 'ads1299_source.dart';
 void registerAllSources(BleSourceRegistry registry) {
   // ── Built-in sources ────────────────────────────────────────────────
   registry.register(Ads1299Source());
+  registry.register(Miruns4ChSource());
 
   // ── Community sources ───────────────────────────────────────────────
   // registry.register(MuseSSource());
