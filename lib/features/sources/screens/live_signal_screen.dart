@@ -212,7 +212,12 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
         tags: eventTags,
       );
 
-      await ref.read(localDbServiceProvider).saveCapture(capture);
+      final db = ref.read(localDbServiceProvider);
+      await db.saveCapture(capture);
+
+      // Sync to miruns-link before navigating so the session detail screen
+      // opens with the share link already available.
+      await _syncToBackend(capture);
 
       if (mounted) {
         context.go('/lab/session/${capture.id}', extra: capture);
@@ -241,6 +246,27 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
   void _autoSaveOnDisconnect() {
     if (!_isRecording) return;
     _stopRecording();
+  }
+
+  /// Fire-and-forget sync of a newly saved capture to miruns-link.
+  Future<void> _syncToBackend(CaptureEntry capture) async {
+    final db = ref.read(localDbServiceProvider);
+    final link = ref.read(mirunsLinkServiceProvider);
+    try {
+      await db.updateSyncStatus(capture.id, 'syncing');
+      final payload = capture.toJson();
+      // Include full signal data from the local file.
+      final signalJson = await db.readSignalFileRaw(capture.id);
+      if (signalJson != null) {
+        payload['signal_session'] = signalJson;
+      }
+      final result = await link.createSession(payload);
+      final code = result['code'] as String;
+      await db.updateSyncStatus(capture.id, 'synced', shareCode: code);
+    } catch (e) {
+      debugPrint('[LiveSignal] Sync failed: $e');
+      await db.updateSyncStatus(capture.id, 'failed');
+    }
   }
 
   // ── Demo mode ───────────────────────────────────────────────────────

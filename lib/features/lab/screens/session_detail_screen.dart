@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/models/capture_entry.dart';
 import '../../../core/services/ble_source_provider.dart';
 import '../../../core/services/fft_engine.dart';
+import '../../../core/services/miruns_link_service.dart';
 import '../../../core/services/service_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/research_export_sheet.dart';
@@ -89,6 +91,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   /// Cached constraints for coordinate mapping.
   BoxConstraints? _chartConstraints;
 
+  /// miruns-link sync state.
+  SyncStatus _syncStatus = SyncStatus.none;
+  String? _shareCode;
+
   @override
   void initState() {
     super.initState();
@@ -96,6 +102,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     _artifacts = _parseMarkers(_entry.tags, 'artifact');
     _events = _parseMarkers(_entry.tags, 'event');
     _loadFullSession();
+    _loadSyncStatus();
   }
 
   Future<void> _loadFullSession() async {
@@ -109,6 +116,70 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         _loadingSession = false;
       });
     }
+  }
+
+  Future<void> _loadSyncStatus() async {
+    final db = ref.read(localDbServiceProvider);
+    final status = await db.getSyncStatus(_entry.id);
+    final code = await db.getShareCode(_entry.id);
+    if (mounted) {
+      setState(() {
+        _syncStatus = SyncStatus.values.firstWhere(
+          (s) => s.name == status,
+          orElse: () => SyncStatus.none,
+        );
+        _shareCode = code;
+      });
+    }
+  }
+
+  /// Sync current entry to miruns-link (create or update).
+  Future<void> _syncEntry() async {
+    final db = ref.read(localDbServiceProvider);
+    final link = ref.read(mirunsLinkServiceProvider);
+    if (mounted) setState(() => _syncStatus = SyncStatus.syncing);
+    try {
+      await db.updateSyncStatus(_entry.id, 'syncing');
+      final payload = _entry.toJson();
+      // Include full signal data from the local file.
+      final signalJson = await db.readSignalFileRaw(_entry.id);
+      if (signalJson != null) {
+        payload['signal_session'] = signalJson;
+      }
+
+      if (_shareCode != null) {
+        await link.updateSession(_shareCode!, payload);
+      } else {
+        final result = await link.createSession(payload);
+        _shareCode = result['code'] as String;
+      }
+      await db.updateSyncStatus(_entry.id, 'synced', shareCode: _shareCode);
+      if (mounted) setState(() => _syncStatus = SyncStatus.synced);
+    } catch (e) {
+      debugPrint('[SessionDetail] Sync failed: $e');
+      await db.updateSyncStatus(_entry.id, 'failed');
+      if (mounted) setState(() => _syncStatus = SyncStatus.failed);
+    }
+  }
+
+  void _shareSession() {
+    if (_shareCode == null) return;
+    final url = MirunsLinkService.shareUrl(_shareCode!);
+    Share.share(url);
+  }
+
+  void _copyLink() {
+    if (_shareCode == null) return;
+    final url = MirunsLinkService.shareUrl(_shareCode!);
+    Clipboard.setData(ClipboardData(text: url));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Link copied', style: AppTheme.geist(fontSize: 13)),
+        backgroundColor: AppTheme.tidePool,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -273,6 +344,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                   );
                   ref.read(localDbServiceProvider).saveCapture(updated);
                   setState(() => _entry = updated);
+                  _syncEntry();
                   Navigator.pop(ctx);
                 },
                 style: ElevatedButton.styleFrom(
@@ -817,6 +889,13 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
+      // Best-effort delete from backend.
+      if (_shareCode != null) {
+        ref
+            .read(mirunsLinkServiceProvider)
+            .deleteSession(_shareCode!)
+            .catchError((_) {});
+      }
       await ref.read(localDbServiceProvider).deleteCapture(_entry.id);
       if (mounted) Navigator.of(context).pop();
     }
@@ -924,6 +1003,28 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       ),
                       tooltip: 'Export & share',
                     ),
+                    // ── Sync indicator ──────────────────────────────
+                    _SyncIndicator(status: _syncStatus, onRetry: _syncEntry),
+                    if (_shareCode != null) ...[
+                      IconButton(
+                        onPressed: _copyLink,
+                        icon: const Icon(
+                          Icons.link_rounded,
+                          color: AppTheme.fog,
+                          size: 20,
+                        ),
+                        tooltip: 'Copy link',
+                      ),
+                      IconButton(
+                        onPressed: _shareSession,
+                        icon: const Icon(
+                          Icons.share_rounded,
+                          color: AppTheme.glow,
+                          size: 20,
+                        ),
+                        tooltip: 'Share link',
+                      ),
+                    ],
                     IconButton(
                       onPressed: _confirmDelete,
                       icon: const Icon(
@@ -2117,5 +2218,57 @@ class _TagChip extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sync status indicator — compact icon in the app bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SyncIndicator extends StatelessWidget {
+  final SyncStatus status;
+  final VoidCallback onRetry;
+
+  const _SyncIndicator({required this.status, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case SyncStatus.none:
+        return const SizedBox.shrink();
+      case SyncStatus.syncing:
+        return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppTheme.mist,
+            ),
+          ),
+        );
+      case SyncStatus.synced:
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Icon(
+            Icons.cloud_done_rounded,
+            size: 18,
+            color: AppTheme.glow.withValues(alpha: 0.6),
+          ),
+        );
+      case SyncStatus.failed:
+        return IconButton(
+          onPressed: onRetry,
+          icon: const Icon(
+            Icons.cloud_off_rounded,
+            size: 18,
+            color: AppTheme.crimson,
+          ),
+          tooltip: 'Sync failed — tap to retry',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        );
+    }
   }
 }
