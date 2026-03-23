@@ -9,7 +9,7 @@
 > **AI-assisted development.** Portions of this codebase, including data-processing logic and application code were developed with the assistance of AI tools. Outputs have been reviewed by human developers, but no guarantee of correctness or completeness is implied at this stage.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.2%2B-blue?logo=flutter)
-![Version](https://img.shields.io/badge/version-1.0.28-informational)
+![Version](https://img.shields.io/badge/version-1.0.33-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > Neuroscience meets sport. Miruns listens to your body so you can push further, safer.
