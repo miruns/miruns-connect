@@ -134,6 +134,12 @@ const List<_MoreDestination> _moreDestinations = [
     description: 'Body blog, daily entries',
   ),
   _MoreDestination(
+    icon: Icons.visibility_rounded,
+    label: 'Blink Control',
+    route: '/train',
+    description: 'Hands-free app control via eye blinks',
+  ),
+  _MoreDestination(
     icon: Icons.auto_awesome_rounded,
     label: 'AI Services',
     route: '/ai-settings',
@@ -150,12 +156,6 @@ const List<_MoreDestination> _moreDestinations = [
     label: 'Signal Sources',
     route: '/sources',
     description: 'BLE signal hardware (EEG, EMG)',
-  ),
-  _MoreDestination(
-    icon: Icons.psychology_rounded,
-    label: 'Train',
-    route: '/train',
-    description: 'BCI blink detection training',
   ),
   _MoreDestination(
     icon: Icons.tune_rounded,
