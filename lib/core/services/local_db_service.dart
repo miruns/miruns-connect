@@ -43,7 +43,7 @@ class LocalDbService {
   static const _tableCaptures = 'captures';
   static const _tableVersions = 'body_blog_versions';
   static const _tableNutritionLogs = 'nutrition_logs';
-  static const _schemaVersion = 12;
+  static const _schemaVersion = 13;
 
   /// All capture columns EXCEPT signal_session.
   /// Prevents Android CursorWindow overflow for rows with large signal data.
@@ -68,6 +68,8 @@ class LocalDbService {
     'ai_metadata',
     'ble_hr_session',
     'nutrition_data',
+    'sync_status',
+    'share_code',
   ];
 
   Database? _db;
@@ -136,7 +138,9 @@ class LocalDbService {
         ai_metadata      TEXT,
         ble_hr_session   TEXT,
         nutrition_data   TEXT,
-        signal_session   TEXT
+        signal_session   TEXT,
+        sync_status      TEXT    NOT NULL DEFAULT 'none',
+        share_code       TEXT
       )
     ''');
     await db.execute('''
@@ -360,6 +364,21 @@ class LocalDbService {
       // (see _migrateSignalDataLazily) to avoid CursorWindow issues
       // inside the onUpgrade transaction.
     }
+    if (oldVersion < 13) {
+      // v12 → v13: miruns-link sync columns
+      for (final col in {
+        'sync_status': "TEXT NOT NULL DEFAULT 'none'",
+        'share_code': 'TEXT',
+      }.entries) {
+        try {
+          await db.execute(
+            'ALTER TABLE $_tableCaptures ADD COLUMN ${col.key} ${col.value}',
+          );
+        } catch (e) {
+          if (!e.toString().toLowerCase().contains('duplicate column')) rethrow;
+        }
+      }
+    }
   }
 
   Future<void> close() async {
@@ -389,6 +408,15 @@ class LocalDbService {
     final dir = await _signalDir();
     final file = File(p.join(dir.path, '$captureId.json'));
     if (await file.exists()) await file.delete();
+  }
+
+  /// Read the raw JSON string from the signal file for a capture.
+  /// Returns null if the file doesn't exist.
+  Future<String?> readSignalFileRaw(String captureId) async {
+    final dir = await _signalDir();
+    final file = File(p.join(dir.path, '$captureId.json'));
+    if (await file.exists()) return file.readAsString();
+    return null;
   }
 
   /// Load the full signal session for a capture.
@@ -819,6 +847,51 @@ class LocalDbService {
   ///
   /// More efficient than loading + re-saving a full [CaptureEntry] when the
   /// only thing that changed is the AI metadata.
+
+  /// Update sync status and optional share code for a capture.
+  Future<void> updateSyncStatus(
+    String captureId,
+    String syncStatus, {
+    String? shareCode,
+  }) async {
+    final db = await _database;
+    final values = <String, dynamic>{'sync_status': syncStatus};
+    if (shareCode != null) values['share_code'] = shareCode;
+    await db.update(
+      _tableCaptures,
+      values,
+      where: 'id = ?',
+      whereArgs: [captureId],
+    );
+  }
+
+  /// Look up the share code for a capture, or null if never synced.
+  Future<String?> getShareCode(String captureId) async {
+    final db = await _database;
+    final rows = await db.query(
+      _tableCaptures,
+      columns: ['share_code'],
+      where: 'id = ?',
+      whereArgs: [captureId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['share_code'] as String?;
+  }
+
+  /// Load sync_status for a capture.
+  Future<String> getSyncStatus(String captureId) async {
+    final db = await _database;
+    final rows = await db.query(
+      _tableCaptures,
+      columns: ['sync_status'],
+      where: 'id = ?',
+      whereArgs: [captureId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return 'none';
+    return (rows.first['sync_status'] as String?) ?? 'none';
+  }
+
   Future<void> updateCaptureAiMetadata(
     String captureId,
     String aiMetadataJson,

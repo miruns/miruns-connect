@@ -103,6 +103,12 @@ class CaptureEntry {
   /// (e.g. ADS1299 EEG). Null when no signal source was active.
   final SignalSession? signalSession;
 
+  /// miruns-link sync status (transient, from DB column).
+  final String? syncStatus;
+
+  /// miruns-link share code (transient, from DB column).
+  final String? shareCode;
+
   const CaptureEntry({
     required this.id,
     required this.timestamp,
@@ -125,6 +131,8 @@ class CaptureEntry {
     this.bleHrSession,
     this.nutritionData = const [],
     this.signalSession,
+    this.syncStatus,
+    this.shareCode,
   });
 
   CaptureEntry copyWith({
@@ -162,6 +170,8 @@ class CaptureEntry {
     List<NutritionLog>? nutritionData,
     SignalSession? signalSession,
     bool clearSignalSession = false,
+    String? syncStatus,
+    String? shareCode,
   }) {
     return CaptureEntry(
       id: id ?? this.id,
@@ -197,6 +207,8 @@ class CaptureEntry {
       signalSession: clearSignalSession
           ? null
           : (signalSession ?? this.signalSession),
+      syncStatus: syncStatus ?? this.syncStatus,
+      shareCode: shareCode ?? this.shareCode,
     );
   }
 
@@ -300,6 +312,8 @@ class CaptureEntry {
       bleHrSession: BleHrSession.decode(json['ble_hr_session'] as String?),
       nutritionData: NutritionLog.decodeList(json['nutrition_data'] as String?),
       signalSession: SignalSession.decode(json['signal_session'] as String?),
+      syncStatus: json['sync_status'] as String?,
+      shareCode: json['share_code'] as String?,
     );
   }
 }

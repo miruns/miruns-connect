@@ -71,6 +71,21 @@ class SessionCard extends StatelessWidget {
                     color: AppTheme.glow,
                   ),
                 ),
+                if (entry.syncStatus == 'synced') ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.cloud_done_rounded,
+                    size: 14,
+                    color: AppTheme.glow.withValues(alpha: 0.5),
+                  ),
+                ] else if (entry.syncStatus == 'failed') ...[
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    size: 14,
+                    color: AppTheme.crimson,
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 8),

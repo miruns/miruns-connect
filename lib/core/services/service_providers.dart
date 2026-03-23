@@ -27,6 +27,7 @@ import 'health_service.dart';
 import 'journal_ai_service.dart';
 import 'local_db_service.dart';
 import 'location_service.dart';
+import 'miruns_link_service.dart';
 import 'notification_content_service.dart';
 import 'notification_service.dart';
 import 'nutrition_service.dart';
@@ -50,6 +51,11 @@ final localDbServiceProvider = Provider<LocalDbService>((ref) {
   // No explicit dispose needed — sqflite manages the connection lifecycle.
   return service;
 }, dependencies: []);
+
+/// miruns-link ephemeral session sharing API client.
+final mirunsLinkServiceProvider = Provider<MirunsLinkService>((ref) {
+  return MirunsLinkService(db: ref.read(localDbServiceProvider));
+});
 
 // ── AI configuration (depends on DB) ────────────────────────────────────────
 
