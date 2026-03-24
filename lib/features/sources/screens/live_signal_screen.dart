@@ -260,7 +260,10 @@ class _LiveSignalScreenState extends ConsumerState<LiveSignalScreen> {
       if (signalJson != null) {
         payload['signal_session'] = signalJson;
       }
-      final result = await link.createSession(payload);
+      final result = await link.createSession(
+        payload,
+        meta: capture.toSyncMeta(),
+      );
       final code = result['code'] as String;
       await db.updateSyncStatus(capture.id, 'synced', shareCode: code);
     } catch (e) {

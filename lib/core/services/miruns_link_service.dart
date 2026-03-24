@@ -46,14 +46,16 @@ class MirunsLinkService {
     'X-Device-Id': deviceId,
   };
 
-  /// POST /sessions — returns `{ code, dataSize, expiresAt, createdAt }`.
+  /// POST /sessions — returns `{ code, dataSize, expiresAt, createdAt, ... }`.
   Future<Map<String, dynamic>> createSession(
     Map<String, dynamic> data, {
     int? ttlHours,
+    Map<String, dynamic>? meta,
   }) async {
     final deviceId = await _deviceId();
     final body = <String, dynamic>{'data': data};
     if (ttlHours != null) body['ttlHours'] = ttlHours;
+    if (meta != null) body.addAll(meta);
 
     final res = await http.post(
       Uri.parse('$_baseUrl/sessions'),
@@ -66,15 +68,17 @@ class MirunsLinkService {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
-  /// PATCH /sessions/:code — returns `{ code, dataSize, updatedAt, expiresAt }`.
+  /// PATCH /sessions/:code — returns `{ code, dataSize, updatedAt, expiresAt, ... }`.
   Future<Map<String, dynamic>> updateSession(
     String code,
     Map<String, dynamic> data, {
     int? ttlHours,
+    Map<String, dynamic>? meta,
   }) async {
     final deviceId = await _deviceId();
     final body = <String, dynamic>{'data': data};
     if (ttlHours != null) body['ttlHours'] = ttlHours;
+    if (meta != null) body.addAll(meta);
 
     final res = await http.patch(
       Uri.parse('$_baseUrl/sessions/$code'),

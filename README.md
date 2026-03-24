@@ -618,7 +618,7 @@ Mock data is only acceptable in unit tests or clearly labelled `kDebugMode` path
 - [x] Auto-save on BLE disconnect during active recording
 - [x] Recording duration counter in app bar (mm:ss)
 - [x] Empty-state CTA on Lab — "Start Demo" button that enables demo mode and navigates to live signal screen
-- [x] Cloud sync via miruns-link — sessions auto-sync to ephemeral backend on save, sync status indicator (syncing/synced/failed+retry), re-sync on tag/artifact/note edits
+- [x] Cloud sync via miruns-link — sessions auto-sync to ephemeral backend on save, sync status indicator (syncing/synced/failed+retry), re-sync on tag/artifact/note edits, searchable metadata (title, tags, source type, device name, duration, annotations)
 - [x] Session sharing — one-tap share button generates `https://share.miruns.com/{code}` link, copies to clipboard and opens native share sheet
 - [x] Anonymous device identity — random 16-char hex persisted in SQLite, no real device ID exposed
 - [x] Signal data included in sync payload — full EEG samples uploaded alongside metadata (DB schema v12 → v13)
@@ -737,6 +737,10 @@ Your source will appear in the **Source Browser** and the full scan → connect 
 
 <details>
 <summary>Full changelog</summary>
+
+### [1.0.29] - 2026-03-24
+
+**Added:** Searchable session metadata on miruns-link — title, tags, source type/name, device name, duration, channel count, sample count, sample rate, and annotations are now stored in MongoDB alongside the S3 payload. The Flutter app sends `toSyncMeta()` on create/update so sessions are queryable by tag, title, device type, and annotations without fetching the full payload.
 
 ### [1.0.28] - 2026-03-23
 

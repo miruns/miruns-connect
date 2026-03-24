@@ -242,6 +242,36 @@ class CaptureEntry {
     'signal_session': signalSession?.encode(),
   };
 
+  /// Lightweight metadata map sent as top-level fields to miruns-link
+  /// so sessions are queryable without fetching the S3 payload.
+  Map<String, dynamic> toSyncMeta() {
+    final userTags = tags
+        .where((t) => !t.startsWith('artifact:') && !t.startsWith('event:'))
+        .toList();
+    final lines = userNote?.split('\n') ?? [];
+    final title = lines.isNotEmpty ? lines.first.trim() : null;
+    final annotations = lines.length > 1
+        ? lines.sublist(1).join('\n').trim()
+        : null;
+
+    return <String, dynamic>{
+      if (title != null && title.isNotEmpty) 'title': title,
+      if (userTags.isNotEmpty) 'tags': userTags,
+      if (signalSession != null) ...{
+        'sourceType': signalSession!.sourceId,
+        'sourceName': signalSession!.sourceName,
+        if (signalSession!.deviceName != null)
+          'deviceName': signalSession!.deviceName,
+        'durationMs': signalSession!.duration.inMilliseconds,
+        'channelCount': signalSession!.channelCount,
+        'sampleCount': signalSession!.samples.length,
+        'sampleRateHz': signalSession!.sampleRateHz,
+      },
+      if (annotations != null && annotations.isNotEmpty)
+        'annotations': annotations,
+    };
+  }
+
   factory CaptureEntry.fromJson(Map<String, dynamic> json) {
     final tagsRaw = json['tags'] as String?;
     final healthDataRaw = json['health_data'] as String?;

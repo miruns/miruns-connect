@@ -147,10 +147,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         payload['signal_session'] = signalJson;
       }
 
+      final meta = _entry.toSyncMeta();
       if (_shareCode != null) {
-        await link.updateSession(_shareCode!, payload);
+        await link.updateSession(_shareCode!, payload, meta: meta);
       } else {
-        final result = await link.createSession(payload);
+        final result = await link.createSession(payload, meta: meta);
         _shareCode = result['code'] as String;
       }
       await db.updateSyncStatus(_entry.id, 'synced', shareCode: _shareCode);
