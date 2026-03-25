@@ -158,6 +158,12 @@ const List<_MoreDestination> _moreDestinations = [
     description: 'BLE signal hardware (EEG, EMG)',
   ),
   _MoreDestination(
+    icon: Icons.ios_share_rounded,
+    label: 'Export',
+    route: '/export',
+    description: 'Export all data — health, EEG, workouts',
+  ),
+  _MoreDestination(
     icon: Icons.tune_rounded,
     label: 'Environment',
     route: '/environment',
