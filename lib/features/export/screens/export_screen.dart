@@ -297,8 +297,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       await Share.shareXFiles(
         files.map((f) => XFile(f.path)).toList(),
         subject:
-            'Miruns Export — ${DateFormat.yMMMd().format(_from)} to ${DateFormat.yMMMd().format(_to)}',
-        text: 'Miruns data export: ${parts.join(", ")}',
+            'Miruns Export — ${DateFormat.yMMMd().format(_from)} to ${DateFormat.yMMMd().format(_to)} (${parts.join(", ")})',
       );
 
       if (mounted) setState(() => _loading = false);

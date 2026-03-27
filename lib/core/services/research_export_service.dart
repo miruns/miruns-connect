@@ -159,8 +159,7 @@ class ResearchExportService {
     if (result.files.isEmpty) return;
     await Share.shareXFiles(
       result.files.map((f) => XFile(f.path)).toList(),
-      subject: 'Miruns Research Export',
-      text: result.summary,
+      subject: 'Miruns Research Export — ${result.summary}',
     );
   }
 
