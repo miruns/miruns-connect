@@ -5,6 +5,7 @@ import '../../features/ai_settings/screens/ai_settings_screen.dart';
 import '../../features/capture/screens/capture_screen.dart';
 import '../../features/eeg/screens/eeg_onboarding_screen.dart';
 import '../../features/environment/screens/environment_screen.dart';
+import '../../features/export/screens/export_screen.dart';
 import '../../features/journal/screens/journal_screen.dart';
 import '../../features/lab/screens/lab_home_screen.dart';
 import '../../features/lab/screens/session_comparison_screen.dart';
@@ -243,6 +244,31 @@ class AppRouter {
                       position:
                           Tween<Offset>(
                             begin: const Offset(0, 1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+          ),
+        ),
+
+        // ── Export ──────────────────────────────────────────────────────
+        GoRoute(
+          path: '/export',
+          name: 'export',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const ExportScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(1, 0),
                             end: Offset.zero,
                           ).animate(
                             CurvedAnimation(

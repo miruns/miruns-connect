@@ -843,6 +843,22 @@ class LocalDbService {
     return rows.map((row) => CaptureEntry.fromJson(row)).toList();
   }
 
+  /// Load all captures between [from] and [to] (inclusive), newest first.
+  Future<List<CaptureEntry>> loadCapturesInRange(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final db = await _database;
+    final rows = await db.query(
+      _tableCaptures,
+      columns: _captureColumnsLight,
+      where: "date(timestamp) BETWEEN ? AND ?",
+      whereArgs: [_dateKey(from), _dateKey(to)],
+      orderBy: 'timestamp DESC',
+    );
+    return rows.map((row) => CaptureEntry.fromJson(row)).toList();
+  }
+
   /// Update only the [ai_metadata] column for an existing capture.
   ///
   /// More efficient than loading + re-saving a full [CaptureEntry] when the
